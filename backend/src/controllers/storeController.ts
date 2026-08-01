@@ -1,35 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../prisma/client';
 
-const FALLBACK_STORES = [
-  {
-    id: 'store-1',
-    name: 'Waroengkita Pusat Bandung',
-    address: 'Jl. Ir. H. Juanda No. 120, Dago',
-    city: 'Bandung',
-    latitude: -6.8915,
-    longitude: 107.6106,
-    phone: '081234567890',
-    operatingHours: '07:00 - 21:00 WIB',
-    coverImage: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80',
-    rating: 4.9,
-    isActive: true,
-  },
-  {
-    id: 'store-2',
-    name: 'Waroengkita Cabang Jakarta Selatan',
-    address: 'Jl. Senopati No. 45, Kebayoran Baru',
-    city: 'Jakarta Selatan',
-    latitude: -6.2348,
-    longitude: 106.8094,
-    phone: '081298765432',
-    operatingHours: '08:00 - 22:00 WIB',
-    coverImage: 'https://images.unsplash.com/photo-1610348725531-843dff563e2c?auto=format&fit=crop&w=600&q=80',
-    rating: 4.8,
-    isActive: true,
-  },
-];
-
 // Haversine formula distance calculation in kilometers
 function calculateHaversineDistance(
   lat1: number,
@@ -68,21 +39,10 @@ function calculateHaversineDistance(
 export const getStores = async (req: Request, res: Response) => {
   try {
     const { lat, lon } = req.query;
-    let stores: any[] = [];
-
-    try {
-      stores = await prisma.store.findMany({
-        where: { isActive: true },
-        orderBy: { name: 'asc' },
-      });
-    } catch (dbErr: any) {
-      console.error('Error querying stores from DB:', dbErr.message);
-      stores = FALLBACK_STORES;
-    }
-
-    if (!stores || stores.length === 0) {
-      stores = FALLBACK_STORES;
-    }
+    const stores = await prisma.store.findMany({
+      where: { isActive: true },
+      orderBy: { name: 'asc' },
+    });
 
     const userLat = lat ? parseFloat(lat as string) : -6.2088;
     const userLon = lon ? parseFloat(lon as string) : 106.8456;
@@ -97,10 +57,11 @@ export const getStores = async (req: Request, res: Response) => {
       data: storesWithDistance,
     });
   } catch (error: any) {
-    console.error('getStores global error:', error.message);
-    return res.json({
-      success: true,
-      data: FALLBACK_STORES.map((s) => ({ ...s, distanceKm: 2.5 })),
+    console.error('getStores error (DB Disconnected):', error.message);
+    return res.status(503).json({
+      success: false,
+      message: 'Koneksi server/database terputus.',
+      error: error.message,
     });
   }
 };
@@ -119,14 +80,12 @@ export const getStoreById = async (req: Request, res: Response) => {
     });
 
     if (!store) {
-      const fallback = FALLBACK_STORES.find((s) => s.id === id) || FALLBACK_STORES[0];
-      return res.json({ success: true, data: { ...fallback, products: [] } });
+      return res.status(404).json({ success: false, message: 'Toko tidak ditemukan' });
     }
 
     return res.json({ success: true, data: store });
   } catch (error: any) {
-    const fallback = FALLBACK_STORES[0];
-    return res.json({ success: true, data: { ...fallback, products: [] } });
+    return res.status(503).json({ success: false, message: 'Koneksi server/database terputus.' });
   }
 };
 

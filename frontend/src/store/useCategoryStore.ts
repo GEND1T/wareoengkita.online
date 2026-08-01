@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { Category } from '../types';
 import { INITIAL_CATEGORIES } from '../data/mockData';
 import { API_BASE_URL } from '../config/api';
+import { useServerStatusStore } from './useServerStatusStore';
 
 interface CategoryState {
   selectedCategory: string;
@@ -44,7 +45,10 @@ export const useCategoryStore = create<CategoryState>((set) => ({
   fetchCategories: async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/categories`);
-      if (!res.ok) throw new Error(`HTTP status ${res.status}`);
+      if (!res.ok) {
+        useServerStatusStore.getState().setDisconnected(true, `Gagal memuat kategori (HTTP Status ${res.status}).`);
+        throw new Error(`HTTP status ${res.status}`);
+      }
       const json = await res.json();
       if (json.success && Array.isArray(json.data) && json.data.length > 0) {
         const mappedCats: Category[] = json.data.map((c: any) => ({
@@ -59,7 +63,8 @@ export const useCategoryStore = create<CategoryState>((set) => ({
         });
       }
     } catch (err) {
-      console.warn('Failed to fetch categories from DB, keeping default categories:', err);
+      console.error('Failed to fetch categories:', err);
+      useServerStatusStore.getState().setDisconnected(true, 'Koneksi ke database server kategori terputus.');
     }
   },
 }));

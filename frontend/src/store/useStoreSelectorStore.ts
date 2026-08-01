@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { API_BASE_URL } from '../config/api';
+import { useServerStatusStore } from './useServerStatusStore';
 
 export interface RegisteredStore {
   id: string;
@@ -52,6 +53,10 @@ export const useStoreSelectorStore = create<StoreSelectorState>((set, get) => ({
         url += `?lat=${lat}&lon=${lon}`;
       }
       const res = await fetch(url);
+      if (!res.ok) {
+        useServerStatusStore.getState().setDisconnected(true, `Gagal memuat cabang toko (HTTP Status ${res.status}).`);
+        return;
+      }
       const json = await res.json();
       if (json.success && Array.isArray(json.data) && json.data.length > 0) {
         const mappedStores: RegisteredStore[] = json.data.map((s: any) => ({
@@ -68,9 +73,12 @@ export const useStoreSelectorStore = create<StoreSelectorState>((set, get) => ({
           rating: s.rating || 0,
         }));
         set({ stores: mappedStores });
+      } else {
+        useServerStatusStore.getState().setDisconnected(true, 'Data toko tidak dapat dimuat dari server.');
       }
     } catch (err) {
       console.error('Failed to fetch stores from DB:', err);
+      useServerStatusStore.getState().setDisconnected(true, 'Koneksi ke database server toko terputus.');
     }
   },
 }));

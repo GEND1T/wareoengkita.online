@@ -18,6 +18,7 @@ import { AdminDashboard } from './components/admin/AdminDashboard';
 import { AuthModal } from './components/AuthModal';
 import { VerifyAccessPage } from './components/VerifyAccessPage';
 import { PwaInstallPrompt } from './components/PwaInstallPrompt';
+import { ServerStatusBanner } from './components/ServerStatusBanner';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
 import { useCartStore } from './store/useCartStore';
 import { useCategoryStore } from './store/useCategoryStore';
@@ -79,6 +80,9 @@ export const App: React.FC = () => {
             path="*"
             element={
               <div className="min-h-screen bg-[#F9F8F6] text-[#1F2937] flex flex-col font-sans selection:bg-[#77a160] selection:text-white">
+                {/* Global Server Disconnected Alert Banner */}
+                <ServerStatusBanner />
+
                 {/* Header Bar */}
                 <Header />
 
