@@ -1,4 +1,4 @@
-const CACHE_NAME = 'wareoengkita-pwa-v1';
+const CACHE_NAME = 'waroengkita-pwa-v1';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

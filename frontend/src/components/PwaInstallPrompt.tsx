@@ -112,7 +112,7 @@ export const PwaInstallPrompt: React.FC = () => {
         <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[100] bg-[#063104] text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-emerald-500/40 animate-bounce">
           <CheckCircle2 className="w-5 h-5 text-emerald-400" />
           <span className="text-xs font-bold">
-            Aplikasi Wareoengkita berhasil terpasang di Layar Utama Anda!
+            Aplikasi Waroengkita berhasil terpasang di Layar Utama Anda!
           </span>
         </div>
       )}
@@ -123,11 +123,11 @@ export const PwaInstallPrompt: React.FC = () => {
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center shrink-0 shadow-inner">
-                <img src="/pwa-icon.svg" alt="Wareoengkita App" className="w-9 h-9 object-contain" />
+                <img src="/pwa-icon.svg" alt="Waroengkita App" className="w-9 h-9 object-contain" />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h4 className="font-extrabold text-white text-sm">Download App Wareoengkita</h4>
+                  <h4 className="font-extrabold text-white text-sm">Download App Waroengkita</h4>
                   <span className="bg-emerald-500/30 text-emerald-300 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">
                     Cepat & Ringan
                   </span>
@@ -195,7 +195,7 @@ export const PwaInstallPrompt: React.FC = () => {
 
             <div className="space-y-3 text-xs">
               <p className="text-gray-600 font-medium">
-                Untuk memasang aplikasi Wareoengkita di Layar Utama iPhone/iPad Anda, ikuti 2 langkah mudah berikut:
+                Untuk memasang aplikasi Waroengkita di Layar Utama iPhone/iPad Anda, ikuti 2 langkah mudah berikut:
               </p>
 
               <div className="bg-emerald-50 rounded-2xl p-3.5 border border-emerald-200/80 flex items-start gap-3">

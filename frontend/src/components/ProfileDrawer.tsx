@@ -484,7 +484,7 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
                 </div>
                 <div className="min-w-0">
                   <h4 className="font-bold text-gray-900 text-xs flex items-center gap-1.5">
-                    Install Aplikasi Wareoengkita
+                    Install Aplikasi WaroengKita
                     <span className="bg-emerald-100 text-[#063104] text-[9px] font-bold px-1.5 py-0.5 rounded">
                       MOBILE & PC
                     </span>
@@ -543,7 +543,7 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
                 <span>Versi Aplikasi v{appVersion}</span>
               </div>
               <p className="text-[11px] font-medium text-gray-400">
-                © 2026 Wareoengkita • Hak Cipta Dilindungi
+                © 2026 Waroengkita • Hak Cipta Dilindungi
               </p>
             </div>
           </div>
@@ -553,9 +553,8 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
         {/* OVERLAY SUB-PANEL 1: UBAH PROFIL VIEW (SLIDES IN / OUT)       */}
         {/* ============================================================== */}
         <div
-          className={`absolute inset-0 bg-[#F8FAFC] p-4 sm:p-5 z-20 flex flex-col transition-transform duration-300 ease-in-out ${
-            activeSubView === 'editProfile' ? 'translate-x-0' : 'translate-x-full pointer-events-none'
-          }`}
+          className={`absolute inset-0 bg-[#F8FAFC] p-4 sm:p-5 z-20 flex flex-col transition-transform duration-300 ease-in-out ${activeSubView === 'editProfile' ? 'translate-x-0' : 'translate-x-full pointer-events-none'
+            }`}
         >
           {/* Subview Header */}
           <div className="flex items-center justify-between pb-3 shrink-0">
@@ -647,11 +646,10 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     <label
-                      className={`cursor-pointer border py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
-                        selectedGender === 'Laki-laki'
-                          ? 'border-[#063104] bg-emerald-50 text-[#063104]'
-                          : 'border-gray-200 text-gray-700'
-                      }`}
+                      className={`cursor-pointer border py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${selectedGender === 'Laki-laki'
+                        ? 'border-[#063104] bg-emerald-50 text-[#063104]'
+                        : 'border-gray-200 text-gray-700'
+                        }`}
                     >
                       <input
                         type="radio"
@@ -663,11 +661,10 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
                     </label>
 
                     <label
-                      className={`cursor-pointer border py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
-                        selectedGender === 'Perempuan'
-                          ? 'border-[#063104] bg-emerald-50 text-[#063104]'
-                          : 'border-gray-200 text-gray-700'
-                      }`}
+                      className={`cursor-pointer border py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${selectedGender === 'Perempuan'
+                        ? 'border-[#063104] bg-emerald-50 text-[#063104]'
+                        : 'border-gray-200 text-gray-700'
+                        }`}
                     >
                       <input
                         type="radio"
@@ -716,9 +713,8 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
         {/* OVERLAY SUB-PANEL 2: PESANAN SAYA VIEW (SLIDES IN / OUT)      */}
         {/* ============================================================== */}
         <div
-          className={`absolute inset-0 bg-[#F8FAFC] p-4 sm:p-5 z-20 flex flex-col transition-transform duration-300 ease-in-out ${
-            activeSubView === 'orders' ? 'translate-x-0' : 'translate-x-full pointer-events-none'
-          }`}
+          className={`absolute inset-0 bg-[#F8FAFC] p-4 sm:p-5 z-20 flex flex-col transition-transform duration-300 ease-in-out ${activeSubView === 'orders' ? 'translate-x-0' : 'translate-x-full pointer-events-none'
+            }`}
         >
           {/* Subview Header */}
           <div className="flex items-center justify-between pb-3 shrink-0">
@@ -745,11 +741,10 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
                   key={filter.key}
                   type="button"
                   onClick={() => setSelectedOrderStatusFilter(filter.key)}
-                  className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
-                    isSelected
-                      ? 'bg-[#063104] text-white shadow-xs'
-                      : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200/80'
-                  }`}
+                  className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${isSelected
+                    ? 'bg-[#063104] text-white shadow-xs'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200/80'
+                    }`}
                 >
                   {filter.icon}
                   <span>{filter.label}</span>
