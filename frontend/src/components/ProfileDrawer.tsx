@@ -1,0 +1,846 @@
+import React, { useState, useEffect } from 'react';
+import { Drawer, IconButton, Divider } from '@mui/material';
+import {
+  X,
+  User,
+  Package,
+  Calendar,
+  Phone,
+  CheckCircle2,
+  Clock,
+  Truck,
+  RotateCcw,
+  XCircle,
+  Save,
+  ChevronRight,
+  ArrowLeft,
+  ShoppingBag,
+  CreditCard,
+  Receipt,
+  Sparkles,
+  MapPin,
+  HelpCircle,
+  LayoutDashboard,
+  LogOut,
+  Store,
+} from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useUserStore, type OrderStatus, type Order } from '../store/useUserStore';
+import { useLocationStore } from '../store/useLocationStore';
+import { useAdminStore } from '../store/useAdminStore';
+import { StoreRegistrationModal } from './StoreRegistrationModal';
+import { OrderTrackingModal } from './OrderTrackingModal';
+
+interface ProfileDrawerProps {
+  onOpenSupport?: () => void;
+}
+
+const profileSchema = z.object({
+  fullName: z.string().min(3, 'Nama lengkap minimal 3 karakter'),
+  username: z.string().min(3, 'Username minimal 3 karakter'),
+  phone: z
+    .string()
+    .min(9, 'Nomor telepon minimal 9 digit')
+    .regex(/^[0-9+-\s]+$/, 'Format nomor telepon tidak valid'),
+  gender: z.enum(['Laki-laki', 'Perempuan']),
+  birthDate: z.string().min(4, 'Tanggal lahir wajib diisi'),
+});
+
+type ProfileFormData = z.infer<typeof profileSchema>;
+
+const STATUS_FILTERS: { key: OrderStatus | 'semua'; label: string; icon: React.ReactNode }[] = [
+  { key: 'semua', label: 'Semua', icon: <Receipt className="w-3.5 h-3.5" /> },
+  { key: 'belum_bayar', label: 'Belum Bayar', icon: <Clock className="w-3.5 h-3.5" /> },
+  { key: 'dikemas', label: 'Dikemas', icon: <Package className="w-3.5 h-3.5" /> },
+  { key: 'dikirim', label: 'Dikirim', icon: <Truck className="w-3.5 h-3.5" /> },
+  { key: 'selesai', label: 'Selesai', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
+  { key: 'pengembalian', label: 'Pengembalian', icon: <RotateCcw className="w-3.5 h-3.5" /> },
+  { key: 'dibatalkan', label: 'Dibatalkan', icon: <XCircle className="w-3.5 h-3.5" /> },
+];
+
+export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) => {
+  const {
+    profile,
+    orders,
+    isProfileDrawerOpen,
+    closeProfileDrawer,
+    selectedOrderStatusFilter,
+    setSelectedOrderStatusFilter,
+    skipProfileAnimation,
+    setSkipProfileAnimation,
+    updateProfile,
+    fetchUserOrders,
+    logout,
+  } = useUserStore();
+
+  const { openAdmin, unreadNewOrdersCount } = useAdminStore();
+  const { showToast, openLocationDrawer, getSelectedAddress } = useLocationStore();
+  const activeAddress = getSelectedAddress();
+
+  // Active subview overlay: null (Main Dashboard), 'editProfile', or 'orders'
+  const [activeSubView, setActiveSubView] = useState<'editProfile' | 'orders' | null>(null);
+  const [isStoreRegistrationOpen, setIsStoreRegistrationOpen] = useState(false);
+  const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<ProfileFormData>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: profile,
+  });
+
+  const selectedGender = watch('gender');
+
+  useEffect(() => {
+    if (isProfileDrawerOpen || activeSubView === 'orders') {
+      const userIdent = profile.id || profile.phone;
+      fetchUserOrders(userIdent);
+    }
+  }, [isProfileDrawerOpen, activeSubView, profile.id, profile.phone, fetchUserOrders]);
+
+  // Sync form values when profile store updates
+  useEffect(() => {
+    setValue('fullName', profile.fullName);
+    setValue('username', profile.username);
+    setValue('phone', profile.phone);
+    setValue('gender', profile.gender);
+    setValue('birthDate', profile.birthDate);
+  }, [profile, setValue]);
+
+  // Reset active sub-view when drawer is closed
+  useEffect(() => {
+    if (!isProfileDrawerOpen) {
+      setActiveSubView(null);
+    }
+  }, [isProfileDrawerOpen]);
+
+  const onProfileSubmit = (data: ProfileFormData) => {
+    updateProfile(data);
+    setActiveSubView(null); // Slide out back to main
+    showToast('Profil akun berhasil diperbarui!');
+  };
+
+  const handleOpenLocation = () => {
+    setSkipProfileAnimation(true);
+    openLocationDrawer();
+  };
+
+  // Order Counts for Badges
+  const countBelumBayar = orders.filter((o) => o.status === 'belum_bayar').length;
+  const countDikemas = orders.filter((o) => o.status === 'dikemas').length;
+  const countDikirim = orders.filter((o) => o.status === 'dikirim').length;
+  const countSemua = orders.length;
+
+  const filteredOrders =
+    selectedOrderStatusFilter === 'semua'
+      ? orders
+      : orders.filter((o) => o.status === selectedOrderStatusFilter);
+
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      maximumFractionDigits: 0,
+    })
+      .format(amount)
+      .replace(/\s/g, ' ');
+
+  const getStatusBadge = (status: OrderStatus) => {
+    switch (status) {
+      case 'belum_bayar':
+        return (
+          <span className="bg-amber-100 text-amber-900 border border-amber-300/80 font-bold px-2.5 py-0.5 rounded-full text-[10px] flex items-center gap-1">
+            <Clock className="w-3 h-3 text-amber-700" /> Belum Bayar
+          </span>
+        );
+      case 'dikemas':
+        return (
+          <span className="bg-blue-100 text-blue-900 border border-blue-300/80 font-bold px-2.5 py-0.5 rounded-full text-[10px] flex items-center gap-1">
+            <Package className="w-3 h-3 text-blue-700" /> Dikemas
+          </span>
+        );
+      case 'dikirim':
+        return (
+          <span className="bg-indigo-100 text-indigo-900 border border-indigo-300/80 font-bold px-2.5 py-0.5 rounded-full text-[10px] flex items-center gap-1">
+            <Truck className="w-3 h-3 text-indigo-700" /> Dikirim
+          </span>
+        );
+      case 'selesai':
+        return (
+          <span className="bg-emerald-100 text-[#063104] border border-emerald-300/80 font-bold px-2.5 py-0.5 rounded-full text-[10px] flex items-center gap-1">
+            <CheckCircle2 className="w-3 h-3 text-[#063104]" /> Selesai
+          </span>
+        );
+      case 'pengembalian':
+        return (
+          <span className="bg-purple-100 text-purple-900 border border-purple-300/80 font-bold px-2.5 py-0.5 rounded-full text-[10px] flex items-center gap-1">
+            <RotateCcw className="w-3 h-3 text-purple-700" /> Pengembalian
+          </span>
+        );
+      case 'dibatalkan':
+        return (
+          <span className="bg-rose-100 text-rose-900 border border-rose-300/80 font-bold px-2.5 py-0.5 rounded-full text-[10px] flex items-center gap-1">
+            <XCircle className="w-3 h-3 text-rose-700" /> Dibatalkan
+          </span>
+        );
+    }
+  };
+
+  const openOrderHistoryWithFilter = (status: OrderStatus | 'semua') => {
+    setSelectedOrderStatusFilter(status);
+    setActiveSubView('orders');
+  };
+
+  return (
+    <Drawer
+      anchor="right"
+      open={isProfileDrawerOpen}
+      onClose={closeProfileDrawer}
+      transitionDuration={skipProfileAnimation ? 0 : { enter: 225, exit: 225 }}
+      slotProps={{
+        paper: {
+          sx: {
+            width: { xs: '100%', sm: '480px' },
+            backgroundColor: '#F9F8F6',
+            p: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          },
+        },
+      }}
+    >
+      <div className="relative w-full h-full flex flex-col p-2.5 overflow-hidden">
+        {/* ========================================== */}
+        {/* BASE LAYER: MAIN PROFILE DASHBOARD VIEW   */}
+        {/* ========================================== */}
+        <div className="flex flex-col h-full overflow-hidden">
+          {/* Main Header */}
+          <div className="flex items-center justify-between pb-3 shrink-0">
+            <div className="flex items-center gap-2">
+              <User className="w-5 h-5 text-[#063104]" />
+              <h2 className="font-bold text-gray-900 text-lg">Profil Saya</h2>
+            </div>
+            <IconButton onClick={closeProfileDrawer} size="small">
+              <X className="w-5 h-5" />
+            </IconButton>
+          </div>
+
+          <Divider className="my-1 shrink-0" />
+
+          {/* Main Dashboard Scrollable Content */}
+          <div className="flex-1 overflow-y-auto space-y-4 pt-2 pr-1">
+            {/* CLICKABLE DATA AKUN CARD (Opens Edit Profile View) */}
+            <div
+              onClick={() => setActiveSubView('editProfile')}
+              className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs hover:border-[#77a160] hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-14 h-14 rounded-2xl bg-[#063104] text-white font-black text-xl flex items-center justify-center shadow-md shrink-0 group-hover:scale-105 transition-transform">
+                  {profile.fullName.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-extrabold text-gray-900 text-base truncate">
+                    {profile.fullName}
+                  </h3>
+                  <p className="text-xs text-gray-500 font-medium truncate">
+                    @{profile.username} • {profile.phone}
+                  </p>
+                  {profile.role === 'superadmin' ? (
+                    <span className="inline-block bg-purple-100 text-purple-900 border border-purple-300 text-[10px] font-extrabold px-2 py-0.5 rounded-md mt-1">
+                      Superadmin Platform
+                    </span>
+                  ) : profile.role === 'admin_store' ? (
+                    <span className="inline-block bg-blue-100 text-blue-900 border border-blue-300 text-[10px] font-extrabold px-2 py-0.5 rounded-md mt-1">
+                      Admin Toko ({profile.assignedStoreName || 'Cabang'})
+                    </span>
+                  ) : (
+                    <span className="inline-block bg-emerald-50 text-[#063104] text-[10px] font-extrabold px-2 py-0.5 rounded-md mt-1 border border-emerald-200/60">
+                      Pelanggan Organik
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#063104] group-hover:translate-x-0.5 transition-all shrink-0" />
+            </div>
+
+            {/* ALAMAT PENGIRIMAN SAYA CARD */}
+            <div
+              onClick={handleOpenLocation}
+              className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs hover:border-[#77a160] hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#063104] font-bold flex items-center justify-center shrink-0 group-hover:bg-[#063104] group-hover:text-white transition-colors">
+                  <MapPin className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-bold text-gray-900 text-xs">Alamat Pengiriman Saya</h4>
+                    {activeAddress && (
+                      <span className="bg-emerald-100 text-[#063104] text-[9px] font-extrabold px-1.5 py-0.5 rounded">
+                        {activeAddress.label}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 truncate mt-0.5">
+                    {activeAddress
+                      ? `${activeAddress.streetAddress}, ${activeAddress.city}`
+                      : 'Pilih atau atur alamat pengiriman'}
+                  </p>
+                </div>
+              </div>
+
+              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#063104] group-hover:translate-x-0.5 transition-all shrink-0" />
+            </div>
+
+            {/* DAFTAR / BUKA TOKO SAYA CARD (Only visible to customer role) */}
+            {profile.role === 'customer' && (
+              <div
+                onClick={() => setIsStoreRegistrationOpen(true)}
+                className="bg-emerald-50/70 rounded-2xl p-4 border border-emerald-200/80 shadow-xs hover:border-[#77a160] hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3"
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-[#063104] text-emerald-300 font-bold flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <Store className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="font-extrabold text-[#063104] text-xs flex items-center gap-1.5">
+                      Daftar / Buka Toko Saya
+                      <span className="bg-emerald-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded">
+                        GRATIS
+                      </span>
+                    </h4>
+                    <p className="text-xs text-gray-600 truncate mt-0.5">
+                      Ajukan pendaftaran cabang toko & jual produk Anda
+                    </p>
+                  </div>
+                </div>
+
+                <ChevronRight className="w-5 h-5 text-emerald-700 group-hover:translate-x-0.5 transition-all shrink-0" />
+              </div>
+            )}
+
+            {/* RIWAYAT PESANAN QUICK GRID (3 Status Categories + Semua Icon) */}
+            <div className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs space-y-3">
+              <div className="flex items-center justify-between pb-1 border-b border-gray-100">
+                <div className="flex items-center gap-1.5 text-[#063104] font-extrabold text-xs uppercase tracking-wider">
+                  <Package className="w-4 h-4" />
+                  <span>Riwayat Pesanan Saya</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => openOrderHistoryWithFilter('semua')}
+                  className="text-xs font-bold text-[#063104] hover:underline flex items-center gap-0.5"
+                >
+                  <span>Lihat Semua</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* 4 Medium Icon Buttons Grid */}
+              <div className="grid grid-cols-4 gap-2 pt-1">
+                {/* 1. Belum Bayar */}
+                <button
+                  type="button"
+                  onClick={() => openOrderHistoryWithFilter('belum_bayar')}
+                  className="relative flex flex-col items-center justify-center p-3 rounded-2xl bg-amber-50/70 border border-amber-200/60 hover:bg-amber-100/70 transition-all text-amber-900 group focus:outline-none"
+                >
+                  {countBelumBayar > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-amber-600 text-white text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center shadow-xs">
+                      {countBelumBayar}
+                    </span>
+                  )}
+                  <div className="p-2.5 rounded-xl bg-amber-100 text-amber-800 group-hover:scale-110 transition-transform mb-1.5">
+                    <Clock className="w-5 h-5" />
+                  </div>
+                  <span className="text-[11px] font-bold text-center leading-tight">
+                    Belum Bayar
+                  </span>
+                </button>
+
+                {/* 2. Dikemas */}
+                <button
+                  type="button"
+                  onClick={() => openOrderHistoryWithFilter('dikemas')}
+                  className="relative flex flex-col items-center justify-center p-3 rounded-2xl bg-blue-50/70 border border-blue-200/60 hover:bg-blue-100/70 transition-all text-blue-900 group focus:outline-none"
+                >
+                  {countDikemas > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-blue-600 text-white text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center shadow-xs">
+                      {countDikemas}
+                    </span>
+                  )}
+                  <div className="p-2.5 rounded-xl bg-blue-100 text-blue-800 group-hover:scale-110 transition-transform mb-1.5">
+                    <Package className="w-5 h-5" />
+                  </div>
+                  <span className="text-[11px] font-bold text-center leading-tight">
+                    Dikemas
+                  </span>
+                </button>
+
+                {/* 3. Dikirim */}
+                <button
+                  type="button"
+                  onClick={() => openOrderHistoryWithFilter('dikirim')}
+                  className="relative flex flex-col items-center justify-center p-3 rounded-2xl bg-indigo-50/70 border border-indigo-200/60 hover:bg-indigo-100/70 transition-all text-indigo-900 group focus:outline-none"
+                >
+                  {countDikirim > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center shadow-xs">
+                      {countDikirim}
+                    </span>
+                  )}
+                  <div className="p-2.5 rounded-xl bg-indigo-100 text-indigo-800 group-hover:scale-110 transition-transform mb-1.5">
+                    <Truck className="w-5 h-5" />
+                  </div>
+                  <span className="text-[11px] font-bold text-center leading-tight">
+                    Dikirim
+                  </span>
+                </button>
+
+                {/* 4. Semua Pesanan */}
+                <button
+                  type="button"
+                  onClick={() => openOrderHistoryWithFilter('semua')}
+                  className="relative flex flex-col items-center justify-center p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200/60 hover:bg-emerald-100/70 transition-all text-[#063104] group focus:outline-none"
+                >
+                  {countSemua > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-[#063104] text-white text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center shadow-xs">
+                      {countSemua}
+                    </span>
+                  )}
+                  <div className="p-2.5 rounded-xl bg-emerald-100 text-[#063104] group-hover:scale-110 transition-transform mb-1.5">
+                    <Receipt className="w-5 h-5" />
+                  </div>
+                  <span className="text-[11px] font-bold text-center leading-tight">
+                    Semua
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* DASHBOARD ADMIN CARD (Restricted to admin_store and superadmin roles) */}
+            {(profile.role === 'admin_store' || profile.role === 'superadmin') && (
+              <div
+                onClick={() => {
+                  closeProfileDrawer();
+                  openAdmin();
+                }}
+                className="bg-gradient-to-r from-emerald-900 to-[#063104] rounded-2xl p-4 border border-emerald-800 text-white shadow-sm hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3"
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="relative w-10 h-10 rounded-xl bg-white/15 text-white font-bold flex items-center justify-center shrink-0 group-hover:bg-white group-hover:text-[#063104] transition-colors">
+                    <LayoutDashboard className="w-5 h-5" />
+                    {unreadNewOrdersCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white font-black text-[9px] rounded-full flex items-center justify-center animate-bounce">
+                        {unreadNewOrdersCount}
+                      </span>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="font-extrabold text-white text-xs flex items-center gap-1.5">
+                      Dashboard Admin
+                      <span className="bg-amber-400 text-emerald-950 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">
+                        {profile.role === 'superadmin' ? 'Superadmin' : 'Admin Toko'}
+                      </span>
+                    </h4>
+                    <p className="text-xs text-emerald-200 truncate mt-0.5">
+                      {profile.role === 'superadmin'
+                        ? 'Kelola Produk, Pesanan, Multi-Store & System'
+                        : `Kelola ${profile.assignedStoreName || 'Toko Cabang'}`}
+                    </p>
+                  </div>
+                </div>
+
+                <ChevronRight className="w-5 h-5 text-emerald-300 group-hover:text-white group-hover:translate-x-0.5 transition-all shrink-0" />
+              </div>
+            )}
+
+            {/* PUSAT BANTUAN & LIVE CHAT CS CARD */}
+            <div
+              onClick={() => {
+                if (onOpenSupport) onOpenSupport();
+              }}
+              className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs hover:border-[#77a160] hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#063104] font-bold flex items-center justify-center shrink-0 group-hover:bg-[#063104] group-hover:text-white transition-colors">
+                  <HelpCircle className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="font-bold text-gray-900 text-xs">Pusat Bantuan & Live Chat CS</h4>
+                  <p className="text-xs text-gray-500 truncate mt-0.5">
+                    Hubungi WhatsApp CS Toko & Pertanyaan FAQ
+                  </p>
+                </div>
+              </div>
+
+              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#063104] group-hover:translate-x-0.5 transition-all shrink-0" />
+            </div>
+
+            {/* LOGOUT BUTTON */}
+            <div className="pt-2 pb-4">
+              <button
+                type="button"
+                onClick={() => {
+                  logout();
+                  closeProfileDrawer();
+                  showToast('Anda telah keluar dari akun.');
+                }}
+                className="w-full py-3 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/80 rounded-2xl text-xs font-extrabold flex items-center justify-center space-x-2 transition-all active:scale-[0.99]"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Keluar / Logout Akun</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ============================================================== */}
+        {/* OVERLAY SUB-PANEL 1: UBAH PROFIL VIEW (SLIDES IN / OUT)       */}
+        {/* ============================================================== */}
+        <div
+          className={`absolute inset-0 bg-[#F9F8F6] p-2.5 z-20 flex flex-col transition-transform duration-300 ease-in-out ${activeSubView === 'editProfile' ? 'translate-x-0' : 'translate-x-full pointer-events-none'
+            }`}
+        >
+          {/* Subview Header (Back button only, NO close icon) */}
+          <div className="flex items-center justify-between pb-3 shrink-0">
+            <div className="flex items-center gap-2">
+              <IconButton
+                onClick={() => setActiveSubView(null)}
+                size="small"
+                className="text-gray-800 hover:text-black"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </IconButton>
+              <h2 className="font-bold text-gray-900 text-lg">Ubah Profil Akun</h2>
+            </div>
+          </div>
+
+          <Divider className="my-1 shrink-0" />
+
+          {/* Form Content */}
+          <form
+            onSubmit={handleSubmit(onProfileSubmit)}
+            className="flex-1 flex flex-col justify-between overflow-hidden pt-2"
+          >
+            <div className="flex-1 overflow-y-auto space-y-3.5 pr-1 pb-4">
+              <div className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs space-y-3.5">
+                <div className="flex items-center gap-1.5 pb-1 border-b border-gray-100 text-[#063104] font-extrabold text-xs uppercase tracking-wider">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Ubah Informasi Akun</span>
+                </div>
+
+                {/* Nama Lengkap */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                    Nama Lengkap
+                  </label>
+                  <input
+                    type="text"
+                    {...register('fullName')}
+                    placeholder="Nama Lengkap"
+                    className="w-full bg-white text-sm rounded-xl px-3.5 py-2.5 border border-gray-200 focus:outline-none focus:border-[#063104] focus:ring-2 focus:ring-[#063104]/20"
+                  />
+                  {errors.fullName && (
+                    <p className="text-red-500 text-[11px] mt-0.5">
+                      {errors.fullName.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Username */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                    Username Akun
+                  </label>
+                  <input
+                    type="text"
+                    {...register('username')}
+                    placeholder="Username"
+                    className="w-full bg-white text-sm rounded-xl px-3.5 py-2.5 border border-gray-200 focus:outline-none focus:border-[#063104] focus:ring-2 focus:ring-[#063104]/20"
+                  />
+                  {errors.username && (
+                    <p className="text-red-500 text-[11px] mt-0.5">
+                      {errors.username.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* No. Handphone */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">
+                    <Phone className="w-3.5 h-3.5 text-gray-500" />
+                    No. Handphone
+                  </label>
+                  <input
+                    type="text"
+                    {...register('phone')}
+                    placeholder="08xxxxxxxxxx"
+                    className="w-full bg-white text-sm rounded-xl px-3.5 py-2.5 border border-gray-200 focus:outline-none focus:border-[#063104] focus:ring-2 focus:ring-[#063104]/20"
+                  />
+                  {errors.phone && (
+                    <p className="text-red-500 text-[11px] mt-0.5">
+                      {errors.phone.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Jenis Kelamin */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                    Jenis Kelamin
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <label
+                      className={`cursor-pointer border py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${selectedGender === 'Laki-laki'
+                        ? 'border-[#063104] bg-emerald-50 text-[#063104]'
+                        : 'border-gray-200 text-gray-700'
+                        }`}
+                    >
+                      <input
+                        type="radio"
+                        value="Laki-laki"
+                        {...register('gender')}
+                        className="accent-[#063104]"
+                      />
+                      <span>Laki-laki</span>
+                    </label>
+
+                    <label
+                      className={`cursor-pointer border py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${selectedGender === 'Perempuan'
+                        ? 'border-[#063104] bg-emerald-50 text-[#063104]'
+                        : 'border-gray-200 text-gray-700'
+                        }`}
+                    >
+                      <input
+                        type="radio"
+                        value="Perempuan"
+                        {...register('gender')}
+                        className="accent-[#063104]"
+                      />
+                      <span>Perempuan</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Tanggal Lahir */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5 text-gray-500" />
+                    Tanggal Lahir
+                  </label>
+                  <input
+                    type="date"
+                    {...register('birthDate')}
+                    className="w-full bg-white text-sm rounded-xl px-3.5 py-2.5 border border-gray-200 focus:outline-none focus:border-[#063104] focus:ring-2 focus:ring-[#063104]/20"
+                  />
+                  {errors.birthDate && (
+                    <p className="text-red-500 text-[11px] mt-0.5">
+                      {errors.birthDate.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-gray-200/80 shrink-0">
+              <button
+                type="submit"
+                className="w-full bg-[#063104] hover:bg-[#084205] text-white font-bold py-3.5 rounded-2xl shadow-md active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-sm focus:outline-none"
+              >
+                <Save className="w-4 h-4" />
+                <span>Simpan Perubahan Profil</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* ============================================================== */}
+        {/* OVERLAY SUB-PANEL 2: PESANAN SAYA VIEW (SLIDES IN / OUT)      */}
+        {/* ============================================================== */}
+        <div
+          className={`absolute inset-0 bg-[#F9F8F6] p-2.5 z-20 flex flex-col transition-transform duration-300 ease-in-out ${activeSubView === 'orders' ? 'translate-x-0' : 'translate-x-full pointer-events-none'
+            }`}
+        >
+          {/* Subview Header (Back button only, NO close icon) */}
+          <div className="flex items-center justify-between pb-3 shrink-0">
+            <div className="flex items-center gap-2">
+              <IconButton
+                onClick={() => setActiveSubView(null)}
+                size="small"
+                className="text-gray-800 hover:text-black"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </IconButton>
+              <h2 className="font-bold text-gray-900 text-lg">Pesanan Saya</h2>
+            </div>
+          </div>
+
+          <Divider className="my-1 shrink-0" />
+
+          {/* Horizontally Scrollable Status Filter Chips */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none pr-1 pt-1 shrink-0">
+            {STATUS_FILTERS.map((filter) => {
+              const isSelected = selectedOrderStatusFilter === filter.key;
+              return (
+                <button
+                  key={filter.key}
+                  type="button"
+                  onClick={() => setSelectedOrderStatusFilter(filter.key)}
+                  className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${isSelected
+                    ? 'bg-[#063104] text-white shadow-sm'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200/80'
+                    }`}
+                >
+                  {filter.icon}
+                  <span>{filter.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Filtered Orders List */}
+          <div className="flex-1 overflow-y-auto space-y-3.5 my-2 pr-1">
+            {filteredOrders.length === 0 ? (
+              <div className="text-center py-12 space-y-3">
+                <div className="w-14 h-14 rounded-full bg-emerald-50 text-[#77a160] flex items-center justify-center mx-auto">
+                  <ShoppingBag className="w-7 h-7" />
+                </div>
+                <p className="text-sm font-semibold text-gray-700">
+                  Tidak ada pesanan ditemukan
+                </p>
+                <p className="text-xs text-gray-400 max-w-xs mx-auto">
+                  Belum ada transaksi dengan status yang dipilih saat ini.
+                </p>
+              </div>
+            ) : (
+              filteredOrders.map((order) => (
+                <div
+                  key={order.id}
+                  className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs space-y-3"
+                >
+                  {/* Order Header */}
+                  <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                    <div>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-extrabold text-[#063104] text-xs">
+                          #{order.orderNo}
+                        </span>
+                        {order.storeName && (
+                          <span className="bg-emerald-50 text-[#063104] text-[10px] font-extrabold px-2 py-0.5 rounded-md border border-emerald-200/80">
+                            {order.storeName}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[11px] text-gray-400 block mt-0.5">
+                        {order.date}
+                      </span>
+                    </div>
+                    {getStatusBadge(order.status)}
+                  </div>
+
+                  {/* Order Items Summary */}
+                  <div className="space-y-2">
+                    {order.items.map((item) => (
+                      <div key={item.id} className="flex items-center gap-3">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-12 h-12 object-contain rounded-xl bg-gray-50 p-1 border border-gray-100 shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-gray-900 text-xs truncate">
+                            {item.name}
+                          </h4>
+                          <p className="text-[11px] text-gray-500 mt-0.5">
+                            {item.quantity} x {formatCurrency(item.price)} ({item.unit})
+                          </p>
+                        </div>
+                        <span className="font-bold text-gray-900 text-xs shrink-0">
+                          {formatCurrency(item.price * item.quantity)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <Divider className="my-1" />
+
+                  {/* Order Footer & Actions */}
+                  <div className="flex items-center justify-between pt-1">
+                    <div>
+                      <span className="text-[10px] text-gray-400 block uppercase font-bold tracking-wider">
+                        Total Pesanan
+                      </span>
+                      <span className="font-extrabold text-[#063104] text-sm">
+                        {formatCurrency(order.totalAmount)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {order.status === 'belum_bayar' && (
+                        <button
+                          type="button"
+                          className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1 shadow-xs"
+                        >
+                          <CreditCard className="w-3.5 h-3.5" />
+                          <span>Bayar Sekarang</span>
+                        </button>
+                      )}
+                      {(order.status === 'dikirim' || order.status === 'dikemas') && (
+                        <button
+                          type="button"
+                          onClick={() => setTrackingOrder(order)}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1 shadow-xs active:scale-95 transition-all"
+                        >
+                          <Truck className="w-3.5 h-3.5" />
+                          <span>Lacak Kurir</span>
+                        </button>
+                      )}
+                      {order.status === 'selesai' && (
+                        <button
+                          type="button"
+                          className="bg-[#063104] hover:bg-[#084205] text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1 shadow-xs"
+                        >
+                          <ShoppingBag className="w-3.5 h-3.5" />
+                          <span>Beli Lagi</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* STORE REGISTRATION MODAL */}
+      <StoreRegistrationModal
+        isOpen={isStoreRegistrationOpen}
+        onClose={() => setIsStoreRegistrationOpen(false)}
+        profile={profile}
+      />
+
+      {/* ORDER TRACKING MODAL */}
+      {trackingOrder && (
+        <OrderTrackingModal
+          open={!!trackingOrder}
+          onClose={() => setTrackingOrder(null)}
+          orderNo={trackingOrder.orderNo}
+          orderDate={trackingOrder.date}
+          courierName={trackingOrder.shippingCourier || 'OrganikStore Instant Courier'}
+          currentStatus={trackingOrder.status}
+          driverName="Pak Rahmat Express"
+          driverPhone="081298765432"
+          trackingNumber={`TRK-${trackingOrder.orderNo}`}
+        />
+      )}
+    </Drawer>
+  );
+};

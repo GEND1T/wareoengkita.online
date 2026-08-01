@@ -1,0 +1,248 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                 String   @id @default(uuid())
+  name               String
+  email              String   @unique
+  passwordHash       String
+  phone              String   @unique
+  role               String   @default("customer") // "customer" | "admin_store" | "superadmin"
+  status             String   @default("active")   // "active" | "inactive"
+  assignedStoreId    String?
+  assignedStoreName  String?
+  gender             String?  @default("Laki-laki")
+  birthDate          String?  @default("1995-08-17")
+  joinedDate         String
+  avatarUrl          String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  orders Order[]
+  reviews Review[]
+  storeRegistrations StoreRegistration[]
+  addresses Address[]
+}
+
+model StoreRegistration {
+  id              String   @id @default(uuid())
+  userId          String
+  userName        String
+  userPhone       String
+  storeName       String
+  address         String
+  city            String
+  phone           String
+  operatingHours  String   @default(" ")
+  description     String?
+  status          String   @default("PENDING") // "PENDING" | "APPROVED" | "REJECTED"
+  rejectionReason String?
+  createdStoreId  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+
+model Store {
+  id             String   @id @default(uuid())
+  name           String
+  description    String?
+  address        String
+  city           String
+  latitude       Float
+  longitude      Float
+  phone          String
+  operatingHours String
+  coverImage     String
+  rating         Float    @default(0)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  products        Product[]
+  orders          Order[]
+  shippingOptions ShippingOption[]
+  paymentOptions  PaymentOption[]
+  promos          PromoBanner[]
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  name      String
+  slug      String    @unique
+  icon      String?
+  createdAt DateTime  @default(now())
+  products  Product[]
+}
+
+model Product {
+  id                 String   @id @default(uuid())
+  name               String
+  subtitle           String?
+  categoryId         String?
+  categorySlug       String
+  storeId            String
+  price              Float
+  originalPrice      Float?
+  discountTag        String?
+  stock              Int      @default(0)
+  unit               String   @default(" ")
+  badge              String?
+  image              String
+  description        String
+  rating             Float    @default(0)
+  reviewCount        Int      @default(0)
+  isFreshDaily       Boolean  @default(false)
+  isOrganicCertified Boolean  @default(false)
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  store    Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  reviews  Review[]
+}
+
+model Order {
+  id              String   @id @default(uuid())
+  orderNo         String   @unique
+  customerId      String?
+  customerName    String
+  customerPhone   String
+  shippingAddress String
+  storeId         String
+  itemsJson       String   // JSON array string of items
+  subtotal        Float
+  shippingFee     Float    @default(10000)
+  discountAmount  Float    @default(0)
+  totalPrice      Float
+  paymentMethod   String
+  paymentStatus   String   @default("pending") // "pending" | "paid" | "failed"
+  orderStatus     String   @default("new")     // "new" | "processing" | "ready" | "delivering" | "completed" | "cancelled"
+  driverName      String?
+  driverPhone     String?
+  driverPlate     String?
+  trackingNumber  String?
+  orderTime       String
+  orderDate       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user  User?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id           String   @id @default(uuid())
+  productId    String
+  customerId   String?
+  customerName String
+  userAvatar   String?
+  rating       Int      @default(0)
+  comment      String
+  photoUrl     String?
+  helpfulCount Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+}
+
+model PromoBanner {
+  id             String   @id @default(uuid())
+  title          String
+  subtitle       String
+  imageUrl       String
+  badgeText      String?
+  targetCategory String?
+  targetStoreId  String?
+  storeId        String?
+  discountCode   String?
+  startDate      String
+  endDate        String
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  store Store? @relation(fields: [storeId], references: [id], onDelete: Cascade)
+}
+
+model ShippingOption {
+  id            String   @id @default(uuid())
+  code          String
+  name          String
+  courier       String?
+  estimatedTime String
+  baseFee       Float
+  feePerKm      Float    @default(2000)
+  iconUrl       String?
+  isActive      Boolean  @default(true)
+  storeId       String?
+  store         Store?   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+}
+
+model PaymentOption {
+  id           String   @id @default(uuid())
+  code         String
+  name         String
+  category     String?
+  type         String   // "qris" | "virtual_account" | "cod" | "ewallet"
+  accountNo    String?
+  accountName  String?
+  instructions String?
+  iconUrl      String?
+  isActive     Boolean  @default(true)
+  storeId      String?
+  store        Store?   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+}
+
+model SystemConfig {
+  id                 String  @id @default("default")
+  announcementActive Boolean @default(true)
+  announcementText   String
+  platformName       String  @default("OrganikStore Indonesia")
+  supportPhone       String  @default("0812-3456-7890")
+  waGatewayApiKey    String?
+  autoWaOnOrder      Boolean @default(true)
+  autoWaOnShipping   Boolean @default(true)
+}
+
+model VerificationToken {
+  id        String   @id @default(uuid())
+  phone     String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Address {
+  id            String   @id @default(uuid())
+  userId        String?
+  label         String
+  fullName      String
+  phone         String
+  province      String
+  city          String
+  district      String
+  village       String?
+  postalCode    String
+  streetAddress String
+  landmark      String?
+  latitude      Float?
+  longitude     Float?
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
