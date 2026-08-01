@@ -44,6 +44,7 @@ export const useCategoryStore = create<CategoryState>((set) => ({
   fetchCategories: async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/categories`);
+      if (!res.ok) throw new Error(`HTTP status ${res.status}`);
       const json = await res.json();
       if (json.success && Array.isArray(json.data) && json.data.length > 0) {
         const mappedCats: Category[] = json.data.map((c: any) => ({
@@ -58,7 +59,7 @@ export const useCategoryStore = create<CategoryState>((set) => ({
         });
       }
     } catch (err) {
-      console.error('Failed to fetch categories from DB:', err);
+      console.warn('Failed to fetch categories from DB, keeping default categories:', err);
     }
   },
 }));

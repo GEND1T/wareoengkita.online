@@ -3,11 +3,32 @@ import { useStoreSelectorStore } from '../store/useStoreSelectorStore';
 import { BannerSkeleton } from './common/SkeletonLoaders';
 import { API_BASE_URL } from '../config/api';
 
+const DEFAULT_SLIDES = [
+  {
+    subtitle: 'Promo Panen Raya Organik',
+    title: 'Diskon Spesial 20% Produk Organik Segar',
+    badgeText: 'DISKON 20%',
+    image: 'https://images.unsplash.com/photo-1610348725531-843dff563e2c?auto=format&fit=crop&w=1200&q=80',
+  },
+  {
+    subtitle: 'Bebas Biaya Kirim Hari Ini',
+    title: 'Beli Sayur Organik Gratis Ongkir Sepuasnya',
+    badgeText: 'GRATIS ONGKIR',
+    image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80',
+  },
+  {
+    subtitle: 'Kualitas Premium Garansi Segar',
+    title: 'Sayur & Buah Petik Langsung Segar Dari Kebun',
+    badgeText: 'GARANSI SEGAR',
+    image: 'https://images.unsplash.com/photo-1573246123716-6b1782bfc499?auto=format&fit=crop&w=1200&q=80',
+  },
+];
+
 export const HeroBanner: React.FC = () => {
   const { selectedStoreId } = useStoreSelectorStore();
   const [activeSlide, setActiveSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [slides, setSlides] = useState<any[]>([]);
+  const [slides, setSlides] = useState<any[]>(DEFAULT_SLIDES);
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 
@@ -19,9 +40,12 @@ export const HeroBanner: React.FC = () => {
       : `${API_BASE_URL}/promos`;
 
     fetch(url)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP status ${res.status}`);
+        return res.json();
+      })
       .then((json) => {
-        if (json.success && Array.isArray(json.data)) {
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
           const mapped = json.data.map((p: any) => ({
             subtitle: p.subtitle || 'Promo Spesial',
             title: p.title,
@@ -30,12 +54,12 @@ export const HeroBanner: React.FC = () => {
           }));
           setSlides(mapped);
         } else {
-          setSlides([]);
+          setSlides(DEFAULT_SLIDES);
         }
       })
       .catch((err) => {
-        console.error('Failed to fetch live promo banners:', err);
-        setSlides([]);
+        console.warn('Live promos fetch fallback activated:', err);
+        setSlides(DEFAULT_SLIDES);
       });
   }, [selectedStoreId]);
 
