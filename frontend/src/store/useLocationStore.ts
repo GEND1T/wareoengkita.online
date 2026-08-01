@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Address } from '../types';
+import { API_BASE_URL } from '../config/api';
 
 interface LocationState {
   addresses: Address[];
@@ -56,7 +57,7 @@ export const useLocationStore = create<LocationState>()(
 
       fetchAddresses: async (userId?: string) => {
         try {
-          let url = 'http://localhost:5050/api/addresses';
+          let url = `${API_BASE_URL}/addresses`;
           if (userId) {
             url += `?userId=${encodeURIComponent(userId)}`;
           }
@@ -78,7 +79,7 @@ export const useLocationStore = create<LocationState>()(
 
       addAddress: async (newAddrData) => {
         try {
-          const res = await fetch('http://localhost:5050/api/addresses', {
+          const res = await fetch(`${API_BASE_URL}/addresses`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newAddrData),
@@ -104,7 +105,7 @@ export const useLocationStore = create<LocationState>()(
 
       updateAddress: async (id: string, updatedData) => {
         try {
-          const res = await fetch(`http://localhost:5050/api/addresses/${id}`, {
+          const res = await fetch(`${API_BASE_URL}/addresses/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updatedData),
@@ -126,7 +127,7 @@ export const useLocationStore = create<LocationState>()(
 
       deleteAddress: async (id: string) => {
         try {
-          await fetch(`http://localhost:5050/api/addresses/${id}`, {
+          await fetch(`${API_BASE_URL}/addresses/${id}`, {
             method: 'DELETE',
           });
 

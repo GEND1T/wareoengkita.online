@@ -3,6 +3,7 @@ import { ProductCard } from './ProductCard';
 import type { Product } from '../types';
 import { useCategoryStore } from '../store/useCategoryStore';
 import { useStoreSelectorStore } from '../store/useStoreSelectorStore';
+import { API_BASE_URL } from '../config/api';
 
 import { ProductCardSkeleton } from './common/SkeletonLoaders';
 
@@ -16,7 +17,7 @@ export const ProductGrid: React.FC = () => {
     let isMounted = true;
     setIsLoading(true);
 
-    fetch(`http://localhost:5050/api/products?storeId=${encodeURIComponent(selectedStoreId)}`)
+    fetch(`${API_BASE_URL}/products?storeId=${encodeURIComponent(selectedStoreId)}`)
       .then((res) => res.json())
       .then((json) => {
         if (isMounted) {

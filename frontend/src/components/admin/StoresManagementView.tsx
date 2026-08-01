@@ -23,6 +23,7 @@ import {
 import { useAdminStore } from '../../store/useAdminStore';
 import MapLocationPicker, { type MapLocationResult } from '../MapLocationPicker';
 import { CardsGridSkeleton } from '../common/AdminSkeletons';
+import { API_BASE_URL } from '../../config/api';
 
 export interface PendingStoreApplication {
   id: string;
@@ -63,7 +64,7 @@ export const StoresManagementView: React.FC = () => {
   const [latitude, setLatitude] = useState(-6.225);
   const [longitude, setLongitude] = useState(106.8);
 
-  const API_REGISTRATION_BASE = 'http://localhost:5050/api/store-registrations';
+  const API_REGISTRATION_BASE = `${API_BASE_URL}/store-registrations`;
 
   useEffect(() => {
     fetchPendingApplications();

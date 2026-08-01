@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { API_BASE_URL } from '../config/api';
 import type {
   AdminProduct,
   AdminOrder,
@@ -135,7 +136,7 @@ export const useAdminStore = create<AdminState>()(
     }
 
     try {
-      const API_HOST = 'http://localhost:5050/api';
+      const API_HOST = API_BASE_URL;
 
       // 1. Fetch Orders
       const orderQuery = storeId ? `?storeId=${storeId}` : '';
@@ -268,7 +269,7 @@ export const useAdminStore = create<AdminState>()(
     }));
 
     try {
-      await fetch(`http://localhost:5050/api/products/${id}`, {
+      await fetch(`${API_BASE_URL}/products/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: newIsActive }),
@@ -287,7 +288,7 @@ export const useAdminStore = create<AdminState>()(
   updateProductStock: async (id, newStock) => {
     const validStock = Math.max(0, newStock);
     try {
-      await fetch(`http://localhost:5050/api/products/${id}`, {
+      await fetch(`${API_BASE_URL}/products/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stock: validStock }),
@@ -329,7 +330,7 @@ export const useAdminStore = create<AdminState>()(
         reviewCount: newProdData.reviewCount ?? 0,
       };
 
-      const res = await fetch('http://localhost:5050/api/products', {
+      const res = await fetch(`${API_BASE_URL}/products`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -383,7 +384,7 @@ export const useAdminStore = create<AdminState>()(
       if (updatedData.badge !== undefined) payload.badge = updatedData.badge;
       if (updatedData.isActive !== undefined) payload.isActive = updatedData.isActive;
 
-      await fetch(`http://localhost:5050/api/products/${id}`, {
+      await fetch(`${API_BASE_URL}/products/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -402,7 +403,7 @@ export const useAdminStore = create<AdminState>()(
 
   deleteProduct: async (id) => {
     try {
-      await fetch(`http://localhost:5050/api/products/${id}`, {
+      await fetch(`${API_BASE_URL}/products/${id}`, {
         method: 'DELETE',
       });
     } catch (err) {
@@ -421,7 +422,7 @@ export const useAdminStore = create<AdminState>()(
       const order = _get().orders.find((o) => o.id === orderId || o.dbId === orderId);
       const targetId = order?.dbId || orderId;
 
-      await fetch(`http://localhost:5050/api/orders/admin/${targetId}/status`, {
+      await fetch(`${API_BASE_URL}/orders/admin/${targetId}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
@@ -477,7 +478,7 @@ export const useAdminStore = create<AdminState>()(
     const item = _get().promos.find((p) => p.id === id);
     if (item) {
       try {
-        await fetch(`http://localhost:5050/api/promos/${id}`, {
+        await fetch(`${API_BASE_URL}/promos/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ isActive: !item.isActive }),
@@ -494,7 +495,7 @@ export const useAdminStore = create<AdminState>()(
 
   addPromo: async (promoData, storeId?: string) => {
     try {
-      const res = await fetch('http://localhost:5050/api/promos', {
+      const res = await fetch(`${API_BASE_URL}/promos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -524,7 +525,7 @@ export const useAdminStore = create<AdminState>()(
 
   updatePromo: async (id, updatedData) => {
     try {
-      await fetch(`http://localhost:5050/api/promos/${id}`, {
+      await fetch(`${API_BASE_URL}/promos/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -545,7 +546,7 @@ export const useAdminStore = create<AdminState>()(
 
   deletePromo: async (id) => {
     try {
-      await fetch(`http://localhost:5050/api/promos/${id}`, {
+      await fetch(`${API_BASE_URL}/promos/${id}`, {
         method: 'DELETE',
       });
     } catch (err) {
@@ -581,7 +582,7 @@ export const useAdminStore = create<AdminState>()(
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      await fetch(`http://localhost:5050/api/stores/${storeIdToUpdate}`, {
+      await fetch(`${API_BASE_URL}/stores/${storeIdToUpdate}`, {
         method: 'PUT',
         headers,
         body: JSON.stringify(payload),
@@ -601,7 +602,7 @@ export const useAdminStore = create<AdminState>()(
     const item = _get().shippingOptions.find((s) => s.id === id);
     if (item) {
       try {
-        await fetch(`http://localhost:5050/api/options/shipping/${id}`, {
+        await fetch(`${API_BASE_URL}/options/shipping/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ isActive: !item.isActive }),
@@ -620,7 +621,7 @@ export const useAdminStore = create<AdminState>()(
 
   addShippingOption: async (data, storeId?: string) => {
     try {
-      const res = await fetch('http://localhost:5050/api/options/shipping', {
+      const res = await fetch(`${API_BASE_URL}/options/shipping`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...data, storeId }),
@@ -644,7 +645,7 @@ export const useAdminStore = create<AdminState>()(
 
   updateShippingOption: async (id, data) => {
     try {
-      await fetch(`http://localhost:5050/api/options/shipping/${id}`, {
+      await fetch(`${API_BASE_URL}/options/shipping/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -662,7 +663,7 @@ export const useAdminStore = create<AdminState>()(
 
   deleteShippingOption: async (id) => {
     try {
-      await fetch(`http://localhost:5050/api/options/shipping/${id}`, {
+      await fetch(`${API_BASE_URL}/options/shipping/${id}`, {
         method: 'DELETE',
       });
     } catch (err) {
@@ -679,7 +680,7 @@ export const useAdminStore = create<AdminState>()(
     const item = _get().paymentMethods.find((p) => p.id === id);
     if (item) {
       try {
-        await fetch(`http://localhost:5050/api/options/payment/${id}`, {
+        await fetch(`${API_BASE_URL}/options/payment/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ isActive: !item.isActive }),
@@ -698,7 +699,7 @@ export const useAdminStore = create<AdminState>()(
 
   addPaymentOption: async (data, storeId?: string) => {
     try {
-      const res = await fetch('http://localhost:5050/api/options/payment', {
+      const res = await fetch(`${API_BASE_URL}/options/payment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...data, storeId }),
@@ -722,7 +723,7 @@ export const useAdminStore = create<AdminState>()(
 
   updatePaymentOption: async (id, data) => {
     try {
-      await fetch(`http://localhost:5050/api/options/payment/${id}`, {
+      await fetch(`${API_BASE_URL}/options/payment/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -740,7 +741,7 @@ export const useAdminStore = create<AdminState>()(
 
   deletePaymentOption: async (id) => {
     try {
-      await fetch(`http://localhost:5050/api/options/payment/${id}`, {
+      await fetch(`${API_BASE_URL}/options/payment/${id}`, {
         method: 'DELETE',
       });
     } catch (err) {
@@ -755,7 +756,7 @@ export const useAdminStore = create<AdminState>()(
   // Superadmin: User Management
   addUser: async (userData) => {
     try {
-      const res = await fetch('http://localhost:5050/api/users', {
+      const res = await fetch(`${API_BASE_URL}/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),
@@ -789,7 +790,7 @@ export const useAdminStore = create<AdminState>()(
 
   updateUser: async (id, userData) => {
     try {
-      await fetch(`http://localhost:5050/api/users/${id}`, {
+      await fetch(`${API_BASE_URL}/users/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),
@@ -816,7 +817,7 @@ export const useAdminStore = create<AdminState>()(
 
   deleteUser: async (id) => {
     try {
-      await fetch(`http://localhost:5050/api/users/${id}`, {
+      await fetch(`${API_BASE_URL}/users/${id}`, {
         method: 'DELETE',
       });
     } catch (err) {

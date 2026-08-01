@@ -13,6 +13,7 @@ import {
 import { useAdminStore } from '../../store/useAdminStore';
 import { useUserStore } from '../../store/useUserStore';
 import type { PromoBanner } from '../../types';
+import { API_BASE_URL } from '../../config/api';
 import { CardsGridSkeleton } from '../common/AdminSkeletons';
 
 export const PromosView: React.FC = () => {
@@ -38,7 +39,7 @@ export const PromosView: React.FC = () => {
     try {
       const formData = new FormData();
       formData.append('image', file);
-      const res = await fetch('http://localhost:5050/api/upload', {
+      const res = await fetch(`${API_BASE_URL}/upload`, {
         method: 'POST',
         body: formData,
       });

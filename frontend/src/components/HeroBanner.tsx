@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useStoreSelectorStore } from '../store/useStoreSelectorStore';
 import { BannerSkeleton } from './common/SkeletonLoaders';
+import { API_BASE_URL } from '../config/api';
 
 export const HeroBanner: React.FC = () => {
   const { selectedStoreId } = useStoreSelectorStore();
@@ -14,8 +15,8 @@ export const HeroBanner: React.FC = () => {
     setActiveSlide(0);
 
     const url = selectedStoreId
-      ? `http://localhost:5050/api/promos?storeId=${selectedStoreId}`
-      : 'http://localhost:5050/api/promos';
+      ? `${API_BASE_URL}/promos?storeId=${selectedStoreId}`
+      : `${API_BASE_URL}/promos`;
 
     fetch(url)
       .then((res) => res.json())

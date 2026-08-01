@@ -4,6 +4,7 @@ import type { AdminProduct } from '../../types';
 import { useAdminStore } from '../../store/useAdminStore';
 import { useUserStore } from '../../store/useUserStore';
 import { useStoreSelectorStore } from '../../store/useStoreSelectorStore';
+import { API_BASE_URL } from '../../config/api';
 
 import { ProcessingOverlay } from '../common/ProcessingOverlay';
 
@@ -79,7 +80,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     try {
       const formData = new FormData();
       formData.append('image', file);
-      const res = await fetch('http://localhost:5050/api/upload', {
+      const res = await fetch(`${API_BASE_URL}/upload`, {
         method: 'POST',
         body: formData,
       });

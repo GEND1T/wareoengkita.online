@@ -4,6 +4,7 @@ import { ShieldCheck, AlertCircle, Loader2, CheckCircle2, ArrowLeft } from 'luci
 import { useUserStore } from '../store/useUserStore';
 import { useLocationStore } from '../store/useLocationStore';
 import { useAdminStore } from '../store/useAdminStore';
+import { API_BASE_URL } from '../config/api';
 
 export const VerifyAccessPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -26,7 +27,7 @@ export const VerifyAccessPage: React.FC = () => {
 
     const verifyToken = async () => {
       try {
-        const res = await fetch('http://localhost:5050/api/auth/verify-access', {
+        const res = await fetch(`${API_BASE_URL}/auth/verify-access`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token }),

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { API_BASE_URL } from '../config/api';
 
 export interface RegisteredStore {
   id: string;
@@ -46,7 +47,7 @@ export const useStoreSelectorStore = create<StoreSelectorState>((set, get) => ({
   },
   fetchStores: async (lat?: number, lon?: number) => {
     try {
-      let url = 'http://localhost:5050/api/stores';
+      let url = `${API_BASE_URL}/stores`;
       if (lat && lon) {
         url += `?lat=${lat}&lon=${lon}`;
       }

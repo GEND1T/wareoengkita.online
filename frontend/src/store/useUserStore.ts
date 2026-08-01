@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { API_BASE_URL } from '../config/api';
 
 export interface UserProfile {
   id?: string;
@@ -113,7 +114,7 @@ export const useUserStore = create<UserState>()(
           const param = userIdentifier
             ? `?phone=${encodeURIComponent(userIdentifier)}&userId=${encodeURIComponent(userIdentifier)}`
             : '';
-          const res = await fetch(`http://localhost:5050/api/orders/my-orders${param}`);
+          const res = await fetch(`${API_BASE_URL}/orders/my-orders${param}`);
           const json = await res.json();
           if (json.success && Array.isArray(json.data)) {
             const mappedOrders: Order[] = json.data.map((o: any) => {

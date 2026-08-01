@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import type { UserProfile } from '../store/useUserStore';
 import { useLocationStore } from '../store/useLocationStore';
+import { API_BASE_URL } from '../config/api';
 
 interface StoreRegistrationModalProps {
   isOpen: boolean;
@@ -51,7 +52,7 @@ export const StoreRegistrationModal: React.FC<StoreRegistrationModalProps> = ({
   const [errorMsg, setErrorMsg] = useState('');
   const [myApplication, setMyApplication] = useState<StoreApplicationData | null>(null);
 
-  const API_BASE = 'http://localhost:5050/api/store-registrations';
+  const API_BASE = `${API_BASE_URL}/store-registrations`;
 
   // Check if user already submitted an application
   useEffect(() => {

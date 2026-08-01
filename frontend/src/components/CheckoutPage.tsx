@@ -27,6 +27,7 @@ import { useAdminStore } from '../store/useAdminStore';
 import { ProcessingOverlay } from './common/ProcessingOverlay';
 
 import { useUserStore } from '../store/useUserStore';
+import { API_BASE_URL } from '../config/api';
 import { AlertCircle } from 'lucide-react';
 
 interface ShippingOption {
@@ -254,7 +255,7 @@ export const CheckoutPage: React.FC = () => {
         paymentMethod: selectedPayment ? selectedPayment.name : '',
       };
 
-      const res = await fetch('http://localhost:5050/api/orders', {
+      const res = await fetch(`${API_BASE_URL}/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderPayload),

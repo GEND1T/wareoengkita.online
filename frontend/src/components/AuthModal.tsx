@@ -14,6 +14,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useUserStore } from '../store/useUserStore';
+import { API_BASE_URL } from '../config/api';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -36,7 +37,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     message: string;
   } | null>(null);
 
-  const API_BASE = 'http://localhost:5050/api/auth';
+  const API_BASE = `${API_BASE_URL}/auth`;
 
   const resetForm = () => {
     setPhone('');

@@ -12,6 +12,7 @@ import {
 import { useAdminStore } from '../../store/useAdminStore';
 import MapLocationPicker, { type MapLocationResult } from '../MapLocationPicker';
 import { FormSkeleton } from '../common/AdminSkeletons';
+import { API_BASE_URL } from '../../config/api';
 
 
 
@@ -55,7 +56,7 @@ export const StoreProfileView: React.FC = () => {
     try {
       const formData = new FormData();
       formData.append('image', file);
-      const res = await fetch('http://localhost:5050/api/upload', {
+      const res = await fetch(`${API_BASE_URL}/upload`, {
         method: 'POST',
         body: formData,
       });

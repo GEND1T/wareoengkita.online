@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Category } from '../types';
 import { INITIAL_CATEGORIES } from '../data/mockData';
+import { API_BASE_URL } from '../config/api';
 
 interface CategoryState {
   selectedCategory: string;
@@ -42,7 +43,7 @@ export const useCategoryStore = create<CategoryState>((set) => ({
 
   fetchCategories: async () => {
     try {
-      const res = await fetch('http://localhost:5050/api/categories');
+      const res = await fetch(`${API_BASE_URL}/categories`);
       const json = await res.json();
       if (json.success && Array.isArray(json.data) && json.data.length > 0) {
         const mappedCats: Category[] = json.data.map((c: any) => ({
