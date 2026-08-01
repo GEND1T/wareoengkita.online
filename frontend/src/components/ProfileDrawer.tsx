@@ -158,37 +158,37 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
     switch (status) {
       case 'belum_bayar':
         return (
-          <span className="bg-amber-100 text-amber-900 border border-amber-300/80 font-bold px-2.5 py-0.5 rounded-full text-[10px] flex items-center gap-1">
+          <span className="bg-amber-50 text-amber-800 border border-amber-200/80 font-semibold px-2.5 py-0.5 rounded-full text-[10px] flex items-center gap-1">
             <Clock className="w-3 h-3 text-amber-700" /> Belum Bayar
           </span>
         );
       case 'dikemas':
         return (
-          <span className="bg-blue-100 text-blue-900 border border-blue-300/80 font-bold px-2.5 py-0.5 rounded-full text-[10px] flex items-center gap-1">
+          <span className="bg-blue-50 text-blue-800 border border-blue-200/80 font-semibold px-2.5 py-0.5 rounded-full text-[10px] flex items-center gap-1">
             <Package className="w-3 h-3 text-blue-700" /> Dikemas
           </span>
         );
       case 'dikirim':
         return (
-          <span className="bg-indigo-100 text-indigo-900 border border-indigo-300/80 font-bold px-2.5 py-0.5 rounded-full text-[10px] flex items-center gap-1">
+          <span className="bg-indigo-50 text-indigo-800 border border-indigo-200/80 font-semibold px-2.5 py-0.5 rounded-full text-[10px] flex items-center gap-1">
             <Truck className="w-3 h-3 text-indigo-700" /> Dikirim
           </span>
         );
       case 'selesai':
         return (
-          <span className="bg-emerald-100 text-[#063104] border border-emerald-300/80 font-bold px-2.5 py-0.5 rounded-full text-[10px] flex items-center gap-1">
+          <span className="bg-emerald-50 text-[#063104] border border-emerald-200/80 font-semibold px-2.5 py-0.5 rounded-full text-[10px] flex items-center gap-1">
             <CheckCircle2 className="w-3 h-3 text-[#063104]" /> Selesai
           </span>
         );
       case 'pengembalian':
         return (
-          <span className="bg-purple-100 text-purple-900 border border-purple-300/80 font-bold px-2.5 py-0.5 rounded-full text-[10px] flex items-center gap-1">
+          <span className="bg-purple-50 text-purple-800 border border-purple-200/80 font-semibold px-2.5 py-0.5 rounded-full text-[10px] flex items-center gap-1">
             <RotateCcw className="w-3 h-3 text-purple-700" /> Pengembalian
           </span>
         );
       case 'dibatalkan':
         return (
-          <span className="bg-rose-100 text-rose-900 border border-rose-300/80 font-bold px-2.5 py-0.5 rounded-full text-[10px] flex items-center gap-1">
+          <span className="bg-rose-50 text-rose-800 border border-rose-200/80 font-semibold px-2.5 py-0.5 rounded-full text-[10px] flex items-center gap-1">
             <XCircle className="w-3 h-3 text-rose-700" /> Dibatalkan
           </span>
         );
@@ -227,8 +227,8 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
           {/* Header Bar */}
           <div className="flex items-center justify-between pb-3.5 shrink-0">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-emerald-100/80 text-[#063104] flex items-center justify-center">
-                <User className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-[#063104] flex items-center justify-center border border-emerald-100">
+                <User className="w-5 h-5 stroke-[1.8]" />
               </div>
               <div>
                 <h2 className="font-bold text-gray-900 text-lg leading-tight">Profil Saya</h2>
@@ -247,34 +247,31 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
           <Divider className="my-1.5 border-gray-200/60 shrink-0" />
 
           {/* Main Dashboard Scrollable Content */}
-          <div className="flex-1 overflow-y-auto space-y-4 pt-3 pr-1 pb-4 scrollbar-thin">
-            {/* CLICKABLE PROFILE HERO CARD */}
+          <div className="flex-1 overflow-y-auto space-y-4.5 pt-3 pr-1 pb-4 scrollbar-thin">
+            {/* 1. TOP PROFILE HERO CARD (Clean White) */}
             <div
               onClick={() => setActiveSubView('editProfile')}
-              className="bg-white rounded-2xl p-4.5 border border-gray-200/70 shadow-sm hover:border-[#77a160] hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3.5"
+              className="bg-white rounded-2xl p-4.5 border border-gray-100 shadow-sm hover:border-[#77a160]/40 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3.5"
             >
-              <div className="flex items-center gap-4 min-w-0">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#063104] to-[#165a12] text-white font-black text-xl flex items-center justify-center shadow-sm shrink-0 group-hover:scale-105 transition-transform">
-                  {profile.fullName.charAt(0).toUpperCase()}
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-12 h-12 rounded-full bg-[#063104] text-white font-bold text-lg flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                  {profile.fullName ? profile.fullName.charAt(0).toUpperCase() : 'A'}
                 </div>
                 <div className="min-w-0 space-y-1">
-                  <h3 className="font-extrabold text-gray-900 text-base truncate leading-tight">
+                  <h3 className="font-bold text-gray-900 text-base leading-tight">
                     {profile.fullName}
                   </h3>
-                  <p className="text-xs text-gray-500 font-medium truncate">
-                    @{profile.username} • {profile.phone}
-                  </p>
                   <div>
                     {profile.role === 'superadmin' ? (
-                      <span className="inline-block bg-purple-100 text-purple-900 border border-purple-300 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
+                      <span className="inline-block bg-purple-50 text-purple-800 border border-purple-200/70 text-[11px] font-medium px-2.5 py-0.5 rounded-full">
                         Superadmin Platform
                       </span>
                     ) : profile.role === 'admin_store' ? (
-                      <span className="inline-block bg-blue-100 text-blue-900 border border-blue-300 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
-                        Admin Toko ({profile.assignedStoreName || 'Cabang'})
+                      <span className="inline-block bg-blue-50 text-blue-800 border border-blue-200/70 text-[11px] font-medium px-2.5 py-0.5 rounded-full">
+                        Admin Toko ({profile.assignedStoreName || 'test'})
                       </span>
                     ) : (
-                      <span className="inline-block bg-emerald-50 text-[#063104] text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-emerald-200/80">
+                      <span className="inline-block bg-emerald-50 text-[#063104] text-[11px] font-medium px-2.5 py-0.5 rounded-full border border-emerald-200/60">
                         Pelanggan Organik
                       </span>
                     )}
@@ -282,31 +279,28 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 text-xs font-bold text-[#063104] group-hover:translate-x-1 transition-transform shrink-0">
-                <span className="hidden sm:inline text-gray-400 group-hover:text-[#063104]">Ubah</span>
-                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#063104]" />
-              </div>
+              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#063104] group-hover:translate-x-0.5 transition-all shrink-0" />
             </div>
 
-            {/* ALAMAT PENGIRIMAN SAYA CARD */}
+            {/* 2. ALAMAT PENGIRIMAN SAYA CARD (Clean White) */}
             <div
               onClick={handleOpenLocation}
-              className="bg-white rounded-2xl p-4 border border-gray-200/70 shadow-xs hover:border-[#77a160] hover:shadow-sm transition-all cursor-pointer group flex items-center justify-between gap-3.5"
+              className="bg-white rounded-2xl p-4.5 border border-gray-100 shadow-sm hover:border-[#77a160]/40 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3.5"
             >
               <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#063104] font-bold flex items-center justify-center shrink-0 group-hover:bg-[#063104] group-hover:text-white transition-colors">
-                  <MapPin className="w-5 h-5" />
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#063104] font-medium flex items-center justify-center shrink-0 group-hover:bg-[#063104] group-hover:text-white transition-colors">
+                  <MapPin className="w-5 h-5 stroke-[1.8]" />
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <h4 className="font-bold text-gray-900 text-xs">Alamat Pengiriman</h4>
                     {activeAddress && (
-                      <span className="bg-emerald-100 text-[#063104] text-[9px] font-extrabold px-1.5 py-0.5 rounded">
+                      <span className="bg-emerald-50 text-[#063104] border border-emerald-200/60 text-[10px] font-semibold px-2 py-0.5 rounded-md">
                         {activeAddress.label}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500 truncate mt-0.5">
+                  <p className="text-xs text-gray-500 mt-1 leading-normal">
                     {activeAddress
                       ? `${activeAddress.streetAddress}, ${activeAddress.city}`
                       : 'Pilih atau atur alamat pengiriman'}
@@ -317,67 +311,67 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
               <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#063104] group-hover:translate-x-0.5 transition-all shrink-0" />
             </div>
 
-            {/* DAFTAR / BUKA TOKO SAYA CARD (Only visible to customer role) */}
+            {/* 3. DAFTAR / BUKA TOKO SAYA CARD (Clean White, Only for Customer Role) */}
             {profile.role === 'customer' && (
               <div
                 onClick={() => setIsStoreRegistrationOpen(true)}
-                className="bg-emerald-50/60 rounded-2xl p-4 border border-emerald-200/80 shadow-xs hover:border-[#77a160] hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3.5"
+                className="bg-white rounded-2xl p-4.5 border border-gray-100 shadow-sm hover:border-[#77a160]/40 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3.5"
               >
                 <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-[#063104] text-emerald-300 font-bold flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                    <Store className="w-5 h-5" />
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#063104] font-medium flex items-center justify-center shrink-0 group-hover:bg-[#063104] group-hover:text-white transition-colors">
+                    <Store className="w-5 h-5 stroke-[1.8]" />
                   </div>
                   <div className="min-w-0">
-                    <h4 className="font-extrabold text-[#063104] text-xs flex items-center gap-1.5">
+                    <h4 className="font-bold text-gray-900 text-xs flex items-center gap-1.5">
                       Daftar / Buka Toko Saya
-                      <span className="bg-emerald-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded">
+                      <span className="bg-emerald-100 text-[#063104] text-[9px] font-bold px-1.5 py-0.5 rounded">
                         GRATIS
                       </span>
                     </h4>
-                    <p className="text-xs text-gray-600 truncate mt-0.5">
+                    <p className="text-xs text-gray-500 mt-1 leading-normal">
                       Ajukan pendaftaran cabang toko & jual produk Anda
                     </p>
                   </div>
                 </div>
 
-                <ChevronRight className="w-5 h-5 text-emerald-700 group-hover:translate-x-0.5 transition-all shrink-0" />
+                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#063104] group-hover:translate-x-0.5 transition-all shrink-0" />
               </div>
             )}
 
-            {/* RIWAYAT PESANAN QUICK GRID */}
-            <div className="bg-white rounded-2xl p-4 border border-gray-200/70 shadow-xs space-y-3.5">
-              <div className="flex items-center justify-between pb-2 border-b border-gray-100">
-                <div className="flex items-center gap-2 text-[#063104] font-extrabold text-xs uppercase tracking-wider">
-                  <Package className="w-4 h-4" />
-                  <span>Riwayat Pesanan Saya</span>
+            {/* 4. PESANAN SAYA (Title Case, Clean White, Minimalist Line Icons) */}
+            <div className="bg-white rounded-2xl p-4.5 border border-gray-100 shadow-sm space-y-4">
+              <div className="flex items-center justify-between pb-2.5 border-b border-gray-100">
+                <div className="flex items-center gap-2 text-gray-900 font-bold text-xs">
+                  <Package className="w-4 h-4 text-[#063104] stroke-[2]" />
+                  <span>Pesanan Saya</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => openOrderHistoryWithFilter('semua')}
-                  className="text-xs font-bold text-[#063104] hover:underline flex items-center gap-0.5"
+                  className="text-xs font-semibold text-[#063104] hover:underline flex items-center gap-0.5"
                 >
                   <span>Lihat Semua</span>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              {/* 4 Shortcut Action Items */}
-              <div className="grid grid-cols-4 gap-2 pt-0.5">
+              {/* 4 Minimalist Line Icons - Backgrounds blend into clean white card */}
+              <div className="grid grid-cols-4 gap-2 pt-1">
                 {/* 1. Belum Bayar */}
                 <button
                   type="button"
                   onClick={() => openOrderHistoryWithFilter('belum_bayar')}
-                  className="relative flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-xl bg-amber-50/60 border border-amber-200/50 hover:bg-amber-100/60 transition-all text-amber-900 group focus:outline-none cursor-pointer"
+                  className="relative flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-transparent hover:bg-gray-50/80 transition-all text-gray-700 group focus:outline-none cursor-pointer"
                 >
                   {countBelumBayar > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-amber-600 text-white text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center shadow-xs">
+                    <span className="absolute top-0 right-3.5 bg-amber-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
                       {countBelumBayar}
                     </span>
                   )}
-                  <div className="p-2 rounded-lg bg-amber-100 text-amber-800 group-hover:scale-110 transition-transform mb-1">
-                    <Clock className="w-4 h-4" />
+                  <div className="mb-2 text-gray-600 group-hover:text-[#063104] group-hover:scale-110 transition-all">
+                    <Clock className="w-6 h-6 stroke-[1.75]" />
                   </div>
-                  <span className="text-[11px] font-bold text-center leading-tight">
+                  <span className="text-[11px] font-medium text-gray-700 text-center leading-tight">
                     Belum Bayar
                   </span>
                 </button>
@@ -386,17 +380,17 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
                 <button
                   type="button"
                   onClick={() => openOrderHistoryWithFilter('dikemas')}
-                  className="relative flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-xl bg-blue-50/60 border border-blue-200/50 hover:bg-blue-100/60 transition-all text-blue-900 group focus:outline-none cursor-pointer"
+                  className="relative flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-transparent hover:bg-gray-50/80 transition-all text-gray-700 group focus:outline-none cursor-pointer"
                 >
                   {countDikemas > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-blue-600 text-white text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center shadow-xs">
+                    <span className="absolute top-0 right-3.5 bg-blue-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
                       {countDikemas}
                     </span>
                   )}
-                  <div className="p-2 rounded-lg bg-blue-100 text-blue-800 group-hover:scale-110 transition-transform mb-1">
-                    <Package className="w-4 h-4" />
+                  <div className="mb-2 text-gray-600 group-hover:text-[#063104] group-hover:scale-110 transition-all">
+                    <Package className="w-6 h-6 stroke-[1.75]" />
                   </div>
-                  <span className="text-[11px] font-bold text-center leading-tight">
+                  <span className="text-[11px] font-medium text-gray-700 text-center leading-tight">
                     Dikemas
                   </span>
                 </button>
@@ -405,68 +399,66 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
                 <button
                   type="button"
                   onClick={() => openOrderHistoryWithFilter('dikirim')}
-                  className="relative flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-xl bg-indigo-50/60 border border-indigo-200/50 hover:bg-indigo-100/60 transition-all text-indigo-900 group focus:outline-none cursor-pointer"
+                  className="relative flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-transparent hover:bg-gray-50/80 transition-all text-gray-700 group focus:outline-none cursor-pointer"
                 >
                   {countDikirim > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center shadow-xs">
+                    <span className="absolute top-0 right-3.5 bg-indigo-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
                       {countDikirim}
                     </span>
                   )}
-                  <div className="p-2 rounded-lg bg-indigo-100 text-indigo-800 group-hover:scale-110 transition-transform mb-1">
-                    <Truck className="w-4 h-4" />
+                  <div className="mb-2 text-gray-600 group-hover:text-[#063104] group-hover:scale-110 transition-all">
+                    <Truck className="w-6 h-6 stroke-[1.75]" />
                   </div>
-                  <span className="text-[11px] font-bold text-center leading-tight">
+                  <span className="text-[11px] font-medium text-gray-700 text-center leading-tight">
                     Dikirim
                   </span>
                 </button>
 
-                {/* 4. Semua Pesanan */}
+                {/* 4. Semua */}
                 <button
                   type="button"
                   onClick={() => openOrderHistoryWithFilter('semua')}
-                  className="relative flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-xl bg-emerald-50/60 border border-emerald-200/50 hover:bg-emerald-100/60 transition-all text-[#063104] group focus:outline-none cursor-pointer"
+                  className="relative flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-transparent hover:bg-gray-50/80 transition-all text-gray-700 group focus:outline-none cursor-pointer"
                 >
                   {countSemua > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-[#063104] text-white text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center shadow-xs">
+                    <span className="absolute top-0 right-3.5 bg-emerald-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
                       {countSemua}
                     </span>
                   )}
-                  <div className="p-2 rounded-lg bg-emerald-100 text-[#063104] group-hover:scale-110 transition-transform mb-1">
-                    <Receipt className="w-4 h-4" />
+                  <div className="mb-2 text-gray-600 group-hover:text-[#063104] group-hover:scale-110 transition-all">
+                    <Receipt className="w-6 h-6 stroke-[1.75]" />
                   </div>
-                  <span className="text-[11px] font-bold text-center leading-tight">
+                  <span className="text-[11px] font-medium text-gray-700 text-center leading-tight">
                     Semua
                   </span>
                 </button>
               </div>
             </div>
 
-            {/* DASHBOARD ADMIN CARD (Restricted to admin_store and superadmin roles) */}
+            {/* 5. DASHBOARD ADMIN CARD (Standard Clean White Card) */}
             {(profile.role === 'admin_store' || profile.role === 'superadmin') && (
               <div
                 onClick={() => {
                   closeProfileDrawer();
                   openAdmin();
                 }}
-                className="bg-gradient-to-r from-emerald-950 to-[#063104] rounded-2xl p-4 border border-emerald-900 text-white shadow-sm hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3.5"
+                className="bg-white rounded-2xl p-4.5 border border-gray-100 shadow-sm hover:border-[#77a160]/40 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3.5"
               >
                 <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="relative w-10 h-10 rounded-xl bg-white/15 text-white font-bold flex items-center justify-center shrink-0 group-hover:bg-white group-hover:text-[#063104] transition-colors">
-                    <LayoutDashboard className="w-5 h-5" />
+                  <div className="relative w-10 h-10 rounded-xl bg-emerald-50 text-[#063104] font-medium flex items-center justify-center shrink-0 group-hover:bg-[#063104] group-hover:text-white transition-colors">
+                    <LayoutDashboard className="w-5 h-5 stroke-[1.8]" />
                     {unreadNewOrdersCount > 0 && (
-                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white font-black text-[9px] rounded-full flex items-center justify-center animate-bounce">
-                        {unreadNewOrdersCount}
-                      </span>
+                      <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 rounded-full border-2 border-white" />
                     )}
                   </div>
                   <div className="min-w-0">
-                    <h4 className="font-extrabold text-white text-xs flex items-center gap-1.5">
+                    <h4 className="font-bold text-gray-900 text-xs flex items-center gap-1.5">
                       Dashboard Admin
-                      <span className="bg-amber-400 text-emerald-950 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">
+                      <span className="bg-amber-100 text-amber-900 text-[9px] font-bold px-1.5 py-0.5 rounded">
                         {profile.role === 'superadmin' ? 'Superadmin' : 'Admin Toko'}
                       </span>
                     </h4>
-                    <p className="text-xs text-emerald-200 truncate mt-0.5">
+                    <p className="text-xs text-gray-500 mt-1 leading-normal">
                       {profile.role === 'superadmin'
                         ? 'Kelola Produk, Pesanan, Multi-Store & System'
                         : `Kelola ${profile.assignedStoreName || 'Toko Cabang'}`}
@@ -474,53 +466,31 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
                   </div>
                 </div>
 
-                <ChevronRight className="w-5 h-5 text-emerald-300 group-hover:text-white group-hover:translate-x-0.5 transition-all shrink-0" />
+                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#063104] group-hover:translate-x-0.5 transition-all shrink-0" />
               </div>
             )}
 
-            {/* DOWNLOAD / INSTALL PWA APP CARD */}
+            {/* 6. DOWNLOAD / INSTALL PWA APP CARD (Standard Clean White Card) */}
             <div
               onClick={() => {
                 closeProfileDrawer();
                 window.dispatchEvent(new Event('trigger-pwa-install'));
               }}
-              className="bg-emerald-50/70 rounded-2xl p-4 border border-emerald-200/80 shadow-xs hover:border-[#77a160] hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3.5"
+              className="bg-white rounded-2xl p-4.5 border border-gray-100 shadow-sm hover:border-[#77a160]/40 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3.5"
             >
               <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-[#063104] text-emerald-300 font-bold flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                  <Download className="w-5 h-5" />
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#063104] font-medium flex items-center justify-center shrink-0 group-hover:bg-[#063104] group-hover:text-white transition-colors">
+                  <Download className="w-5 h-5 stroke-[1.8]" />
                 </div>
                 <div className="min-w-0">
-                  <h4 className="font-extrabold text-[#063104] text-xs flex items-center gap-1.5">
+                  <h4 className="font-bold text-gray-900 text-xs flex items-center gap-1.5">
                     Install Aplikasi Wareoengkita
-                    <span className="bg-emerald-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded">
+                    <span className="bg-emerald-100 text-[#063104] text-[9px] font-bold px-1.5 py-0.5 rounded">
                       MOBILE & PC
                     </span>
                   </h4>
-                  <p className="text-xs text-gray-600 truncate mt-0.5">
-                    Pasang di Layar Utama HP & akses cepat layaknya app native
-                  </p>
-                </div>
-              </div>
-
-              <ChevronRight className="w-5 h-5 text-emerald-700 group-hover:translate-x-0.5 transition-all shrink-0" />
-            </div>
-
-            {/* PUSAT BANTUAN & LIVE CHAT CS CARD */}
-            <div
-              onClick={() => {
-                if (onOpenSupport) onOpenSupport();
-              }}
-              className="bg-white rounded-2xl p-4 border border-gray-200/70 shadow-xs hover:border-[#77a160] hover:shadow-sm transition-all cursor-pointer group flex items-center justify-between gap-3.5"
-            >
-              <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#063104] font-bold flex items-center justify-center shrink-0 group-hover:bg-[#063104] group-hover:text-white transition-colors">
-                  <HelpCircle className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <h4 className="font-bold text-gray-900 text-xs">Pusat Bantuan & Live Chat CS</h4>
-                  <p className="text-xs text-gray-500 truncate mt-0.5">
-                    Hubungi WhatsApp CS Toko & Pertanyaan FAQ
+                  <p className="text-xs text-gray-500 mt-1 leading-normal">
+                    Pasang di Layar Utama HP & komputer Anda untuk akses cepat layaknya aplikasi native
                   </p>
                 </div>
               </div>
@@ -528,7 +498,29 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
               <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#063104] group-hover:translate-x-0.5 transition-all shrink-0" />
             </div>
 
-            {/* LOGOUT BUTTON */}
+            {/* 7. PUSAT BANTUAN & LIVE CHAT CS CARD (Standard Clean White Card) */}
+            <div
+              onClick={() => {
+                if (onOpenSupport) onOpenSupport();
+              }}
+              className="bg-white rounded-2xl p-4.5 border border-gray-100 shadow-sm hover:border-[#77a160]/40 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3.5"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#063104] font-medium flex items-center justify-center shrink-0 group-hover:bg-[#063104] group-hover:text-white transition-colors">
+                  <HelpCircle className="w-5 h-5 stroke-[1.8]" />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="font-bold text-gray-900 text-xs">Pusat Bantuan & Live Chat CS</h4>
+                  <p className="text-xs text-gray-500 mt-1 leading-normal">
+                    Hubungi WhatsApp CS Toko & temukan jawaban pertanyaan FAQ
+                  </p>
+                </div>
+              </div>
+
+              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#063104] group-hover:translate-x-0.5 transition-all shrink-0" />
+            </div>
+
+            {/* 8. LOGOUT BUTTON */}
             <div className="pt-2">
               <button
                 type="button"
@@ -537,16 +529,16 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
                   closeProfileDrawer();
                   showToast('Anda telah keluar dari akun.');
                 }}
-                className="w-full py-3 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/70 rounded-xl text-xs font-extrabold flex items-center justify-center space-x-2 transition-all active:scale-[0.99] cursor-pointer"
+                className="w-full py-3.5 bg-rose-50/70 hover:bg-rose-100 text-rose-700 border border-rose-200/60 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 transition-all active:scale-[0.99] cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Keluar / Logout Akun</span>
               </button>
             </div>
 
-            {/* APP VERSION & FOOTER SECTION AT BOTTOM */}
-            <div className="pt-4 pb-2 border-t border-gray-200/70 flex flex-col items-center justify-center space-y-1.5">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-200/80 text-gray-700 rounded-full text-xs font-semibold shadow-xs">
+            {/* 9. APP VERSION & FOOTER SECTION */}
+            <div className="pt-5 pb-3 flex flex-col items-center justify-center space-y-1.5">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-100 text-gray-500 rounded-full text-xs font-medium shadow-xs">
                 <Sparkles className="w-3.5 h-3.5 text-[#063104]" />
                 <span>Versi Aplikasi v{appVersion}</span>
               </div>
