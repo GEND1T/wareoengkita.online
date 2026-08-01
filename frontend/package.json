@@ -1,11 +1,15 @@
 {
   "name": "frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "npm version patch --no-git-tag-version",
     "build": "tsc -b && vite build",
+    "bump": "npm version patch --no-git-tag-version",
+    "bump:minor": "npm version minor --no-git-tag-version",
+    "bump:major": "npm version major --no-git-tag-version",
     "lint": "oxlint",
     "preview": "vite preview"
   },

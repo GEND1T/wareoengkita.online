@@ -17,6 +17,7 @@ import { ProfileDrawer } from './components/ProfileDrawer';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { AuthModal } from './components/AuthModal';
 import { VerifyAccessPage } from './components/VerifyAccessPage';
+import { PwaInstallPrompt } from './components/PwaInstallPrompt';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
 import { useCartStore } from './store/useCartStore';
 import { useCategoryStore } from './store/useCategoryStore';
@@ -158,6 +159,9 @@ export const App: React.FC = () => {
 
                 {/* WhatsApp Authentication Modal */}
                 <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
+
+                {/* PWA Install Prompt Banner */}
+                <PwaInstallPrompt />
 
                 {/* Location Drawer */}
                 <LocationDrawer />
