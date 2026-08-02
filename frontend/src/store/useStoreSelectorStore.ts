@@ -30,17 +30,30 @@ interface StoreSelectorState {
   fetchStores: (lat?: number, lon?: number) => Promise<void>;
 }
 
+const getInitialStoreId = (): string => {
+  try {
+    const saved = localStorage.getItem('selected_store_id');
+    if (saved) return saved;
+  } catch (e) {}
+  return 'store-1';
+};
+
 export const INITIAL_REGISTERED_STORES: RegisteredStore[] = [];
 
 export const useStoreSelectorStore = create<StoreSelectorState>((set, get) => ({
   isStoreDrawerOpen: false,
-  selectedStoreId: 'store-1',
+  selectedStoreId: getInitialStoreId(),
   searchQuery: '',
   stores: [],
 
   openStoreDrawer: () => set({ isStoreDrawerOpen: true }),
   closeStoreDrawer: () => set({ isStoreDrawerOpen: false }),
-  setSelectedStoreId: (id) => set({ selectedStoreId: id, isStoreDrawerOpen: false }),
+  setSelectedStoreId: (id) => {
+    try {
+      localStorage.setItem('selected_store_id', id);
+    } catch (e) {}
+    set({ selectedStoreId: id, isStoreDrawerOpen: false });
+  },
   setSearchQuery: (query) => set({ searchQuery: query }),
   getSelectedStore: () => {
     const { stores, selectedStoreId } = get();
@@ -72,7 +85,29 @@ export const useStoreSelectorStore = create<StoreSelectorState>((set, get) => ({
           openingHours: s.operatingHours || '',
           rating: s.rating || 0,
         }));
-        set({ stores: mappedStores });
+
+        set((state) => {
+          let savedId: string | null = null;
+          try {
+            savedId = localStorage.getItem('selected_store_id');
+          } catch (e) {}
+
+          const validStore =
+            mappedStores.find((s) => s.id === savedId) ||
+            mappedStores.find((s) => s.id === state.selectedStoreId) ||
+            mappedStores[0];
+
+          const activeId = validStore ? validStore.id : state.selectedStoreId;
+
+          try {
+            localStorage.setItem('selected_store_id', activeId);
+          } catch (e) {}
+
+          return {
+            stores: mappedStores,
+            selectedStoreId: activeId,
+          };
+        });
       } else {
         useServerStatusStore.getState().setDisconnected(true, 'Data toko tidak dapat dimuat dari server.');
       }

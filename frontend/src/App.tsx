@@ -19,6 +19,7 @@ import { AuthModal } from './components/AuthModal';
 import { VerifyAccessPage } from './components/VerifyAccessPage';
 import { PwaInstallPrompt } from './components/PwaInstallPrompt';
 import { ServerStatusBanner } from './components/ServerStatusBanner';
+import { ProductDetailModal } from './components/ProductDetailModal';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
 import { useCartStore } from './store/useCartStore';
 import { useCategoryStore } from './store/useCategoryStore';
@@ -151,6 +152,9 @@ export const App: React.FC = () => {
 
                 {/* Category Selection Modal */}
                 <CategoryModal />
+
+                {/* Interactive Product Detail Sheet Modal */}
+                <ProductDetailModal />
 
                 {/* Cart Drawer */}
                 <CartDrawer />
