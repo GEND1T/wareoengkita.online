@@ -33,6 +33,10 @@ import { useLocationStore } from '../store/useLocationStore';
 import { useAdminStore } from '../store/useAdminStore';
 import { StoreRegistrationModal } from './StoreRegistrationModal';
 import { OrderTrackingModal } from './OrderTrackingModal';
+import { usePembayaranStore } from '../store/usePembayaranStore';
+import { PaymentConfirmPage } from './PaymentConfirmPage';
+import { PaymentSuccessPage } from './PaymentSuccessPage';
+import { API_BASE_URL } from '../config/api';
 
 interface ProfileDrawerProps {
   onOpenSupport?: () => void;
@@ -61,6 +65,55 @@ const STATUS_FILTERS: { key: OrderStatus | 'semua'; label: string; icon: React.R
   { key: 'dibatalkan', label: 'Dibatalkan', icon: <XCircle className="w-3.5 h-3.5" /> },
 ];
 
+const OrderCountdownTimer: React.FC<{ createdAt?: string; onExpired?: () => void }> = ({
+  createdAt,
+  onExpired,
+}) => {
+  const [secondsLeft, setSecondsLeft] = useState<number>(() => {
+    if (!createdAt) return 24 * 3600;
+    const createdTime = new Date(createdAt).getTime();
+    const expiryTime = createdTime + 24 * 3600 * 1000;
+    const diff = Math.floor((expiryTime - Date.now()) / 1000);
+    return diff > 0 ? diff : 0;
+  });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          if (onExpired) onExpired();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [onExpired]);
+
+  const hrs = Math.floor(secondsLeft / 3600);
+  const mins = Math.floor((secondsLeft % 3600) / 60);
+  const secs = secondsLeft % 60;
+  const timeStr = `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+  if (secondsLeft <= 0) {
+    return (
+      <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-100 flex items-center gap-1">
+        <XCircle className="w-3 h-3 text-rose-600" />
+        Waktu Pembayaran Habis
+      </span>
+    );
+  }
+
+  return (
+    <span className="text-[10px] font-mono font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200/80 flex items-center gap-1">
+      <Clock className="w-3 h-3 text-amber-600 animate-pulse" />
+      <span>Batas Bayar: {timeStr}</span>
+    </span>
+  );
+};
+
 export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) => {
   const {
     profile,
@@ -84,6 +137,61 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
   const [activeSubView, setActiveSubView] = useState<'editProfile' | 'orders' | null>(null);
   const [isStoreRegistrationOpen, setIsStoreRegistrationOpen] = useState(false);
   const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
+
+  const { setActivePayment } = usePembayaranStore();
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+
+  const handlePayNow = (order: Order) => {
+    const paymentObj = order.payments && order.payments.length > 0 ? order.payments[0] : null;
+    if (paymentObj) {
+      setActivePayment({
+        id: paymentObj.id,
+        merchantOrderId: paymentObj.merchantOrderId,
+        reference: paymentObj.reference || undefined,
+        paymentMethod: paymentObj.paymentMethod,
+        paymentAmount: paymentObj.paymentAmount,
+        vaNumber: paymentObj.vaNumber || undefined,
+        qrString: paymentObj.qrString || undefined,
+        paymentUrl: paymentObj.paymentUrl || undefined,
+        statusCode: paymentObj.statusCode || '01',
+        statusMessage: paymentObj.statusMessage || 'PENDING',
+        customerName: profile.fullName,
+        customerEmail: profile.email,
+        customerPhone: profile.phone,
+        productDetails: `Pesanan ${order.orderNo}`,
+        createdAt: paymentObj.createdAt || new Date().toISOString(),
+      });
+    } else {
+      setActivePayment({
+        id: order.id,
+        merchantOrderId: order.orderNo,
+        paymentMethod: order.paymentMethod || 'Duitku',
+        paymentAmount: order.totalAmount,
+        statusCode: '01',
+        statusMessage: 'PENDING',
+        customerName: profile.fullName,
+        customerEmail: profile.email,
+        customerPhone: profile.phone,
+        productDetails: `Pesanan ${order.orderNo}`,
+        createdAt: order.createdAt || new Date().toISOString(),
+      });
+    }
+    setIsConfirmModalOpen(true);
+  };
+
+  const handleOrderExpired = async (orderId: string) => {
+    try {
+      await fetch(`${API_BASE_URL}/orders/admin/${orderId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'cancelled' }),
+      });
+      fetchUserOrders(profile.id || profile.phone);
+    } catch (e) {
+      console.error('Failed to expire order:', e);
+    }
+  };
 
   const appVersion = import.meta.env.VITE_APP_VERSION || '1.0.0';
 
@@ -774,7 +882,7 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
                   className="bg-white rounded-2xl p-4 border border-gray-200/70 shadow-xs space-y-3"
                 >
                   {/* Order Header */}
-                  <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                  <div className="flex items-center justify-between pb-2 border-b border-gray-100 gap-2">
                     <div>
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="font-extrabold text-[#063104] text-xs">
@@ -790,7 +898,15 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
                         {order.date}
                       </span>
                     </div>
-                    {getStatusBadge(order.status)}
+                    <div className="flex flex-col items-end gap-1">
+                      {getStatusBadge(order.status)}
+                      {order.status === 'belum_bayar' && (
+                        <OrderCountdownTimer
+                          createdAt={order.createdAt}
+                          onExpired={() => handleOrderExpired(order.id)}
+                        />
+                      )}
+                    </div>
                   </div>
 
                   {/* Order Items Summary */}
@@ -834,7 +950,8 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
                       {order.status === 'belum_bayar' && (
                         <button
                           type="button"
-                          className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1 shadow-xs cursor-pointer"
+                          onClick={() => handlePayNow(order)}
+                          className="bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer transition-all"
                         >
                           <CreditCard className="w-3.5 h-3.5" />
                           <span>Bayar Sekarang</span>
@@ -889,6 +1006,32 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
           trackingNumber={`TRK-${trackingOrder.orderNo}`}
         />
       )}
+
+      {/* PAYMENT CONFIRMATION MODAL */}
+      <PaymentConfirmPage
+        isOpen={isConfirmModalOpen}
+        onClose={() => setIsConfirmModalOpen(false)}
+        onPaymentSuccess={() => {
+          setIsConfirmModalOpen(false);
+          setIsSuccessModalOpen(true);
+          fetchUserOrders(profile.id || profile.phone);
+        }}
+      />
+
+      {/* PAYMENT SUCCESS MODAL */}
+      <PaymentSuccessPage
+        isOpen={isSuccessModalOpen}
+        onClose={() => {
+          setIsSuccessModalOpen(false);
+          setSelectedOrderStatusFilter('dikemas');
+          fetchUserOrders(profile.id || profile.phone);
+        }}
+        onViewOrders={() => {
+          setIsSuccessModalOpen(false);
+          setSelectedOrderStatusFilter('dikemas');
+          fetchUserOrders(profile.id || profile.phone);
+        }}
+      />
     </Drawer>
   );
 };

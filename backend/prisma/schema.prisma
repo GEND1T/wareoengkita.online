@@ -71,6 +71,7 @@ model Store {
 
   products        Product[]
   orders          Order[]
+  payments        Payment[]
   shippingOptions ShippingOption[]
   paymentOptions  PaymentOption[]
   promos          PromoBanner[]
@@ -138,8 +139,9 @@ model Order {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  user  User?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  user     User?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  store    Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  payments Payment[]
 }
 
 model Review {
@@ -245,5 +247,41 @@ model Address {
   updatedAt     DateTime @updatedAt
 
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id                String    @id @default(uuid())
+  orderId           String?
+  merchantOrderId   String    @unique
+  reference         String?
+  paymentMethod     String
+  paymentName       String?
+  paymentAmount     Int
+  paymentFee        Int       @default(0)
+  vaNumber          String?
+  qrString          String?
+  paymentUrl        String?
+  statusCode        String    @default("01")
+  statusMessage     String    @default("PENDING")
+  resultCode        String?
+  customerName      String?
+  customerEmail     String?
+  customerPhone     String?
+  productDetails    String?
+  additionalParam   String?
+  publisherOrderId  String?
+  settlementDate    String?
+  callbackReceived  Boolean   @default(false)
+  isPaymentLink     Boolean   @default(false)
+  linkToken         String?   @unique
+  linkExpiry        DateTime?
+  storeId           String?
+  expiryPeriod      Int       @default(1440)
+  itemsJson         String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  order Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  store Store? @relation(fields: [storeId], references: [id], onDelete: Cascade)
 }
 

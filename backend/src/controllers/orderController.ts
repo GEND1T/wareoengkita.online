@@ -91,6 +91,10 @@ export const getMyOrders = async (req: AuthRequest, res: Response) => {
             phone: true,
           },
         },
+        payments: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
       },
       orderBy: { createdAt: 'desc' },
     });

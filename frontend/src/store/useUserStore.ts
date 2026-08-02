@@ -42,6 +42,8 @@ export interface Order {
   shippingCourier: string;
   paymentMethod: string;
   storeName?: string;
+  createdAt?: string;
+  payments?: any[];
 }
 
 interface UserState {
@@ -142,6 +144,8 @@ export const useUserStore = create<UserState>()(
                 paymentMethod: o.paymentMethod || 'QRIS',
                 totalAmount: o.totalPrice,
                 storeName: o.store?.name,
+                createdAt: o.createdAt,
+                payments: o.payments || [],
                 items: itemsParsed.map((item: any, idx: number) => ({
                   id: `item-${idx}`,
                   name: item.productName || item.name || 'Produk Organik',

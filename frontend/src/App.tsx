@@ -20,6 +20,9 @@ import { VerifyAccessPage } from './components/VerifyAccessPage';
 import { PwaInstallPrompt } from './components/PwaInstallPrompt';
 import { ServerStatusBanner } from './components/ServerStatusBanner';
 import { ProductDetailModal } from './components/ProductDetailModal';
+import { PaymentInvoicePage } from './components/PaymentInvoicePage';
+import { BackgroundPrefetcher } from './components/BackgroundPrefetcher';
+import { usePwaBackButton } from './hooks/usePwaBackButton';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
 import { useCartStore } from './store/useCartStore';
 import { useCategoryStore } from './store/useCategoryStore';
@@ -52,6 +55,7 @@ const muiTheme = createTheme({
 });
 
 export const App: React.FC = () => {
+  usePwaBackButton();
   const { selectedStoreId, getSelectedStore } = useStoreSelectorStore();
   const totalItems = useCartStore((state) => state.getTotalItems());
   const storeItems = useCartStore((state) => state.getTotalItemsByStore(selectedStoreId));
@@ -76,11 +80,17 @@ export const App: React.FC = () => {
           {/* Route for WhatsApp Magic Link Token Verification */}
           <Route path="/verify-access" element={<VerifyAccessPage />} />
 
+          {/* Route for Public Shareable Invoicing Link */}
+          <Route path="/pay/:token" element={<PaymentInvoicePage />} />
+
           {/* Main E-Commerce Application Page */}
           <Route
             path="*"
             element={
               <div className="min-h-screen bg-[#F9F8F6] text-[#1F2937] flex flex-col font-sans selection:bg-[#77a160] selection:text-white">
+                {/* Silent Background Data Prefetcher & Memory Cache */}
+                <BackgroundPrefetcher />
+
                 {/* Global Server Disconnected Alert Banner */}
                 <ServerStatusBanner />
 

@@ -13,6 +13,7 @@ import addressRoutes from './routes/addressRoutes';
 import promoRoutes from './routes/promoRoutes';
 import optionRoutes from './routes/optionRoutes';
 import uploadRoutes from './routes/uploadRoutes';
+import pembayaranRoutes from './routes/pembayaranRoutes';
 import { errorHandler } from './middlewares/errorHandler';
 
 dotenv.config();
@@ -47,6 +48,7 @@ app.use('/api/addresses', addressRoutes);
 app.use('/api/promos', promoRoutes);
 app.use('/api/options', optionRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/pembayaran', pembayaranRoutes);
 
 // Global Error Handler Middleware
 app.use(errorHandler);

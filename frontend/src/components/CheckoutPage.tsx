@@ -17,7 +17,9 @@ import {
   ShoppingBag,
   Store,
   Bike,
-  Route,
+  ChevronDown,
+  ChevronUp,
+  Wallet,
 } from 'lucide-react';
 import { useCategoryStore } from '../store/useCategoryStore';
 import { useCartStore } from '../store/useCartStore';
@@ -29,6 +31,9 @@ import { ProcessingOverlay } from './common/ProcessingOverlay';
 import { useUserStore } from '../store/useUserStore';
 import { API_BASE_URL } from '../config/api';
 import { AlertCircle } from 'lucide-react';
+import { PaymentConfirmPage } from './PaymentConfirmPage';
+import { PaymentSuccessPage } from './PaymentSuccessPage';
+import { usePembayaranStore } from '../store/usePembayaranStore';
 
 interface ShippingOption {
   id: string;
@@ -40,12 +45,6 @@ interface ShippingOption {
   feePerKm?: number;
 }
 
-interface PaymentOption {
-  id: string;
-  name: string;
-  category: string;
-  icon: React.ReactNode;
-}
 
 export const CheckoutPage: React.FC = () => {
   const { isCheckoutOpen, closeCheckout, openCartDrawer, setSkipCartAnimation } =
@@ -53,7 +52,7 @@ export const CheckoutPage: React.FC = () => {
   const { items, getTotalPriceByStore, clearCartByStore } = useCartStore();
   const { getSelectedAddress, openLocationDrawer } = useLocationStore();
   const { selectedStoreId } = useStoreSelectorStore();
-  const { profile, fetchUserOrders } = useUserStore();
+  const { profile, fetchUserOrders, openProfileDrawer, setSelectedOrderStatusFilter, isLoggedIn, openAuthModal } = useUserStore();
   const {
     storeProfile,
     shippingOptions: adminShippingOptions,
@@ -63,13 +62,18 @@ export const CheckoutPage: React.FC = () => {
 
   React.useEffect(() => {
     if (isCheckoutOpen) {
+      if (!isLoggedIn) {
+        closeCheckout();
+        openAuthModal();
+        return;
+      }
       fetchInitialData(selectedStoreId);
     }
-  }, [isCheckoutOpen, selectedStoreId, fetchInitialData]);
+  }, [isCheckoutOpen, isLoggedIn, selectedStoreId, fetchInitialData, closeCheckout, openAuthModal]);
 
   const activeAddress = getSelectedAddress();
 
-  // Active Shipping & Payment Options derived dynamically from Admin Store
+  // Active Shipping Options derived dynamically from Admin Store
   const availableShippingOptions: ShippingOption[] = adminShippingOptions
     .filter((s) => s.isActive)
     .map((s: any) => ({
@@ -82,36 +86,25 @@ export const CheckoutPage: React.FC = () => {
       estimated: s.estimatedTime || s.estimated || '1-2 Hari',
     }));
 
-  const renderPaymentIcon = (iconType: string) => {
-    switch (iconType) {
-      case 'qris':
-        return <QrCode className="w-5 h-5 text-emerald-700" />;
-      case 'bca':
-        return <Building2 className="w-5 h-5 text-blue-700" />;
-      case 'mandiri':
-        return <Building2 className="w-5 h-5 text-indigo-700" />;
-      case 'cod':
-        return <Banknote className="w-5 h-5 text-amber-700" />;
-      case 'cc':
-      default:
-        return <CreditCard className="w-5 h-5 text-[#063104]" />;
-    }
-  };
-
-  const availablePaymentOptions: PaymentOption[] = adminPaymentMethods
-    .filter((p) => p.isActive)
-    .map((p) => ({
-      id: p.id,
-      name: p.name,
-      category: p.category,
-      icon: renderPaymentIcon(p.iconType),
-    }));
+  const {
+    paymentMethods: duitkuMethods,
+    fetchPaymentMethods,
+    createPayment,
+    isLoadingMethods,
+  } = usePembayaranStore();
 
   const [selectedShippingId, setSelectedShippingId] = useState<string>('');
-  const [selectedPaymentId, setSelectedPaymentId] = useState<string>('');
+  const [selectedPaymentMode, setSelectedPaymentMode] = useState<'duitku' | 'manual'>('duitku');
+  const [selectedDuitkuCode, setSelectedDuitkuCode] = useState<string>('BC'); // Default BCA VA
+  const [openCategoryAccordion, setOpenCategoryAccordion] = useState<string | null>('va');
+  const [selectedManualPaymentId, setSelectedManualPaymentId] = useState<string>('');
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [orderId, setOrderId] = useState<string>('');
+
+  const [isDuitkuConfirmOpen, setIsDuitkuConfirmOpen] = useState(false);
+  const [isDuitkuSuccessOpen, setIsDuitkuSuccessOpen] = useState(false);
 
   React.useEffect(() => {
     if (availableShippingOptions.length > 0) {
@@ -122,16 +115,6 @@ export const CheckoutPage: React.FC = () => {
       setSelectedShippingId('');
     }
   }, [availableShippingOptions, selectedShippingId]);
-
-  React.useEffect(() => {
-    if (availablePaymentOptions.length > 0) {
-      if (!availablePaymentOptions.some((p) => p.id === selectedPaymentId)) {
-        setSelectedPaymentId(availablePaymentOptions[0].id);
-      }
-    } else {
-      setSelectedPaymentId('');
-    }
-  }, [availablePaymentOptions, selectedPaymentId]);
 
   const STORE_LAT = storeProfile.latitude || -6.2250;
   const STORE_LON = storeProfile.longitude || 106.8000;
@@ -190,7 +173,6 @@ export const CheckoutPage: React.FC = () => {
   };
 
   const selectedShipping = availableShippingOptions.find((s) => s.id === selectedShippingId) || null;
-  const selectedPayment = availablePaymentOptions.find((p) => p.id === selectedPaymentId) || null;
 
   const storeCheckoutItems = items.filter(
     (item) => (item.product.storeId || 'store-1') === (selectedStoreId || 'store-1')
@@ -202,7 +184,21 @@ export const CheckoutPage: React.FC = () => {
     : useCartStore.getState().getTotalPrice();
   const subtotalShipping = selectedShipping ? calculateDynamicShippingFee(selectedShipping) : 0;
   const serviceFee = subtotalItems > 0 ? 1000 : 0;
-  const grandTotal = subtotalItems + subtotalShipping + serviceFee;
+
+  // Fetch Duitku Payment Methods when Checkout is open
+  React.useEffect(() => {
+    if (isCheckoutOpen && subtotalItems > 0) {
+      fetchPaymentMethods(subtotalItems + subtotalShipping + serviceFee);
+    }
+  }, [isCheckoutOpen, subtotalItems, subtotalShipping, serviceFee, fetchPaymentMethods]);
+
+  // Selected Duitku payment fee
+  const selectedDuitkuMethod = duitkuMethods.find((m) => m.paymentMethod === selectedDuitkuCode);
+  const paymentServiceFee = selectedPaymentMode === 'duitku' && selectedDuitkuMethod
+    ? parseInt(selectedDuitkuMethod.totalFee || '0') || 0
+    : 0;
+
+  const grandTotal = subtotalItems + subtotalShipping + serviceFee + paymentServiceFee;
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('id-ID', {
@@ -223,7 +219,7 @@ export const CheckoutPage: React.FC = () => {
   };
 
   const handleCreateOrder = async () => {
-    if (!selectedPayment || !selectedShipping) return;
+    if (!selectedShipping) return;
     setIsSubmitting(true);
     try {
       const formattedAddress = activeAddress
@@ -234,6 +230,10 @@ export const CheckoutPage: React.FC = () => {
       const custName = activeAddress?.fullName || profile.fullName || 'Pembeli';
       const custPhone = activeAddress?.phone || profile.phone || '081234567890';
       const targetStoreId = selectedStoreId || 'store-1';
+
+      const selectedPaymentName = selectedPaymentMode === 'duitku'
+        ? (selectedDuitkuMethod?.paymentName || `Duitku (${selectedDuitkuCode})`)
+        : (adminPaymentMethods.find(p => p.id === selectedManualPaymentId)?.name || 'Manual Transfer');
 
       const orderPayload = {
         customerId: custId,
@@ -252,7 +252,7 @@ export const CheckoutPage: React.FC = () => {
         shippingFee: subtotalShipping,
         discountAmount: 0,
         totalPrice: grandTotal,
-        paymentMethod: selectedPayment ? selectedPayment.name : '',
+        paymentMethod: selectedPaymentName,
       };
 
       const res = await fetch(`${API_BASE_URL}/orders`, {
@@ -262,16 +262,39 @@ export const CheckoutPage: React.FC = () => {
       });
 
       const json = await res.json();
-      if (json.success && json.data) {
-        setOrderId(json.data.orderNo || `ORD-${json.data.id.slice(0, 5)}`);
-      } else {
-        setOrderId(`ORD-${Date.now().toString().slice(-6)}`);
-      }
-      setOrderSuccess(true);
-      clearCartByStore(targetStoreId);
+      const createdOrderData = json.data;
+      const createdOrderId = createdOrderData?.orderNo || `ORD-${Date.now().toString().slice(-6)}`;
+      setOrderId(createdOrderId);
 
-      // Trigger instant refetch for user orders
+      clearCartByStore(targetStoreId);
       fetchUserOrders(custId || custPhone);
+
+      if (selectedPaymentMode === 'duitku') {
+        const paymentRes = await createPayment({
+          orderId: createdOrderData?.id,
+          paymentMethod: selectedDuitkuCode,
+          paymentAmount: grandTotal,
+          customerName: custName,
+          customerEmail: profile.email || 'customer@waroengkita.online',
+          customerPhone: custPhone,
+          productDetails: `Pesanan #${createdOrderId}`,
+          storeId: targetStoreId,
+          items: checkoutItems.map((i) => ({
+            name: i.product.name,
+            price: i.product.price,
+            quantity: i.quantity,
+          })),
+          shippingAddress: formattedAddress,
+        });
+
+        if (paymentRes) {
+          setIsDuitkuConfirmOpen(true);
+        } else {
+          setOrderSuccess(true);
+        }
+      } else {
+        setOrderSuccess(true);
+      }
     } catch (err) {
       console.error('Failed to submit order to DB:', err);
       setOrderId(`ORD-${Date.now().toString().slice(-6)}`);
@@ -347,7 +370,11 @@ export const CheckoutPage: React.FC = () => {
           <div className="w-full bg-white p-4 rounded-2xl border border-gray-200 text-left space-y-2 text-xs">
             <div className="flex items-center justify-between pb-2 border-b border-gray-100 font-bold text-gray-800">
               <span>Metode Pembayaran</span>
-              <span className="text-[#063104]">{selectedPayment?.name || '-'}</span>
+              <span className="text-[#063104]">
+                {selectedPaymentMode === 'duitku'
+                  ? (selectedDuitkuMethod?.paymentName || `Duitku (${selectedDuitkuCode})`)
+                  : (adminPaymentMethods.find((p) => p.id === selectedManualPaymentId)?.name || 'Manual Transfer')}
+              </span>
             </div>
             <div className="flex items-center justify-between pb-2 border-b border-gray-100 font-bold text-gray-800">
               <span>Pengiriman</span>
@@ -467,7 +494,7 @@ export const CheckoutPage: React.FC = () => {
           <div className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs space-y-2.5">
             <div className="flex items-center justify-between pb-1 border-b border-gray-100">
               <div className="flex items-center gap-1.5 text-[#063104] font-extrabold text-xs uppercase tracking-wider">
-                <Route className="w-4 h-4" />
+                <Bike className="w-4 h-4" />
                 <span>Jarak Pengiriman</span>
               </div>
 
@@ -557,51 +584,368 @@ export const CheckoutPage: React.FC = () => {
             )}
           </div>
 
-          {/* SECTION 4: PAYMENT METHOD OPTIONS (Pilihan Metode Pembayaran) */}
+          {/* SECTION 4: PAYMENT METHOD OPTIONS (Accordion Cards) */}
           <div className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs space-y-3">
-            <div className="flex items-center gap-1.5 text-[#063104] font-extrabold text-xs uppercase tracking-wider pb-1 border-b border-gray-100">
-              <CreditCard className="w-4 h-4" />
-              <span>Metode Pembayaran</span>
+            <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+              <div className="flex items-center gap-1.5 text-[#063104] font-extrabold text-xs uppercase tracking-wider">
+                <CreditCard className="w-4 h-4" />
+                <span>Pilih Metode Pembayaran</span>
+              </div>
+              <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                Otomatis via Duitku
+              </span>
             </div>
 
-            {availablePaymentOptions.length === 0 ? (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-semibold flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
-                <span>Toko ini belum menyediakan metode pembayaran aktif. Anda tidak dapat melanjutkan pemesanan.</span>
+            {isLoadingMethods ? (
+              <div className="py-6 text-center flex flex-col items-center justify-center gap-2 text-xs text-slate-500">
+                <Loader2 className="w-5 h-5 text-[#063104] animate-spin" />
+                <span>Memuat opsi pembayaran resmi Duitku...</span>
               </div>
             ) : (
-              <div className="space-y-2">
-                {availablePaymentOptions.map((method) => {
-                  const isSelected = method.id === selectedPaymentId;
-                  return (
-                    <button
-                      key={method.id}
-                      type="button"
-                      onClick={() => setSelectedPaymentId(method.id)}
-                      className={`w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between ${isSelected
-                        ? 'bg-emerald-50/60 border-[#063104] ring-1 ring-[#063104]'
-                        : 'bg-white border-gray-200 hover:border-[#77a160]'
-                        }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-gray-50 border border-gray-100">
-                          {method.icon}
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-gray-900 text-xs">
-                            {method.name}
-                          </h4>
-                          <p className="text-[10px] text-gray-500">
-                            {method.category}
-                          </p>
-                        </div>
-                      </div>
-                      {isSelected && (
-                        <CheckCircle2 className="w-4 h-4 text-[#063104] stroke-[3]" />
-                      )}
-                    </button>
+              <div className="space-y-2.5">
+                {/* 1. VIRTUAL ACCOUNT (ACCORDION) */}
+                {(() => {
+                  const vaMethods = duitkuMethods.filter((m) =>
+                    ['A1', 'BC', 'I1', 'BR', 'BV', 'M2', 'BT', 'VA', 'NC', 'S1', 'DM', 'AG'].includes(m.paymentMethod)
                   );
-                })}
+                  if (vaMethods.length === 0) return null;
+
+                  return (
+                    <div className="border border-slate-200 rounded-xl overflow-hidden transition-all">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedPaymentMode('duitku');
+                          setOpenCategoryAccordion(openCategoryAccordion === 'va' ? null : 'va');
+                        }}
+                        className={`w-full p-3 flex items-center justify-between text-left transition-colors ${
+                          selectedPaymentMode === 'duitku' && openCategoryAccordion === 'va'
+                            ? 'bg-emerald-50/70 border-b border-emerald-100'
+                            : 'bg-slate-50 hover:bg-slate-100'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Building2 className="w-4 h-4 text-emerald-700 shrink-0" />
+                          <div>
+                            <p className="text-xs font-bold text-slate-800">Virtual Account (Bank Transfer)</p>
+                            <p className="text-[10px] text-slate-500">
+                              {vaMethods.map((m) => m.paymentName).join(', ')}
+                            </p>
+                          </div>
+                        </div>
+                        {openCategoryAccordion === 'va' ? (
+                          <ChevronUp className="w-4 h-4 text-slate-500 shrink-0" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-slate-500 shrink-0" />
+                        )}
+                      </button>
+
+                      {openCategoryAccordion === 'va' && (
+                        <div className="p-3 bg-white grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {vaMethods.map((m) => {
+                            const isSelected = selectedPaymentMode === 'duitku' && selectedDuitkuCode === m.paymentMethod;
+                            const feeVal = parseInt(m.totalFee || '0') || 0;
+                            const feeStr = feeVal > 0 ? `+ ${formatCurrency(feeVal)}` : 'Bebas Biaya';
+
+                            return (
+                              <button
+                                key={m.paymentMethod}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedPaymentMode('duitku');
+                                  setSelectedDuitkuCode(m.paymentMethod);
+                                }}
+                                className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${
+                                  isSelected
+                                    ? 'bg-emerald-50 border-[#063104] ring-1 ring-[#063104]'
+                                    : 'bg-white border-slate-200 hover:border-slate-300'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  {m.paymentImage ? (
+                                    <img src={m.paymentImage} alt={m.paymentName} className="w-7 h-5 object-contain shrink-0" />
+                                  ) : (
+                                    <Building2 className="w-4 h-4 text-emerald-700 shrink-0" />
+                                  )}
+                                  <div className="truncate">
+                                    <p className="text-[11px] font-bold text-slate-800 truncate">{m.paymentName}</p>
+                                    <p className="text-[10px] text-emerald-700 font-semibold">{feeStr}</p>
+                                  </div>
+                                </div>
+                                {isSelected && <CheckCircle2 className="w-4 h-4 text-[#063104] shrink-0" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* 2. E-WALLET (ACCORDION) */}
+                {(() => {
+                  const ewMethods = duitkuMethods.filter((m) =>
+                    ['DA', 'LF', 'LA', 'OV', 'SA', 'SL', 'OL'].includes(m.paymentMethod)
+                  );
+                  if (ewMethods.length === 0) return null;
+
+                  return (
+                    <div className="border border-slate-200 rounded-xl overflow-hidden transition-all">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedPaymentMode('duitku');
+                          setOpenCategoryAccordion(openCategoryAccordion === 'ewallet' ? null : 'ewallet');
+                        }}
+                        className={`w-full p-3 flex items-center justify-between text-left transition-colors ${
+                          selectedPaymentMode === 'duitku' && openCategoryAccordion === 'ewallet'
+                            ? 'bg-blue-50/70 border-b border-blue-100'
+                            : 'bg-slate-50 hover:bg-slate-100'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Wallet className="w-4 h-4 text-blue-600 shrink-0" />
+                          <div>
+                            <p className="text-xs font-bold text-slate-800">E-Wallet & Dompet Digital</p>
+                            <p className="text-[10px] text-slate-500">
+                              {ewMethods.map((m) => m.paymentName).join(', ')}
+                            </p>
+                          </div>
+                        </div>
+                        {openCategoryAccordion === 'ewallet' ? (
+                          <ChevronUp className="w-4 h-4 text-slate-500 shrink-0" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-slate-500 shrink-0" />
+                        )}
+                      </button>
+
+                      {openCategoryAccordion === 'ewallet' && (
+                        <div className="p-3 bg-white grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {ewMethods.map((m) => {
+                            const isSelected = selectedPaymentMode === 'duitku' && selectedDuitkuCode === m.paymentMethod;
+                            const feeVal = parseInt(m.totalFee || '0') || 0;
+                            const feeStr = feeVal > 0 ? `+ ${formatCurrency(feeVal)}` : 'Bebas Biaya';
+
+                            return (
+                              <button
+                                key={m.paymentMethod}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedPaymentMode('duitku');
+                                  setSelectedDuitkuCode(m.paymentMethod);
+                                }}
+                                className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${
+                                  isSelected
+                                    ? 'bg-blue-50 border-blue-600 ring-1 ring-blue-600'
+                                    : 'bg-white border-slate-200 hover:border-slate-300'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  {m.paymentImage ? (
+                                    <img src={m.paymentImage} alt={m.paymentName} className="w-7 h-5 object-contain shrink-0" />
+                                  ) : (
+                                    <Wallet className="w-4 h-4 text-blue-600 shrink-0" />
+                                  )}
+                                  <div className="truncate">
+                                    <p className="text-[11px] font-bold text-slate-800 truncate">{m.paymentName}</p>
+                                    <p className="text-[10px] text-blue-700 font-semibold">{feeStr}</p>
+                                  </div>
+                                </div>
+                                {isSelected && <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* 3. QRIS (ACCORDION) */}
+                {(() => {
+                  const qrisMethods = duitkuMethods.filter((m) =>
+                    ['SP', 'LQ', 'NQ', 'GQ'].includes(m.paymentMethod)
+                  );
+                  if (qrisMethods.length === 0) return null;
+
+                  return (
+                    <div className="border border-slate-200 rounded-xl overflow-hidden transition-all">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedPaymentMode('duitku');
+                          setOpenCategoryAccordion(openCategoryAccordion === 'qris' ? null : 'qris');
+                        }}
+                        className={`w-full p-3 flex items-center justify-between text-left transition-colors ${
+                          selectedPaymentMode === 'duitku' && openCategoryAccordion === 'qris'
+                            ? 'bg-rose-50/70 border-b border-rose-100'
+                            : 'bg-slate-50 hover:bg-slate-100'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <QrCode className="w-4 h-4 text-rose-600 shrink-0" />
+                          <div>
+                            <p className="text-xs font-bold text-slate-800">QRIS (Scan Kode QR)</p>
+                            <p className="text-[10px] text-slate-500">
+                              {qrisMethods.map((m) => m.paymentName).join(', ')}
+                            </p>
+                          </div>
+                        </div>
+                        {openCategoryAccordion === 'qris' ? (
+                          <ChevronUp className="w-4 h-4 text-slate-500 shrink-0" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-slate-500 shrink-0" />
+                        )}
+                      </button>
+
+                      {openCategoryAccordion === 'qris' && (
+                        <div className="p-3 bg-white grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {qrisMethods.map((m) => {
+                            const isSelected = selectedPaymentMode === 'duitku' && selectedDuitkuCode === m.paymentMethod;
+                            const feeVal = parseInt(m.totalFee || '0') || 0;
+                            const feeStr = feeVal > 0 ? `+ ${formatCurrency(feeVal)}` : 'Bebas Biaya';
+
+                            return (
+                              <button
+                                key={m.paymentMethod}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedPaymentMode('duitku');
+                                  setSelectedDuitkuCode(m.paymentMethod);
+                                }}
+                                className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${
+                                  isSelected
+                                    ? 'bg-rose-50 border-rose-600 ring-1 ring-rose-600'
+                                    : 'bg-white border-slate-200 hover:border-slate-300'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  {m.paymentImage ? (
+                                    <img src={m.paymentImage} alt={m.paymentName} className="w-7 h-5 object-contain shrink-0" />
+                                  ) : (
+                                    <QrCode className="w-4 h-4 text-rose-600 shrink-0" />
+                                  )}
+                                  <div className="truncate">
+                                    <p className="text-[11px] font-bold text-slate-800 truncate">{m.paymentName}</p>
+                                    <p className="text-[10px] text-rose-700 font-semibold">{feeStr}</p>
+                                  </div>
+                                </div>
+                                {isSelected && <CheckCircle2 className="w-4 h-4 text-rose-600 shrink-0" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* 4. KARTU KREDIT & LAINNYA */}
+                {(() => {
+                  const otherMethods = duitkuMethods.filter((m) =>
+                    ['VC', 'DN', 'IR', 'FT'].includes(m.paymentMethod)
+                  );
+                  if (otherMethods.length === 0) return null;
+
+                  return (
+                    <div className="border border-slate-200 rounded-xl overflow-hidden transition-all">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedPaymentMode('duitku');
+                          setOpenCategoryAccordion(openCategoryAccordion === 'other' ? null : 'other');
+                        }}
+                        className={`w-full p-3 flex items-center justify-between text-left transition-colors ${
+                          selectedPaymentMode === 'duitku' && openCategoryAccordion === 'other'
+                            ? 'bg-purple-50/70 border-b border-purple-100'
+                            : 'bg-slate-50 hover:bg-slate-100'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <CreditCard className="w-4 h-4 text-purple-600 shrink-0" />
+                          <div>
+                            <p className="text-xs font-bold text-slate-800">Kartu Kredit & Retail / PayLater</p>
+                            <p className="text-[10px] text-slate-500">
+                              {otherMethods.map((m) => m.paymentName).join(', ')}
+                            </p>
+                          </div>
+                        </div>
+                        {openCategoryAccordion === 'other' ? (
+                          <ChevronUp className="w-4 h-4 text-slate-500 shrink-0" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-slate-500 shrink-0" />
+                        )}
+                      </button>
+
+                      {openCategoryAccordion === 'other' && (
+                        <div className="p-3 bg-white grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {otherMethods.map((m) => {
+                            const isSelected = selectedPaymentMode === 'duitku' && selectedDuitkuCode === m.paymentMethod;
+                            const feeVal = parseInt(m.totalFee || '0') || 0;
+                            const feeStr = feeVal > 0 ? `+ ${formatCurrency(feeVal)}` : 'Bebas Biaya';
+
+                            return (
+                              <button
+                                key={m.paymentMethod}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedPaymentMode('duitku');
+                                  setSelectedDuitkuCode(m.paymentMethod);
+                                }}
+                                className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${
+                                  isSelected
+                                    ? 'bg-purple-50 border-purple-600 ring-1 ring-purple-600'
+                                    : 'bg-white border-slate-200 hover:border-slate-300'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  {m.paymentImage ? (
+                                    <img src={m.paymentImage} alt={m.paymentName} className="w-7 h-5 object-contain shrink-0" />
+                                  ) : (
+                                    <CreditCard className="w-4 h-4 text-purple-600 shrink-0" />
+                                  )}
+                                  <div className="truncate">
+                                    <p className="text-[11px] font-bold text-slate-800 truncate">{m.paymentName}</p>
+                                    <p className="text-[10px] text-purple-700 font-semibold">{feeStr}</p>
+                                  </div>
+                                </div>
+                                {isSelected && <CheckCircle2 className="w-4 h-4 text-purple-600 shrink-0" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* 5. BAYAR DI TEMPAT (COD) / MANUAL TOKO */}
+                {adminPaymentMethods.filter((p) => p.isActive).map((manualP) => (
+                  <button
+                    key={manualP.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedPaymentMode('manual');
+                      setSelectedManualPaymentId(manualP.id);
+                    }}
+                    className={`w-full p-3 rounded-xl border text-left flex items-center justify-between transition-all ${
+                      selectedPaymentMode === 'manual' && selectedManualPaymentId === manualP.id
+                        ? 'bg-amber-50 border-amber-600 ring-1 ring-amber-600'
+                        : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Banknote className="w-4 h-4 text-amber-700 shrink-0" />
+                      <div>
+                        <p className="text-xs font-bold text-slate-800">{manualP.name}</p>
+                        <p className="text-[10px] text-slate-500">{manualP.category} • Bebas Biaya</p>
+                      </div>
+                    </div>
+                    {selectedPaymentMode === 'manual' && selectedManualPaymentId === manualP.id && (
+                      <CheckCircle2 className="w-4 h-4 text-amber-700 shrink-0" />
+                    )}
+                  </button>
+                ))}
               </div>
             )}
           </div>
@@ -631,9 +975,19 @@ export const CheckoutPage: React.FC = () => {
             </div>
 
             <div className="flex items-center justify-between text-gray-600">
-              <span>Biaya Layanan & Penanganan</span>
+              <span>Biaya Layanan & Penanganan Toko</span>
               <span className="font-semibold text-gray-900">
                 {formatCurrency(serviceFee)}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between text-gray-600">
+              <span>
+                Biaya Layanan Pembayaran{' '}
+                {selectedPaymentMode === 'duitku' && selectedDuitkuMethod ? `(${selectedDuitkuMethod.paymentName})` : ''}
+              </span>
+              <span className="font-semibold text-emerald-800">
+                {paymentServiceFee > 0 ? formatCurrency(paymentServiceFee) : 'Bebas Biaya'}
               </span>
             </div>
 
@@ -663,7 +1017,7 @@ export const CheckoutPage: React.FC = () => {
 
           <button
             type="button"
-            disabled={isSubmitting || items.length === 0 || !selectedShipping || !selectedPayment}
+            disabled={isSubmitting || items.length === 0 || !selectedShipping}
             onClick={handleCreateOrder}
             className="flex-1 bg-[#063104] hover:bg-[#084205] text-white font-extrabold py-3.5 px-5 rounded-2xl shadow-md active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-sm focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -681,6 +1035,36 @@ export const CheckoutPage: React.FC = () => {
           </button>
         </div>
       )}
+
+      {/* Duitku Custom Payment Modal: Payment Confirmation (VA / QRIS / Countdown) */}
+      <PaymentConfirmPage
+        isOpen={isDuitkuConfirmOpen}
+        onClose={() => {
+          setIsDuitkuConfirmOpen(false);
+          closeCheckout();
+          openProfileDrawer('orders');
+          setSelectedOrderStatusFilter('belum_bayar');
+        }}
+        onPaymentSuccess={() => {
+          setIsDuitkuConfirmOpen(false);
+          setIsDuitkuSuccessOpen(true);
+        }}
+      />
+
+      {/* Duitku Custom Payment Modal: Payment Success & Invoice Download */}
+      <PaymentSuccessPage
+        isOpen={isDuitkuSuccessOpen}
+        onClose={() => {
+          setIsDuitkuSuccessOpen(false);
+          closeCheckout();
+        }}
+        onViewOrders={() => {
+          setIsDuitkuSuccessOpen(false);
+          closeCheckout();
+          openProfileDrawer('orders');
+          setSelectedOrderStatusFilter('dikemas');
+        }}
+      />
     </Drawer>
   );
 };

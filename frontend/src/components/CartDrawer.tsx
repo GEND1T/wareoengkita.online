@@ -16,12 +16,16 @@ import { useCartStore } from '../store/useCartStore';
 import { useCategoryStore } from '../store/useCategoryStore';
 import { useStoreSelectorStore } from '../store/useStoreSelectorStore';
 import { useAdminStore } from '../store/useAdminStore';
+import { useUserStore } from '../store/useUserStore';
+import { useLocationStore } from '../store/useLocationStore';
 
 export const CartDrawer: React.FC = () => {
   const { isCartDrawerOpen, closeCartDrawer, openCheckout, skipCartAnimation } = useCategoryStore();
   const { items, removeItem, updateQuantity, getTotalPriceByStore, getTotalPrice } = useCartStore();
   const { stores, selectedStoreId, setSelectedStoreId } = useStoreSelectorStore();
   const { products: adminProducts } = useAdminStore();
+  const { isLoggedIn, openAuthModal } = useUserStore();
+  const { showToast } = useLocationStore();
 
   // Helper to get store name by storeId
   const getStoreName = (storeId?: string) => {
@@ -79,6 +83,14 @@ export const CartDrawer: React.FC = () => {
 
   const handleCheckoutClick = () => {
     if (activeCheckoutItems.length === 0 || hasInvalidItems) return;
+
+    if (!isLoggedIn) {
+      closeCartDrawer();
+      openAuthModal();
+      showToast('Silakan masuk atau daftar akun terlebih dahulu untuk melanjutkan checkout.');
+      return;
+    }
+
     // Set store in storeSelectorStore to ensure checkout uses this store
     setSelectedStoreId(activeCheckoutStoreId);
     openCheckout();
