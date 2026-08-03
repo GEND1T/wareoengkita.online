@@ -3,32 +3,44 @@ import { Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Snackbar, Alert } from '@mui/material';
-import { Header } from './components/Header';
-import { HeroBanner } from './components/HeroBanner';
-import { CategoryFilter } from './components/CategoryFilter';
-import { CategoryModal } from './components/CategoryModal';
-import { ProductGrid } from './components/ProductGrid';
-import { CartDrawer } from './components/CartDrawer';
-import { LocationDrawer } from './components/LocationDrawer';
-import { StoreSelectorDrawer } from './components/StoreSelectorDrawer';
-import { SupportDrawer } from './components/SupportDrawer';
-import { CheckoutPage } from './components/CheckoutPage';
-import { ProfileDrawer } from './components/ProfileDrawer';
-import { AdminDashboard } from './components/admin/AdminDashboard';
-import { AuthModal } from './components/AuthModal';
-import { VerifyAccessPage } from './components/VerifyAccessPage';
-import { PwaInstallPrompt } from './components/PwaInstallPrompt';
-import { ServerStatusBanner } from './components/ServerStatusBanner';
-import { ProductDetailModal } from './components/ProductDetailModal';
-import { PaymentInvoicePage } from './components/PaymentInvoicePage';
-import { BackgroundPrefetcher } from './components/BackgroundPrefetcher';
 import { usePwaBackButton } from './hooks/usePwaBackButton';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
-import { useCartStore } from './store/useCartStore';
-import { useCategoryStore } from './store/useCategoryStore';
-import { useLocationStore } from './store/useLocationStore';
-import { useUserStore } from './store/useUserStore';
-import { useStoreSelectorStore } from './store/useStoreSelectorStore';
+
+import {
+  BackgroundPrefetcher,
+  PwaInstallPrompt,
+} from './components/pwa';
+
+import {
+  Header,
+  HeroBanner,
+  ServerStatusBanner
+} from './components/layouts';
+
+import { 
+  CategoryFilter, 
+  CategoryModal, 
+  ProductGrid, 
+  ProductDetailModal, 
+  useCategoryStore, 
+  useProductDetailStore 
+} from './features/catalog';
+
+import { CartDrawer, useCartStore } from './features/cart';
+
+import { 
+  LocationDrawer, 
+  StoreSelectorDrawer, 
+  useLocationStore, 
+  useStoreSelectorStore 
+} from './features/store-location';
+
+import { SupportDrawer } from './features/support';
+import { CheckoutPage } from './features/checkout';
+import { ProfileDrawer, AuthModal, VerifyAccessPage, useUserStore } from './features/auth';
+import { PaymentInvoicePage } from './features/payment';
+import { AdminDashboard } from './features/admin';
+
 
 const queryClient = new QueryClient();
 
