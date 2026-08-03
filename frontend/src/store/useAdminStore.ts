@@ -322,6 +322,7 @@ export const useAdminStore = create<AdminState>()(
         stock: newProdData.stock,
         unit: newProdData.unit,
         image: newProdData.image,
+        imagesJson: newProdData.imagesJson ?? null,
         description: newProdData.description || newProdData.longDescription || newProdData.subtitle || newProdData.name,
         isActive: newProdData.isActive !== undefined ? newProdData.isActive : true,
         isFreshDaily: newProdData.isFreshDaily ?? false,
@@ -382,6 +383,7 @@ export const useAdminStore = create<AdminState>()(
       if (updatedData.originalPrice !== undefined) payload.originalPrice = updatedData.originalPrice;
       if (updatedData.discountTag !== undefined) payload.discountTag = updatedData.discountTag;
       if (updatedData.badge !== undefined) payload.badge = updatedData.badge;
+      if (updatedData.imagesJson !== undefined) payload.imagesJson = updatedData.imagesJson;
       if (updatedData.isActive !== undefined) payload.isActive = updatedData.isActive;
 
       await fetch(`${API_BASE_URL}/products/${id}`, {

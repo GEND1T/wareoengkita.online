@@ -53,9 +53,24 @@ export const getProducts = async (req: Request, res: Response) => {
       return imgUrl;
     };
 
+    const sanitizeImagesJson = (jsonStr?: string | null) => {
+      if (!jsonStr) return null;
+      try {
+        const arr = JSON.parse(jsonStr);
+        if (Array.isArray(arr)) {
+          const sanitized = arr.map((imgUrl: string) => sanitizeImage(imgUrl));
+          return JSON.stringify(sanitized);
+        }
+      } catch {
+        // ignore parse error
+      }
+      return jsonStr;
+    };
+
     const sanitizedProducts = products.map((p) => ({
       ...p,
       image: sanitizeImage(p.image),
+      imagesJson: sanitizeImagesJson(p.imagesJson),
     }));
 
     return res.json({
@@ -112,6 +127,7 @@ export const createProduct = async (req: Request, res: Response) => {
       unit,
       badge,
       image,
+      imagesJson,
       description,
       isActive,
       isFreshDaily,
@@ -138,6 +154,7 @@ export const createProduct = async (req: Request, res: Response) => {
         unit: unit || 'per kg',
         badge: badge || null,
         image: safeImage,
+        imagesJson: imagesJson || null,
         description: description || subtitle || name,
         rating: rating !== undefined ? parseFloat(rating) : 0,
         reviewCount: reviewCount !== undefined ? parseInt(reviewCount) : 0,
@@ -178,6 +195,7 @@ export const updateProduct = async (req: Request, res: Response) => {
       unit,
       badge,
       image,
+      imagesJson,
       description,
       isActive,
       isFreshDaily,
@@ -200,6 +218,7 @@ export const updateProduct = async (req: Request, res: Response) => {
     if (unit !== undefined) updatePayload.unit = unit;
     if (badge !== undefined) updatePayload.badge = badge || null;
     if (safeImage !== undefined) updatePayload.image = safeImage;
+    if (imagesJson !== undefined) updatePayload.imagesJson = imagesJson || null;
     if (description !== undefined) updatePayload.description = description;
     if (isActive !== undefined) updatePayload.isActive = Boolean(isActive);
     if (isFreshDaily !== undefined) updatePayload.isFreshDaily = Boolean(isFreshDaily);

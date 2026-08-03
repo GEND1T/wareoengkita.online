@@ -38,13 +38,14 @@ export const ProductDetailModal: React.FC = () => {
   const [isDescExpanded, setIsDescExpanded] = useState<boolean>(false);
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   const [storeProducts, setStoreProducts] = useState<Product[]>([]);
+  const [isClosing, setIsClosing] = useState<boolean>(false);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const activeProduct: Product | undefined =
     productHistory.length > 0 ? productHistory[productHistory.length - 1] : undefined;
 
-  // Auto scroll to top when active product changes (when user clicks a relevant product)
+  // Auto scroll to top when active product changes
   useEffect(() => {
     if (activeProduct) {
       if (scrollContainerRef.current) {
@@ -52,6 +53,7 @@ export const ProductDetailModal: React.FC = () => {
       }
       setIsDescExpanded(false);
       setCurrentImageIndex(0);
+      setIsClosing(false);
     }
   }, [activeProduct?.id]);
 
@@ -66,15 +68,22 @@ export const ProductDetailModal: React.FC = () => {
           const mapped: Product[] = json.data.map((p: any) => ({
             id: p.id,
             name: p.name,
-            subtitle: p.description || p.name,
+            subtitle: p.subtitle || p.name,
             price: p.price,
+            originalPrice: p.originalPrice,
+            discountTag: p.discountTag,
+            badge: p.badge,
             unit: p.unit || '/pak',
             image: p.image,
+            imagesJson: p.imagesJson,
             category: p.categorySlug || 'sayur-segar',
             storeId: p.storeId || selectedStoreId,
             isActive: p.isActive !== undefined ? p.isActive : true,
             description: p.description,
-            rating: p.rating || 4.9,
+            rating: p.rating !== undefined ? p.rating : 4.9,
+            reviewCount: p.reviewCount !== undefined ? p.reviewCount : 0,
+            isFreshDaily: p.isFreshDaily !== undefined ? p.isFreshDaily : false,
+            isOrganicCertified: p.isOrganicCertified !== undefined ? p.isOrganicCertified : false,
             stock: p.stock !== undefined ? p.stock : 50,
           }));
           setStoreProducts(mapped);
@@ -86,6 +95,30 @@ export const ProductDetailModal: React.FC = () => {
   }, [selectedStoreId, activeProduct?.id]);
 
   if (!activeProduct) return null;
+
+  const executeClose = (action: () => void) => {
+    setIsClosing(true);
+    setTimeout(() => {
+      action();
+      setIsClosing(false);
+    }, 250);
+  };
+
+  const handleBack = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    executeClose(() => popProductDetail());
+  };
+
+  const handleCloseAll = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    executeClose(() => closeAllProductDetails());
+  };
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      handleCloseAll(e);
+    }
+  };
 
   // Cart quantity & store total calculation
   const cartItem = cartItems.find((item) => item.product.id === activeProduct.id);
@@ -102,6 +135,16 @@ export const ProductDetailModal: React.FC = () => {
     .format(activeProduct.price)
     .replace(/\s/g, ' ');
 
+  const formattedOriginalPrice = activeProduct.originalPrice && activeProduct.originalPrice > activeProduct.price
+    ? new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        maximumFractionDigits: 0,
+      })
+        .format(activeProduct.originalPrice)
+        .replace(/\s/g, ' ')
+    : null;
+
   const formattedStorePrice = new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
@@ -110,12 +153,21 @@ export const ProductDetailModal: React.FC = () => {
     .format(storePrice)
     .replace(/\s/g, ' ');
 
-  // Images for landscape carousel (main image + 2 curated organic badges)
-  const productImages = [
-    activeProduct.image,
-    'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1610348725531-843dff563e2c?auto=format&fit=crop&w=1000&q=80',
-  ];
+  // Images for landscape carousel (from imagesJson or main image)
+  let productImages: string[] = [];
+  if (activeProduct.imagesJson) {
+    try {
+      const parsed = JSON.parse(activeProduct.imagesJson);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        productImages = parsed;
+      }
+    } catch {
+      // parse fallback
+    }
+  }
+  if (productImages.length === 0 && activeProduct.image) {
+    productImages = [activeProduct.image];
+  }
 
   const handleIncrement = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -138,25 +190,16 @@ export const ProductDetailModal: React.FC = () => {
     .filter((p) => p.id !== activeProduct.id)
     .slice(0, 6);
 
-  const handleBack = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    popProductDetail();
-  };
-
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      closeAllProductDetails();
-    }
-  };
-
   return (
     <div
       onClick={handleBackdropClick}
-      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex flex-col justify-end animate-in fade-in duration-200"
+      className={`fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex flex-col justify-end transition-opacity duration-250 ${
+        isClosing ? 'opacity-0' : 'animate-in fade-in duration-200'
+      }`}
     >
       {/* Top Gap clickable space to close modal to main page directly */}
       <div
-        onClick={closeAllProductDetails}
+        onClick={handleCloseAll}
         className="w-full h-10 sm:h-12 shrink-0 cursor-pointer flex items-center justify-center"
       >
         <span className="text-[11px] font-bold text-white/80 bg-black/40 px-3 py-1 rounded-full backdrop-blur-md hover:bg-black/60 transition-all">
@@ -164,10 +207,12 @@ export const ProductDetailModal: React.FC = () => {
         </span>
       </div>
 
-      {/* Main Full-screen Sheet Container with top rounded corners */}
+      {/* Main Full-screen Sheet Container bounded to max-w-[480px] on desktop */}
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full h-[calc(100vh-2.5rem)] sm:h-[calc(100vh-3rem)] bg-[#F8FAFC] rounded-t-[28px] sm:rounded-t-[32px] shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300 border-t border-white/20"
+        className={`w-full max-w-[480px] mx-auto h-[calc(100vh-2.5rem)] sm:h-[calc(100vh-3rem)] bg-[#F8FAFC] rounded-t-[28px] sm:rounded-t-[32px] shadow-2xl flex flex-col overflow-hidden transition-all duration-250 ease-in-out border-t border-white/20 ${
+          isClosing ? 'translate-y-full opacity-0' : 'animate-in slide-in-from-bottom duration-300'
+        }`}
       >
         {/* Top Drag Handle */}
         <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto my-2.5 shrink-0" />
@@ -204,7 +249,7 @@ export const ProductDetailModal: React.FC = () => {
             </button>
             <button
               type="button"
-              onClick={closeAllProductDetails}
+              onClick={handleCloseAll}
               className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
               title="Tutup"
             >
@@ -226,11 +271,26 @@ export const ProductDetailModal: React.FC = () => {
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
 
-            {/* Fresh Organic Badge Overlay */}
-            <div className="absolute top-3 left-3 bg-[#063104]/90 backdrop-blur-md text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-md flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-emerald-400" />
-              <span>100% Organik Segar</span>
+            {/* Dynamic Badges Overlay (Top Left & Top Right) */}
+            <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start">
+              {activeProduct.isOrganicCertified && (
+                <div className="bg-[#063104]/90 backdrop-blur-md text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-md flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-emerald-400" />
+                  <span>100% Organik Segar</span>
+                </div>
+              )}
+              {activeProduct.discountTag && (
+                <div className="bg-red-600/90 backdrop-blur-md text-white text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-md">
+                  {activeProduct.discountTag}
+                </div>
+              )}
             </div>
+
+            {activeProduct.badge && (
+              <div className="absolute top-3 right-3 bg-amber-500/90 backdrop-blur-md text-white text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-md uppercase">
+                {activeProduct.badge}
+              </div>
+            )}
 
             {/* Left/Right Carousel Controls */}
             {productImages.length > 1 && (
@@ -289,22 +349,32 @@ export const ProductDetailModal: React.FC = () => {
 
                 <div className="flex items-center gap-1 bg-amber-50 text-amber-900 border border-amber-200 px-2.5 py-1 rounded-full text-xs font-bold shrink-0">
                   <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                  <span>{activeProduct.rating || 4.9}</span>
+                  <span>{activeProduct.rating !== undefined ? activeProduct.rating : 4.9}</span>
+                  {activeProduct.reviewCount !== undefined && activeProduct.reviewCount > 0 && (
+                    <span className="text-gray-400 font-normal text-[10px]">({activeProduct.reviewCount})</span>
+                  )}
                 </div>
               </div>
 
-              {/* Price & Direct Quantity Control Row (Parallel on the same line) */}
+              {/* Price & Direct Quantity Control Row */}
               <div className="flex items-center justify-between pt-3 mt-3 border-t border-gray-100">
-                <div className="flex items-baseline gap-1.5">
-                  <span className="font-black text-[#063104] text-xl sm:text-2xl">
-                    {formattedPrice}
-                  </span>
-                  <span className="text-xs text-gray-500 font-medium">
-                    {activeProduct.unit || '/pak'}
-                  </span>
+                <div>
+                  {formattedOriginalPrice && (
+                    <span className="block text-xs text-gray-400 line-through font-medium leading-none mb-1">
+                      {formattedOriginalPrice}
+                    </span>
+                  )}
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="font-black text-[#063104] text-xl sm:text-2xl">
+                      {formattedPrice}
+                    </span>
+                    <span className="text-xs text-gray-500 font-medium">
+                      {activeProduct.unit || '/pak'}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Direct Quantity Input -, qty, + (Synchronized directly with cart) */}
+                {/* Direct Quantity Input -, qty, + */}
                 {currentQty === 0 ? (
                   <button
                     type="button"
@@ -342,14 +412,18 @@ export const ProductDetailModal: React.FC = () => {
             <div className="flex items-center gap-2 flex-wrap text-[11px] font-semibold text-gray-600 pt-1">
               <span className="bg-emerald-50 text-[#063104] border border-emerald-200/80 px-2.5 py-1 rounded-lg flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-[#063104]" />
-                Stok Tersedia ({activeProduct.stock || 50} pak)
+                Stok Tersedia ({activeProduct.stock ?? 50} pak)
               </span>
-              <span className="bg-blue-50 text-blue-900 border border-blue-200/80 px-2.5 py-1 rounded-lg">
-                Bebas Pestisida
-              </span>
-              <span className="bg-amber-50 text-amber-900 border border-amber-200/80 px-2.5 py-1 rounded-lg">
-                Petik Hari Ini
-              </span>
+              {activeProduct.isOrganicCertified && (
+                <span className="bg-blue-50 text-blue-900 border border-blue-200/80 px-2.5 py-1 rounded-lg">
+                  Bebas Pestisida
+                </span>
+              )}
+              {activeProduct.isFreshDaily && (
+                <span className="bg-amber-50 text-amber-900 border border-amber-200/80 px-2.5 py-1 rounded-lg">
+                  Petik Hari Ini
+                </span>
+              )}
             </div>
 
             {/* Description */}
@@ -357,7 +431,7 @@ export const ProductDetailModal: React.FC = () => {
               <h4 className="font-bold text-gray-900 text-xs uppercase tracking-wider">
                 Deskripsi Produk
               </h4>
-              <p className="text-xs text-gray-600 leading-relaxed">
+              <p className="text-xs text-gray-600 leading-relaxed font-medium">
                 {activeProduct.subtitle}
               </p>
               {activeProduct.description && (
@@ -446,7 +520,7 @@ export const ProductDetailModal: React.FC = () => {
           )}
         </div>
 
-        {/* 4. FIXED FLOATING BOTTOM CART BAR INSIDE DETAIL MODAL (Matching main page) */}
+        {/* 4. FIXED FLOATING BOTTOM CART BAR INSIDE DETAIL MODAL */}
         {storeItems > 0 && (
           <div className="shrink-0 p-3.5 sm:p-4 bg-[#063104] text-white border-t border-emerald-900/40 shadow-2xl flex items-center justify-between z-20 animate-in slide-in-from-bottom duration-300">
             <div className="flex items-center gap-3">

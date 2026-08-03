@@ -8,6 +8,7 @@ export interface Product {
   badge?: string | null;
   unit: string; // e.g. "/ikat", "/pak"
   image: string;
+  imagesJson?: string | null;
   category: string;
   categoryId?: string;
   categorySlug?: string;

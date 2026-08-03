@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Check } from 'lucide-react';
+import { Plus, Check, Star } from 'lucide-react';
 import type { Product } from '../types';
 import { useCartStore } from '../store/useCartStore';
 import { useProductDetailStore } from '../store/useProductDetailStore';
@@ -37,6 +37,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     maximumFractionDigits: 0,
   }).format(product.price).replace(/\s/g, ' ');
 
+  const formattedOriginalPrice = product.originalPrice && product.originalPrice > product.price
+    ? new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        maximumFractionDigits: 0,
+      }).format(product.originalPrice).replace(/\s/g, ' ')
+    : null;
+
   return (
     <div
       onClick={handleCardClick}
@@ -44,7 +52,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         isExtendedHeight ? 'pb-9 sm:pb-11' : ''
       } ${offsetClass}`}
     >
-      {/* Enlarged Image Frame: Reduced padding, object-cover zoom fill, top rounded corners (half of card's 20px = 10px) */}
+      {/* Enlarged Image Frame */}
       <div className="relative aspect-square w-full bg-gray-50 rounded-t-[10px] sm:rounded-t-[12px] rounded-b-md overflow-hidden flex items-center justify-center mb-2.5">
         <img
           src={product.image}
@@ -52,14 +60,39 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           className="w-full h-full object-cover scale-105 group-hover:scale-110 transition-transform duration-300"
           loading="lazy"
         />
+
+        {/* Discount Tag Badge (Top Left) */}
+        {product.discountTag && (
+          <div className="absolute top-2 left-2 bg-red-600/90 backdrop-blur-xs text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-xs">
+            {product.discountTag}
+          </div>
+        )}
+
+        {/* Product Custom Badge e.g. PROMO / BESTSELLER (Top Right) */}
+        {product.badge && (
+          <div className="absolute top-2 right-2 bg-amber-500/90 backdrop-blur-xs text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-xs uppercase">
+            {product.badge}
+          </div>
+        )}
       </div>
 
       {/* Content Section */}
       <div className="flex-1 flex flex-col justify-between px-1">
         <div className="mb-2">
-          <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-tight line-clamp-1 group-hover:text-[#063104] transition-colors">
-            {product.name}
-          </h3>
+          <div className="flex items-center justify-between gap-1">
+            <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-tight line-clamp-1 group-hover:text-[#063104] transition-colors flex-1">
+              {product.name}
+            </h3>
+            {product.rating !== undefined && product.rating > 0 && (
+              <div className="flex items-center gap-0.5 text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-md shrink-0">
+                <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
+                <span>{product.rating}</span>
+                {product.reviewCount !== undefined && product.reviewCount > 0 && (
+                  <span className="text-gray-400 font-normal text-[9px]">({product.reviewCount})</span>
+                )}
+              </div>
+            )}
+          </div>
           <p className="text-gray-400 text-xs font-normal mt-0.5 line-clamp-1">
             {product.subtitle}
           </p>
@@ -68,12 +101,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {/* Price & Add Button Row */}
         <div className="flex items-end justify-between pt-1 mt-auto">
           <div>
-            <span className="font-extrabold text-gray-900 text-sm sm:text-base leading-none">
-              {formattedPrice}
-            </span>
-            <span className="text-gray-500 font-normal text-[11px] ml-1">
-              {product.unit}
-            </span>
+            {formattedOriginalPrice && (
+              <span className="block text-[11px] text-gray-400 line-through font-medium leading-none mb-0.5">
+                {formattedOriginalPrice}
+              </span>
+            )}
+            <div className="flex items-baseline">
+              <span className="font-extrabold text-gray-900 text-sm sm:text-base leading-none">
+                {formattedPrice}
+              </span>
+              <span className="text-gray-500 font-normal text-[11px] ml-1">
+                {product.unit}
+              </span>
+            </div>
           </div>
 
           {/* Add to Cart Button */}
