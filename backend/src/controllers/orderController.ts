@@ -180,3 +180,82 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// PUT /api/orders/:id/confirm-receipt (Customer confirms order received)
+export const confirmOrderReceipt = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const order = await prisma.order.findUnique({
+      where: { id },
+      include: { store: true },
+    });
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Pesanan tidak ditemukan.' });
+    }
+
+    if (order.orderStatus === 'completed') {
+      return res.status(400).json({ success: false, message: 'Pesanan ini sudah diselesaikan sebelumnya.' });
+    }
+
+    // Phase 1 Calculation: Net Seller Earnings = Subtotal - MDR Fee - Platform Commission (2%)
+    const mdrFee = 4500; // Flat MDR fee
+    const platformCommission = order.subtotal * 0.02; // 2% platform fee
+    const netSellerEarning = Math.max(0, order.subtotal - mdrFee - platformCommission);
+
+    // Find Store Admin User
+    const storeAdmin = await prisma.user.findFirst({
+      where: { assignedStoreId: order.storeId },
+    });
+
+    await prisma.$transaction(async (tx) => {
+      // 1. Update Order status
+      await tx.order.update({
+        where: { id },
+        data: {
+          orderStatus: 'completed',
+          paymentStatus: 'paid',
+        },
+      });
+
+      // 2. Update Store activeBalance
+      const updatedStore = await tx.store.update({
+        where: { id: order.storeId },
+        data: {
+          activeBalance: { increment: netSellerEarning },
+        },
+      });
+
+      // 3. Update User activeBalance if admin exists
+      if (storeAdmin) {
+        await tx.user.update({
+          where: { id: storeAdmin.id },
+          data: {
+            activeBalance: { increment: netSellerEarning },
+          },
+        });
+      }
+
+      // 4. Record BalanceMutation
+      await tx.balanceMutation.create({
+        data: {
+          userId: storeAdmin?.id || null,
+          storeId: order.storeId,
+          orderId: order.id,
+          type: 'CREDIT',
+          amount: netSellerEarning,
+          balanceAfter: updatedStore.activeBalance,
+          description: `Penambahan saldo dari pesanan #${order.orderNo}`,
+        },
+      });
+    });
+
+    return res.json({
+      success: true,
+      message: `Pesanan #${order.orderNo} telah dikonfirmasi selesai! Saldo Rp ${netSellerEarning.toLocaleString('id-ID')} telah diteruskan ke toko.`,
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};

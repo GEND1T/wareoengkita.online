@@ -23,13 +23,19 @@ model User {
   birthDate          String?  @default("1995-08-17")
   joinedDate         String
   avatarUrl          String?
+  activeBalance      Float    @default(0)
+  bankName           String?
+  bankAccountNumber  String?
+  bankAccountHolder  String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  orders Order[]
-  reviews Review[]
+  orders           Order[]
+  reviews          Review[]
   storeRegistrations StoreRegistration[]
-  addresses Address[]
+  addresses        Address[]
+  balanceMutations BalanceMutation[]
+  withdrawals      Withdrawal[]
 }
 
 model StoreRegistration {
@@ -66,15 +72,21 @@ model Store {
   coverImage     String
   rating         Float    @default(0)
   isActive       Boolean  @default(true)
+  activeBalance  Float    @default(0)
+  bankName       String?
+  bankAccountNumber String?
+  bankAccountHolder String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  products        Product[]
-  orders          Order[]
-  payments        Payment[]
-  shippingOptions ShippingOption[]
-  paymentOptions  PaymentOption[]
-  promos          PromoBanner[]
+  products         Product[]
+  orders           Order[]
+  payments         Payment[]
+  shippingOptions  ShippingOption[]
+  paymentOptions   PaymentOption[]
+  promos           PromoBanner[]
+  balanceMutations BalanceMutation[]
+  withdrawals      Withdrawal[]
 }
 
 model Category {
@@ -143,6 +155,42 @@ model Order {
   user     User?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
   store    Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
   payments Payment[]
+}
+
+model BalanceMutation {
+  id           String   @id @default(uuid())
+  userId       String?
+  storeId      String?
+  orderId      String?
+  type         String   // "CREDIT" | "DEBIT" | "REFUND"
+  amount       Float
+  balanceAfter Float
+  description  String
+  createdAt    DateTime @default(now())
+
+  user  User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store Store? @relation(fields: [storeId], references: [id], onDelete: Cascade)
+}
+
+model Withdrawal {
+  id              String   @id @default(uuid())
+  withdrawalNo    String   @unique
+  userId          String?
+  storeId         String?
+  amount          Float
+  disbursementFee Float    @default(5000)
+  netAmount       Float
+  bankCode        String
+  accountNumber   String
+  accountHolder   String
+  status          String   @default("PENDING") // "PENDING" | "SUCCESS" | "FAILED"
+  disbursementRef String?
+  failureReason   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user  User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store Store? @relation(fields: [storeId], references: [id], onDelete: Cascade)
 }
 
 model Review {

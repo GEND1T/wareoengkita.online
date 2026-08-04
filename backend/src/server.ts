@@ -14,6 +14,8 @@ import promoRoutes from './routes/promoRoutes';
 import optionRoutes from './routes/optionRoutes';
 import uploadRoutes from './routes/uploadRoutes';
 import pembayaranRoutes from './routes/pembayaranRoutes';
+import withdrawalRoutes from './routes/withdrawalRoutes';
+import { handleDisbursementWebhook } from './controllers/disbursementWebhookController';
 import { errorHandler } from './middlewares/errorHandler';
 
 dotenv.config();
@@ -35,6 +37,9 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Webhook Disbursement Callback Endpoint
+app.post('/api/webhook/disbursement', handleDisbursementWebhook);
+
 // API Routes Mounting
 app.use('/api/auth', authRoutes);
 app.use('/api/stores', storeRoutes);
@@ -49,6 +54,7 @@ app.use('/api/promos', promoRoutes);
 app.use('/api/options', optionRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/pembayaran', pembayaranRoutes);
+app.use('/api/withdrawals', withdrawalRoutes);
 
 // Global Error Handler Middleware
 app.use(errorHandler);

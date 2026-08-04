@@ -32,6 +32,8 @@ import { UsersManagementView } from './UsersManagementView';
 import { StoresManagementView } from './StoresManagementView';
 import { AnalyticsReportsView } from './AnalyticsReportsView';
 import { SystemSettingsView } from './SystemSettingsView';
+import { WalletWithdrawalView } from './WalletWithdrawalView';
+import { Wallet } from 'lucide-react';
 import { Snackbar, Alert } from '@mui/material';
 
 import { useUserStore } from '../../store/useUserStore';
@@ -80,6 +82,7 @@ export const AdminDashboard: React.FC = () => {
     { id: 'store_profile', label: 'Profil Toko', icon: <Store className="w-5 h-5" /> },
     { id: 'shipping_options', label: 'Opsi Pengiriman', icon: <Truck className="w-5 h-5" /> },
     { id: 'payment_methods', label: 'Pembayaran', icon: <CreditCard className="w-5 h-5" /> },
+    { id: 'wallet_pencairan', label: 'Dompet & Pencairan', icon: <Wallet className="w-5 h-5" /> },
     { id: 'analytics_reports', label: 'Laporan Analytics', icon: <BarChart3 className="w-5 h-5" /> },
   ];
 
@@ -261,6 +264,7 @@ export const AdminDashboard: React.FC = () => {
               {activeTab === 'store_profile' && 'Profil Toko & Lokasi Map'}
               {activeTab === 'shipping_options' && 'Opsi Pengiriman Pesanan'}
               {activeTab === 'payment_methods' && 'Metode Pembayaran'}
+              {activeTab === 'wallet_pencairan' && 'Dompet & Pencairan Dana Penjual'}
               {activeTab === 'users_management' && 'Manajemen User (Pengguna)'}
               {activeTab === 'stores_management' && 'Manajemen Cabang Toko (Multi-Store)'}
               {activeTab === 'analytics_reports' && 'Laporan Analytics & Penjualan'}
@@ -339,6 +343,7 @@ export const AdminDashboard: React.FC = () => {
             {activeTab === 'store_profile' && <StoreProfileView />}
             {activeTab === 'shipping_options' && <ShippingView />}
             {activeTab === 'payment_methods' && <PaymentView />}
+            {activeTab === 'wallet_pencairan' && <WalletWithdrawalView />}
             {activeTab === 'users_management' && <UsersManagementView />}
             {activeTab === 'stores_management' && <StoresManagementView />}
             {activeTab === 'analytics_reports' && <AnalyticsReportsView />}

@@ -154,5 +154,47 @@ export interface ManagedUser {
   joinedDate: string;
   totalOrdersOrSales: number;
   avatarUrl?: string;
+  activeBalance?: number;
+  bankName?: string;
+  bankAccountNumber?: string;
+  bankAccountHolder?: string;
+}
+
+export interface BalanceMutation {
+  id: string;
+  userId?: string | null;
+  storeId?: string | null;
+  orderId?: string | null;
+  type: 'CREDIT' | 'DEBIT' | 'REFUND';
+  amount: number;
+  balanceAfter: number;
+  description: string;
+  createdAt: string;
+}
+
+export interface Withdrawal {
+  id: string;
+  withdrawalNo: string;
+  userId?: string | null;
+  storeId?: string | null;
+  amount: number;
+  disbursementFee: number;
+  netAmount: number;
+  bankCode: string;
+  accountNumber: string;
+  accountHolder: string;
+  status: 'PENDING' | 'SUCCESS' | 'FAILED';
+  disbursementRef?: string | null;
+  failureReason?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WalletInfo {
+  activeBalance: number;
+  bankName: string;
+  bankAccountNumber: string;
+  bankAccountHolder: string;
+  mutations: BalanceMutation[];
 }
 

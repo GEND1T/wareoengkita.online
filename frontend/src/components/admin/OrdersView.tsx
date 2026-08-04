@@ -20,10 +20,11 @@ import { useUserStore } from '../../store/useUserStore';
 import type { AdminOrder, OrderStatus } from '../../types';
 import { PrintShippingLabel } from './PrintShippingLabel';
 import { TableSkeleton } from '../common/AdminSkeletons';
+import { API_BASE_URL } from '../../config/api';
 
 export const OrdersView: React.FC = () => {
   const { profile } = useUserStore();
-  const { orders, updateOrderStatus, addNewMockOrder, fetchInitialData, isLoadingData } = useAdminStore();
+  const { orders, updateOrderStatus, addNewMockOrder, fetchInitialData, isLoadingData, showToast } = useAdminStore();
 
   React.useEffect(() => {
     fetchInitialData(profile.assignedStoreId);
@@ -168,10 +169,27 @@ export const OrdersView: React.FC = () => {
         return (
           <button
             type="button"
-            onClick={() => updateOrderStatus(order.id, 'completed')}
-            className="bg-[#063104] hover:bg-[#084205] text-white font-extrabold text-xs px-3 py-1.5 rounded-xl shadow-xs transition-all active:scale-95 flex items-center gap-1"
+            onClick={async () => {
+              try {
+                const res = await fetch(`${API_BASE_URL}/orders/${order.id}/confirm-receipt`, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                });
+                const json = await res.json();
+                if (json.success) {
+                  showToast(json.message);
+                  const storeIdFilter = profile.role === 'admin_store' ? (profile.assignedStoreId || undefined) : undefined;
+                  fetchInitialData(storeIdFilter);
+                } else {
+                  updateOrderStatus(order.id, 'completed');
+                }
+              } catch {
+                updateOrderStatus(order.id, 'completed');
+              }
+            }}
+            className="bg-[#063104] hover:bg-[#084205] text-white font-extrabold text-xs px-3 py-1.5 rounded-xl shadow-xs transition-all active:scale-95 flex items-center gap-1 cursor-pointer"
           >
-            <span>Selesai</span>
+            <span>Pesanan Diterima</span>
             <CheckCircle2 className="w-3.5 h-3.5" />
           </button>
         );

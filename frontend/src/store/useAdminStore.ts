@@ -21,6 +21,7 @@ export type AdminTab =
   | 'store_profile'
   | 'shipping_options'
   | 'payment_methods'
+  | 'wallet_pencairan'
   | 'users_management'
   | 'stores_management'
   | 'analytics_reports'
