@@ -450,6 +450,34 @@ export const OrdersView: React.FC = () => {
                 </div>
               </div>
 
+              {/* Shipping Type Info */}
+              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Tipe Pengiriman:</span>
+                  <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${selectedOrderForDetail.shippingType === 'pickup' ? 'bg-blue-50 text-blue-700 border-blue-200' : selectedOrderForDetail.shippingType === 'scheduled' ? 'bg-purple-50 text-purple-700 border-purple-200' : selectedOrderForDetail.shippingType === 'cod' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                    {selectedOrderForDetail.shippingType === 'pickup' ? '📦 Self-Pickup' : selectedOrderForDetail.shippingType === 'scheduled' ? '📅 Terjadwal' : selectedOrderForDetail.shippingType === 'cod' ? '💰 COD' : '⚡ Instant Delivery'}
+                  </span>
+                </div>
+                {selectedOrderForDetail.shippingType === 'pickup' && selectedOrderForDetail.pickupCode && (
+                  <div className="pt-1.5 border-t border-slate-200 flex items-center justify-between">
+                    <span className="text-xs text-gray-600 font-medium">PIN Ambil di Toko:</span>
+                    <span className="text-sm font-black tracking-widest bg-blue-100 text-blue-800 px-3 py-1 rounded-lg border border-blue-300 font-mono">
+                      {selectedOrderForDetail.pickupCode}
+                    </span>
+                  </div>
+                )}
+                {selectedOrderForDetail.shippingType === 'scheduled' && selectedOrderForDetail.scheduledDate && (
+                  <div className="pt-1 border-t border-slate-200 text-xs text-gray-600">
+                    <span>Jadwal: <strong>{selectedOrderForDetail.scheduledDate}</strong> ({selectedOrderForDetail.scheduledSlot || 'Slot Standar'})</span>
+                  </div>
+                )}
+                {selectedOrderForDetail.driverName && (
+                  <div className="pt-1 border-t border-slate-200 text-xs text-gray-600">
+                    <span>Kurir: <strong>{selectedOrderForDetail.driverName}</strong> ({selectedOrderForDetail.driverPhone || '-'}) • {selectedOrderForDetail.driverPlate || ''}</span>
+                  </div>
+                )}
+              </div>
+
               {/* Items List Table */}
               <div className="space-y-2">
                 <span className="font-extrabold text-[#063104] uppercase tracking-wider text-[11px] block">

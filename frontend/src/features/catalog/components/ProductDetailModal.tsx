@@ -369,6 +369,9 @@ export const ProductDetailModal: React.FC = () => {
                       {activeProduct.unit || '/pak'}
                     </span>
                   </div>
+                  <div className="text-xs text-gray-500 font-medium mt-1">
+                    Berat: <strong className="text-emerald-800">{activeProduct.weightInGrams ? (activeProduct.weightInGrams >= 1000 ? `${(activeProduct.weightInGrams / 1000).toFixed(1)} kg` : `${activeProduct.weightInGrams} gram`) : '500 gram'}</strong>
+                  </div>
                 </div>
 
                 {/* Direct Quantity Input -, qty, + */}

@@ -44,7 +44,9 @@ interface PembayaranState {
   activeStep: 'select' | 'confirm' | 'success' | 'failed';
   isPaymentModalOpen: boolean;
 
-  fetchPaymentMethods: (amount: number) => Promise<void>;
+  lastFetchedAmount?: number | null;
+  lastFetchedTime?: number;
+  fetchPaymentMethods: (amount: number, force?: boolean) => Promise<void>;
   createPayment: (payload: {
     orderId?: string;
     paymentMethod: string;
@@ -65,7 +67,7 @@ interface PembayaranState {
   resetPaymentState: () => void;
 }
 
-export const usePembayaranStore = create<PembayaranState>((set) => ({
+export const usePembayaranStore = create<PembayaranState>((set, get) => ({
   paymentMethods: [],
   isLoadingMethods: false,
   methodsError: null,
@@ -77,13 +79,27 @@ export const usePembayaranStore = create<PembayaranState>((set) => ({
   activeStep: 'select',
   isPaymentModalOpen: false,
 
-  fetchPaymentMethods: async (amount: number) => {
+  fetchPaymentMethods: async (amount: number, force = false) => {
+    const state = get();
+    const isSameAmount = state.lastFetchedAmount === amount;
+    const isFresh = Date.now() - (state.lastFetchedTime || 0) < 5 * 60 * 1000;
+    const hasMethods = state.paymentMethods.length > 0;
+
+    if (!force && isSameAmount && isFresh && hasMethods) {
+      return;
+    }
+
     set({ isLoadingMethods: true, methodsError: null });
     try {
       const res = await fetch(`${API_BASE_URL}/pembayaran/methods?amount=${amount}`);
       const data = await res.json();
       if (data.success) {
-        set({ paymentMethods: data.data || [], isLoadingMethods: false });
+        set({
+          paymentMethods: data.data || [],
+          isLoadingMethods: false,
+          lastFetchedAmount: amount,
+          lastFetchedTime: Date.now(),
+        });
       } else {
         set({ methodsError: data.message || 'Gagal memuat metode pembayaran', isLoadingMethods: false });
       }

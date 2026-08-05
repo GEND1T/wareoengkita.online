@@ -32,6 +32,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   const [discountTag, setDiscountTag] = useState('');
   const [badge, setBadge] = useState('');
   const [unit, setUnit] = useState('/ikat');
+  const [weightInGrams, setWeightInGrams] = useState<number | ''>(500);
   const [stock, setStock] = useState<number | ''>(50);
   const [subtitle, setSubtitle] = useState('');
   const [description, setDescription] = useState('');
@@ -58,6 +59,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       setDiscountTag(productToEdit.discountTag || '');
       setBadge(productToEdit.badge || '');
       setUnit(productToEdit.unit);
+      setWeightInGrams(productToEdit.weightInGrams ?? 500);
       setStock(productToEdit.stock);
       setSubtitle(productToEdit.subtitle || '');
       setDescription(productToEdit.description || '');
@@ -229,6 +231,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       discountTag: discountTag.trim() || null,
       badge: badge.trim() || null,
       unit: unit.trim() || '/pak',
+      weightInGrams: typeof weightInGrams === 'number' ? weightInGrams : 500,
       stock: typeof stock === 'number' ? stock : 0,
       description: description.trim() || subtitle.trim() || name.trim(),
       longDescription: description.trim(),
@@ -541,6 +544,21 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                       value={unit}
                       onChange={(e) => setUnit(e.target.value)}
                       placeholder="e.g. /pak, /kg, /ikat"
+                      className="w-full bg-white text-sm rounded-xl px-3.5 py-2.5 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#063104]/20 focus:border-[#063104]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                      Berat Produk (gram) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={1}
+                      value={weightInGrams}
+                      onChange={(e) => setWeightInGrams(e.target.value === '' ? '' : Number(e.target.value))}
+                      placeholder="e.g. 500 (gram)"
                       className="w-full bg-white text-sm rounded-xl px-3.5 py-2.5 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#063104]/20 focus:border-[#063104]"
                     />
                   </div>

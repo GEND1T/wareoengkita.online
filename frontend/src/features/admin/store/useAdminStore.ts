@@ -42,12 +42,15 @@ interface AdminState {
   toastMessage: string | null;
   unreadNewOrdersCount: number;
 
+  lastFetchedStoreId?: string | null;
+  lastFetchedTime?: number;
+
   openAdmin: () => void;
   closeAdmin: () => void;
   setActiveTab: (tab: AdminTab) => void;
   showToast: (msg: string) => void;
   hideToast: () => void;
-  fetchInitialData: (storeId?: string) => Promise<void>;
+  fetchInitialData: (storeId?: string, force?: boolean) => Promise<void>;
 
   // Product Management
   toggleProductStatus: (id: string, storeId?: string) => void;
@@ -127,9 +130,19 @@ export const useAdminStore = create<AdminState>()(
       showToast: (msg) => set({ toastMessage: msg }),
       hideToast: () => set({ toastMessage: null }),
 
-      fetchInitialData: async (storeId?: string) => {
-        const currentProducts = _get().products;
-        const currentOrders = _get().orders;
+      fetchInitialData: async (storeId?: string, force = false) => {
+        const state = _get();
+        const targetStoreId = storeId || 'all';
+        const isSameStore = state.lastFetchedStoreId === targetStoreId;
+        const isFresh = Date.now() - (state.lastFetchedTime || 0) < 3 * 60 * 1000;
+        const hasData = state.products.length > 0 || state.orders.length > 0;
+
+        if (!force && isSameStore && isFresh && hasData) {
+          return;
+        }
+
+        const currentProducts = state.products;
+        const currentOrders = state.orders;
         const isCacheEmpty = currentProducts.length === 0 && currentOrders.length === 0;
 
         if (isCacheEmpty) {
@@ -164,6 +177,23 @@ export const useAdminStore = create<AdminState>()(
                 status: o.orderStatus,
                 shippingAddress: o.shippingAddress,
                 paymentMethod: o.paymentMethod,
+                // Shipping system fields
+                shippingType: o.shippingType || 'instant',
+                shippingFee: o.shippingFee,
+                pickupCode: o.pickupCode,
+                pickupQrData: o.pickupQrData,
+                pickupLocationId: o.pickupLocationId,
+                pickupStatus: o.pickupStatus,
+                scheduledDate: o.scheduledDate,
+                scheduledSlot: o.scheduledSlot,
+                biteshipOrderId: o.biteshipOrderId,
+                biteshipTrackingUrl: o.biteshipTrackingUrl,
+                biteshipWaybillId: o.biteshipWaybillId,
+                codVerified: o.codVerified,
+                codCashCollected: o.codCashCollected,
+                driverName: o.driverName,
+                driverPhone: o.driverPhone,
+                driverPlate: o.driverPlate,
               };
             });
             const newCount = mappedOrders.filter((o) => o.status === 'new').length;
@@ -250,7 +280,11 @@ export const useAdminStore = create<AdminState>()(
         } catch (err) {
           console.error('Failed to fetch live admin data:', err);
         } finally {
-          set({ isLoadingData: false });
+          set({
+            isLoadingData: false,
+            lastFetchedStoreId: targetStoreId,
+            lastFetchedTime: Date.now(),
+          });
         }
       },
 

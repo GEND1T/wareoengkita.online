@@ -13,6 +13,7 @@ interface CartState {
   getTotalPrice: () => number;
   getTotalItemsByStore: (storeId?: string) => number;
   getTotalPriceByStore: (storeId?: string) => number;
+  getTotalWeightByStore: (storeId?: string) => number;
 }
 
 export const useCartStore = create<CartState>()(
@@ -81,6 +82,16 @@ export const useCartStore = create<CartState>()(
         return get()
           .items.filter((item) => (item.product.storeId || 'store-1') === storeId)
           .reduce((total, item) => total + item.product.price * item.quantity, 0);
+      },
+      getTotalWeightByStore: (storeId?: string) => {
+        const targetId = (!storeId || storeId === 'all') ? 'store-1' : storeId;
+        return get()
+          .items.filter((item) => (item.product.storeId || 'store-1') === targetId)
+          .reduce(
+            (total, item) =>
+              total + (item.product.weightInGrams || 500) * item.quantity,
+            0
+          );
       },
     }),
     {

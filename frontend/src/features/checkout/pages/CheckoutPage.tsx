@@ -20,6 +20,7 @@ import {
   ChevronDown,
   ChevronUp,
   Wallet,
+  Zap,
 } from 'lucide-react';
 import { useCategoryStore } from '../../catalog/store/useCategoryStore';
 import { useCartStore } from '../../cart/store/useCartStore';
@@ -38,11 +39,19 @@ import { usePembayaranStore } from '../../payment/store/usePembayaranStore';
 interface ShippingOption {
   id: string;
   name: string;
+  type: string;
   courier: string;
   fee: number;
   estimated: string;
   baseFee?: number;
   feePerKm?: number;
+  pickupFee?: number;
+  maxRadiusKm?: number;
+  scheduleMode?: string;
+  scheduleSlots?: any[];
+  pickupLocations?: any[];
+  biteshipRates?: any[];
+  withinCodZone?: boolean;
 }
 
 
@@ -73,18 +82,55 @@ export const CheckoutPage: React.FC = () => {
 
   const activeAddress = getSelectedAddress();
 
-  // Active Shipping Options derived dynamically from Admin Store
-  const availableShippingOptions: ShippingOption[] = adminShippingOptions
-    .filter((s) => s.isActive)
-    .map((s: any) => ({
-      id: s.id,
-      name: s.name,
-      courier: s.courier || 'Kurir Toko',
-      fee: s.baseFee !== undefined ? s.baseFee : (s.fee || 10000),
-      baseFee: s.baseFee,
-      feePerKm: s.feePerKm,
-      estimated: s.estimatedTime || s.estimated || '1-2 Hari',
-    }));
+  const storeCheckoutItems = items.filter(
+    (item) => (item.product.storeId || 'store-1') === (selectedStoreId || 'store-1')
+  );
+  const checkoutItems = storeCheckoutItems.length > 0 ? storeCheckoutItems : items;
+
+  // State Declarations
+  const [shippingRatesData, setShippingRatesData] = useState<any[]>([]);
+  const [isLoadingRates, setIsLoadingRates] = useState<boolean>(false);
+  const [selectedBiteshipServiceCode, setSelectedBiteshipServiceCode] = useState<string>('');
+
+  const [selectedShippingId, setSelectedShippingId] = useState<string>('');
+  const [selectedPaymentMode, setSelectedPaymentMode] = useState<'duitku' | 'manual'>('duitku');
+  const [selectedDuitkuCode, setSelectedDuitkuCode] = useState<string>('BC');
+  const [openCategoryAccordion, setOpenCategoryAccordion] = useState<string | null>('va');
+  const [selectedManualPaymentId, setSelectedManualPaymentId] = useState<string>('');
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
+  const [orderId, setOrderId] = useState<string>('');
+
+  // Shipping type specific state
+  const [selectedPickupLocationId, setSelectedPickupLocationId] = useState<string>('');
+  const [selectedScheduledDate, setSelectedScheduledDate] = useState<string>('');
+  const [selectedScheduledSlot, setSelectedScheduledSlot] = useState<string>('');
+  const [pickupLocations, setPickupLocations] = useState<any[]>([]);
+  const [openShippingAccordion, setOpenShippingAccordion] = useState<string | null>('instant');
+
+  const [isDuitkuConfirmOpen, setIsDuitkuConfirmOpen] = useState(false);
+  const [isDuitkuSuccessOpen, setIsDuitkuSuccessOpen] = useState(false);
+
+  // Active Shipping Options derived dynamically from Rates API or Admin Store fallback
+  const availableShippingOptions: any[] = (
+    shippingRatesData.length > 0 ? shippingRatesData : adminShippingOptions.filter((s) => s.isActive)
+  ).map((s: any) => ({
+    id: s.id,
+    name: s.name,
+    type: s.type || 'instant',
+    courier: s.courier || 'Kurir Toko',
+    internalFee: s.internalFee,
+    fee: s.internalFee !== undefined ? s.internalFee : (s.baseFee !== undefined ? s.baseFee : (s.fee || 10000)),
+    baseFee: s.baseFee,
+    feePerKm: s.feePerKm,
+    pickupFee: s.pickupFee || s.fee || 0,
+    maxRadiusKm: s.maxRadiusKm,
+    scheduleMode: s.scheduleMode,
+    scheduleSlots: s.scheduleSlots,
+    biteshipRates: s.biteshipRates || [],
+    estimated: s.estimatedTime || s.estimated || 'Hari ini',
+  }));
 
   const {
     paymentMethods: duitkuMethods,
@@ -93,28 +139,97 @@ export const CheckoutPage: React.FC = () => {
     isLoadingMethods,
   } = usePembayaranStore();
 
-  const [selectedShippingId, setSelectedShippingId] = useState<string>('');
-  const [selectedPaymentMode, setSelectedPaymentMode] = useState<'duitku' | 'manual'>('duitku');
-  const [selectedDuitkuCode, setSelectedDuitkuCode] = useState<string>('BC'); // Default BCA VA
-  const [openCategoryAccordion, setOpenCategoryAccordion] = useState<string | null>('va');
-  const [selectedManualPaymentId, setSelectedManualPaymentId] = useState<string>('');
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [orderSuccess, setOrderSuccess] = useState(false);
-  const [orderId, setOrderId] = useState<string>('');
-
-  const [isDuitkuConfirmOpen, setIsDuitkuConfirmOpen] = useState(false);
-  const [isDuitkuSuccessOpen, setIsDuitkuSuccessOpen] = useState(false);
-
   React.useEffect(() => {
     if (availableShippingOptions.length > 0) {
       if (!availableShippingOptions.some((s) => s.id === selectedShippingId)) {
-        setSelectedShippingId(availableShippingOptions[0].id);
+        const firstOpt = availableShippingOptions[0];
+        setSelectedShippingId(firstOpt.id);
+        if (firstOpt.type === 'instant') setOpenShippingAccordion(firstOpt.id);
       }
     } else {
       setSelectedShippingId('');
     }
   }, [availableShippingOptions, selectedShippingId]);
+
+  // Fetch pickup locations when a pickup option is selected
+  const selectedShippingType = availableShippingOptions.find(s => s.id === selectedShippingId)?.type;
+  React.useEffect(() => {
+    if (selectedShippingType === 'pickup' && (selectedStoreId || 'store-1')) {
+      const fetchPL = async () => {
+        try {
+          const res = await fetch(`${API_BASE_URL}/shipping/pickup-locations?storeId=${selectedStoreId || 'store-1'}`);
+          const json = await res.json();
+          if (json.success) setPickupLocations(json.data);
+        } catch (err) { console.error('Failed to fetch pickup locations:', err); }
+      };
+      fetchPL();
+    }
+  }, [selectedShippingType, selectedStoreId]);
+
+  // Package total weight calculation in grams
+  const totalPackageWeightGrams = checkoutItems.reduce(
+    (sum, item) => sum + (item.product.weightInGrams || 500) * item.quantity,
+    0
+  );
+  const isWeightExceeded = totalPackageWeightGrams > 5000;
+  const formattedTotalWeight =
+    totalPackageWeightGrams >= 1000
+      ? `${(totalPackageWeightGrams / 1000).toFixed(1)} kg`
+      : `${totalPackageWeightGrams} gram`;
+
+  const ratesCacheRef = React.useRef<{ key: string; data: any[] } | null>(null);
+
+  // Fetch real-time Biteship & internal rates from POST /api/shipping/rates (with caching)
+  React.useEffect(() => {
+    if (isCheckoutOpen) {
+      const targetStore = selectedStoreId || 'store-1';
+      const userLat = activeAddress?.latitude || -6.2088;
+      const userLon = activeAddress?.longitude || 106.8456;
+
+      const cacheKey = `${targetStore}_${userLat}_${userLon}_${totalPackageWeightGrams}_${checkoutItems.length}`;
+
+      // Token saver: reuse cached rates if location and cart weight remain unchanged
+      if (ratesCacheRef.current && ratesCacheRef.current.key === cacheKey) {
+        setShippingRatesData(ratesCacheRef.current.data);
+        setIsLoadingRates(false);
+        return;
+      }
+
+      const fetchRates = async () => {
+        setIsLoadingRates(true);
+        try {
+          const res = await fetch(`${API_BASE_URL}/shipping/rates`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              storeId: targetStore,
+              userLat,
+              userLon,
+              items: checkoutItems.map((i) => ({
+                name: i.product.name,
+                price: i.product.price,
+                weight: i.product.weightInGrams || 500,
+                weightInGrams: i.product.weightInGrams || 500,
+                quantity: i.quantity,
+              })),
+            }),
+          });
+          const json = await res.json();
+          if (json.success && json.data) {
+            const optionsArr = json.data.options || (Array.isArray(json.data) ? json.data : []);
+            ratesCacheRef.current = { key: cacheKey, data: optionsArr };
+            setShippingRatesData(optionsArr);
+          }
+        } catch (err) {
+          console.error('[Checkout] Error fetching shipping rates:', err);
+        } finally {
+          setIsLoadingRates(false);
+        }
+      };
+
+      fetchRates();
+    }
+  }, [isCheckoutOpen, activeAddress?.latitude, activeAddress?.longitude, selectedStoreId, checkoutItems.length, totalPackageWeightGrams]);
 
   const STORE_LAT = storeProfile.latitude || -6.2250;
   const STORE_LON = storeProfile.longitude || 106.8000;
@@ -164,7 +279,23 @@ export const CheckoutPage: React.FC = () => {
 
   const calculateDynamicShippingFee = (option: any): number => {
     if (!option) return 0;
-    const baseFee = option.baseFee !== undefined ? option.baseFee : (option.fee || 0);
+    if (option.type === 'pickup') return option.pickupFee || 0;
+
+    // Check if user selected a specific Biteship courier rate
+    if (selectedBiteshipServiceCode && option.type === 'instant' && option.biteshipRates?.length > 0) {
+      const matchedBiteship = option.biteshipRates.find(
+        (b: any) => `${b.courierCode}-${b.serviceCode}` === selectedBiteshipServiceCode
+      );
+      if (matchedBiteship) return matchedBiteship.price;
+    }
+
+    // If backend returned pre-calculated internalFee, use it
+    if (option.internalFee !== undefined) {
+      return option.internalFee;
+    }
+
+    // Dynamic calculation from baseFee + (distanceKm * feePerKm)
+    const baseFee = option.baseFee !== undefined ? option.baseFee : (option.fee !== undefined ? option.fee : 10000);
     const feePerKm = option.feePerKm !== undefined ? option.feePerKm : 0;
     if (feePerKm > 0) {
       return baseFee + Math.round(distanceKm * feePerKm);
@@ -173,11 +304,6 @@ export const CheckoutPage: React.FC = () => {
   };
 
   const selectedShipping = availableShippingOptions.find((s) => s.id === selectedShippingId) || null;
-
-  const storeCheckoutItems = items.filter(
-    (item) => (item.product.storeId || 'store-1') === (selectedStoreId || 'store-1')
-  );
-  const checkoutItems = storeCheckoutItems.length > 0 ? storeCheckoutItems : items;
 
   const subtotalItems = storeCheckoutItems.length > 0
     ? getTotalPriceByStore(selectedStoreId)
@@ -239,7 +365,7 @@ export const CheckoutPage: React.FC = () => {
         customerId: custId,
         customerName: custName,
         customerPhone: custPhone,
-        shippingAddress: formattedAddress,
+        shippingAddress: selectedShipping?.type === 'pickup' ? 'Self-Pickup' : formattedAddress,
         storeId: targetStoreId,
         items: checkoutItems.map((item) => ({
           productName: item.product.name,
@@ -252,7 +378,12 @@ export const CheckoutPage: React.FC = () => {
         shippingFee: subtotalShipping,
         discountAmount: 0,
         totalPrice: grandTotal,
-        paymentMethod: selectedPaymentName,
+        paymentMethod: selectedShipping?.type === 'cod' ? 'Cash on Delivery (COD)' : selectedPaymentName,
+        // Shipping type fields
+        shippingType: selectedShipping?.type || 'instant',
+        pickupLocationId: selectedShipping?.type === 'pickup' ? selectedPickupLocationId : undefined,
+        scheduledDate: selectedShipping?.type === 'scheduled' ? selectedScheduledDate : undefined,
+        scheduledSlot: selectedShipping?.type === 'scheduled' ? selectedScheduledSlot : undefined,
       };
 
       const res = await fetch(`${API_BASE_URL}/orders`, {
@@ -551,33 +682,278 @@ export const CheckoutPage: React.FC = () => {
               <div className="space-y-2">
                 {availableShippingOptions.map((option) => {
                   const isSelected = option.id === selectedShippingId;
+                  const typeLabels: Record<string, { label: string; emoji: string; color: string }> = {
+                    instant: { label: 'Instant', emoji: '⚡', color: 'bg-amber-50 text-amber-700 border-amber-200' },
+                    pickup: { label: 'Ambil di Tempat', emoji: '📦', color: 'bg-blue-50 text-blue-700 border-blue-200' },
+                    scheduled: { label: 'Terjadwal', emoji: '📅', color: 'bg-purple-50 text-purple-700 border-purple-200' },
+                    cod: { label: 'COD', emoji: '💰', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+                  };
+                  const typeInfo = typeLabels[option.type] || typeLabels.instant;
+                  const fee = calculateDynamicShippingFee(option);
+
                   return (
-                    <button
-                      key={option.id}
-                      type="button"
-                      onClick={() => setSelectedShippingId(option.id)}
-                      className={`w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between ${isSelected
-                        ? 'bg-emerald-50/60 border-[#063104] ring-1 ring-[#063104]'
-                        : 'bg-white border-gray-200 hover:border-[#77a160]'
-                        }`}
-                    >
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-gray-900 text-xs">
-                            {option.name}
-                          </span>
-                          <span className="bg-emerald-100 text-[#063104] text-[10px] font-bold px-2 py-0.5 rounded">
-                            {option.estimated}
-                          </span>
+                    <div key={option.id}>
+                      {option.type === 'instant' ? (
+                        <div className="border border-emerald-200 rounded-xl overflow-hidden transition-all shadow-2xs">
+                          {/* Header Category Accordion Button (Buka/Tutup) */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedShippingId(option.id);
+                              setOpenShippingAccordion(openShippingAccordion === option.id ? null : option.id);
+                            }}
+                            className={`w-full p-3 flex items-center justify-between text-left transition-colors cursor-pointer ${
+                              isSelected && openShippingAccordion === option.id
+                                ? 'bg-emerald-50/90 border-b border-emerald-200'
+                                : isSelected
+                                ? 'bg-emerald-50/60 hover:bg-emerald-50/80'
+                                : 'bg-slate-50 hover:bg-slate-100'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <Zap className="w-4 h-4 text-emerald-700 shrink-0 fill-emerald-500" />
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-bold text-gray-900 text-xs">{option.name}</span>
+                                  <span className="bg-emerald-100/80 text-[#063104] text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200">
+                                    ⚡ {typeInfo.label}
+                                  </span>
+                                  {selectedBiteshipServiceCode ? (
+                                    <span className="bg-amber-100 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-300">
+                                      {option.biteshipRates?.find((b: any) => `${b.courierCode}-${b.serviceCode}` === selectedBiteshipServiceCode)?.courierName || 'Biteship'}
+                                    </span>
+                                  ) : (
+                                    <span className="bg-[#063104] text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                      kurir toko
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-[11px] text-gray-500 mt-0.5">
+                                  Klik untuk memilih Kurir Toko atau Kurir Instan Biteship
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <span className={`font-extrabold text-xs shrink-0 ${fee === 0 ? 'text-emerald-600' : 'text-[#063104]'}`}>
+                                {fee === 0 ? 'GRATIS' : formatCurrency(fee)}
+                              </span>
+                              {openShippingAccordion === option.id ? (
+                                <ChevronUp className="w-4 h-4 text-emerald-700 shrink-0" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-gray-500 shrink-0" />
+                              )}
+                            </div>
+                          </button>
+
+                          {/* Accordion Body (Open/Close Buka-Tutup) */}
+                          {openShippingAccordion === option.id && (
+                            <div className="p-3 bg-white space-y-2 border-t border-emerald-100">
+                              <div className="flex items-center justify-between px-1 pb-1">
+                                <p className="text-[11px] font-extrabold text-[#063104] flex items-center gap-1.5">
+                                  ⚡ Pilih Penyedia Kurir Instan:
+                                </p>
+                                {isLoadingRates && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#063104]" />}
+                              </div>
+
+                              <div className="space-y-2">
+                                {/* 1. Internal Store Courier (FIRST) with 'kurir toko' badge */}
+                                {(() => {
+                                  const isInternalSelected = isSelected && !selectedBiteshipServiceCode;
+                                  const internalFeeVal = calculateDynamicShippingFee({ ...option, biteshipRates: [] });
+                                  return (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setSelectedShippingId(option.id);
+                                        setSelectedBiteshipServiceCode('');
+                                      }}
+                                      className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer ${
+                                        isInternalSelected
+                                          ? 'bg-emerald-50/90 border-[#063104] ring-2 ring-[#063104] font-bold text-[#063104] shadow-xs'
+                                          : 'bg-white border-gray-200 hover:border-[#77a160] text-gray-800'
+                                      }`}
+                                    >
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <span className="font-extrabold text-gray-900 text-xs">{option.name}</span>
+                                          <span className="bg-[#063104] text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                            kurir toko
+                                          </span>
+                                          <span className="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded">
+                                            {option.estimated || '30-60 menit'}
+                                          </span>
+                                        </div>
+                                        <span className="font-extrabold text-xs text-[#063104]">
+                                          {internalFeeVal === 0 ? 'GRATIS' : formatCurrency(internalFeeVal)}
+                                        </span>
+                                      </div>
+                                      <p className="text-[10px] text-gray-500 mt-1">
+                                        Pengiriman langsung oleh tim/kurir toko (lokal).
+                                      </p>
+                                    </button>
+                                  );
+                                })()}
+
+                                {/* 2. Active Biteship Instant Couriers (Gojek / Grab) */}
+                                {option.biteshipRates && option.biteshipRates.length > 0 && (
+                                  option.biteshipRates.map((bRate: any) => {
+                                    const codeKey = `${bRate.courierCode}-${bRate.serviceCode}`;
+                                    const isRateSelected = isSelected && selectedBiteshipServiceCode === codeKey;
+                                    return (
+                                      <button
+                                        key={codeKey}
+                                        type="button"
+                                        onClick={() => {
+                                          setSelectedShippingId(option.id);
+                                          setSelectedBiteshipServiceCode(codeKey);
+                                        }}
+                                        className={`w-full text-left p-3 rounded-xl border text-xs transition-all cursor-pointer ${
+                                          isRateSelected
+                                            ? 'bg-emerald-50/90 border-[#063104] ring-2 ring-[#063104] font-bold text-[#063104] shadow-xs'
+                                            : 'bg-white border-gray-200 hover:border-emerald-300 text-gray-800'
+                                        }`}
+                                      >
+                                        <div className="flex items-center justify-between">
+                                          <div className="flex items-center gap-2 flex-wrap">
+                                            <span className="font-extrabold text-gray-900 text-xs">
+                                              {bRate.courierName} {bRate.serviceName}
+                                            </span>
+                                            <span className="bg-amber-100 text-amber-900 text-[9px] font-black px-2 py-0.5 rounded-full border border-amber-300 uppercase">
+                                              {bRate.courierCode}
+                                            </span>
+                                            <span className="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded">
+                                              {bRate.duration}
+                                            </span>
+                                          </div>
+                                          <span className="font-extrabold text-[#063104] text-xs">
+                                            {formatCurrency(bRate.price)}
+                                          </span>
+                                        </div>
+                                        {bRate.description && (
+                                          <p className="text-[10px] text-gray-500 mt-1">
+                                            {bRate.description}
+                                          </p>
+                                        )}
+                                      </button>
+                                    );
+                                  })
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
-                        <p className="text-[11px] text-gray-500 mt-0.5">
-                          Kurir: {option.courier}
-                        </p>
-                      </div>
-                      <span className="font-extrabold text-[#063104] text-xs">
-                        {formatCurrency(calculateDynamicShippingFee(option))}
-                      </span>
-                    </button>
+                      ) : (
+                        <div>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedShippingId(option.id)}
+                            className={`w-full text-left p-3 rounded-xl border transition-all ${
+                              isSelected
+                                ? 'bg-emerald-50/60 border-[#063104] ring-1 ring-[#063104]'
+                                : 'bg-white border-gray-200 hover:border-[#77a160]'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-bold text-gray-900 text-xs">{option.name}</span>
+                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${typeInfo.color}`}>
+                                    {typeInfo.emoji} {typeInfo.label}
+                                  </span>
+                                  <span className="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded">
+                                    {option.estimated}
+                                  </span>
+                                </div>
+                                {option.type === 'pickup' && (
+                                  <p className="text-[11px] text-gray-500 mt-0.5">Ambil langsung di lokasi toko</p>
+                                )}
+                                {option.type === 'scheduled' && (
+                                  <p className="text-[11px] text-gray-500 mt-0.5">Pilih tanggal &amp; waktu pengiriman</p>
+                                )}
+                                {option.type === 'cod' && (
+                                  <p className="text-[11px] text-gray-500 mt-0.5">
+                                    Bayar saat barang sampai {option.maxRadiusKm ? `(maks ${option.maxRadiusKm} km)` : ''}
+                                  </p>
+                                )}
+                              </div>
+                              <span className={`font-extrabold text-xs shrink-0 ${fee === 0 ? 'text-emerald-600' : 'text-[#063104]'}`}>
+                                {fee === 0 ? 'GRATIS' : formatCurrency(fee)}
+                              </span>
+                            </div>
+                          </button>
+                        </div>
+                      )}
+
+                      {isSelected && option.type === 'pickup' && (
+                        <div className="mt-2 p-3 bg-blue-50/50 rounded-xl border border-blue-100 space-y-2">
+                          <p className="text-[11px] font-bold text-blue-800">📍 Pilih Lokasi Pengambilan:</p>
+                          {pickupLocations.length === 0 ? (
+                            <p className="text-[10px] text-gray-500">Lokasi pengambilan akan ditampilkan saat tersedia.</p>
+                          ) : (
+                            pickupLocations.map((pl: any) => (
+                              <button
+                                key={pl.id}
+                                type="button"
+                                onClick={() => setSelectedPickupLocationId(pl.id)}
+                                className={`w-full text-left p-2.5 rounded-lg border text-xs transition-all ${selectedPickupLocationId === pl.id ? 'bg-blue-100 border-blue-400 ring-1 ring-blue-400' : 'bg-white border-gray-200 hover:border-blue-300'}`}
+                              >
+                                <span className="font-bold text-gray-900">{pl.name}</span>
+                                <p className="text-[10px] text-gray-500 mt-0.5">{pl.address}</p>
+                                {pl.operatingHours && <p className="text-[10px] text-gray-400">🕐 {pl.operatingHours}</p>}
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      )}
+
+                      {isSelected && option.type === 'scheduled' && (
+                        <div className="mt-2 p-3 bg-purple-50/50 rounded-xl border border-purple-100 space-y-2">
+                          <p className="text-[11px] font-bold text-purple-800">📅 Pilih Jadwal Pengiriman:</p>
+                          <input
+                            type="date"
+                            value={selectedScheduledDate}
+                            onChange={e => setSelectedScheduledDate(e.target.value)}
+                            min={new Date().toISOString().split('T')[0]}
+                            max={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+                            className="w-full px-3 py-2 bg-white border border-purple-200 rounded-lg text-xs"
+                          />
+                          {option.scheduleSlots && option.scheduleSlots.length > 0 && (
+                            <div className="space-y-1.5">
+                              <p className="text-[10px] font-bold text-purple-700">Pilih Slot Waktu:</p>
+                              {option.scheduleSlots.map((slot: any) => (
+                                <button
+                                  key={slot.id}
+                                  type="button"
+                                  onClick={() => setSelectedScheduledSlot(`${slot.startTime}-${slot.endTime}`)}
+                                  className={`w-full text-left p-2 rounded-lg border text-xs transition-all ${selectedScheduledSlot === `${slot.startTime}-${slot.endTime}` ? 'bg-purple-100 border-purple-400 ring-1 ring-purple-400' : 'bg-white border-gray-200 hover:border-purple-300'}`}
+                                >
+                                  <span className="font-bold">{slot.label}</span>
+                                  <span className="text-gray-400 ml-2">{slot.startTime} - {slot.endTime}</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {isSelected && option.type === 'cod' && distanceKm > (option.maxRadiusKm || 10) && (
+                        <div className="mt-2 p-3 bg-red-50 rounded-xl border border-red-200">
+                          <p className="text-[11px] font-bold text-red-700 flex items-center gap-1">
+                            <AlertCircle className="w-3.5 h-3.5" />
+                            Alamat Anda di luar zona COD ({distanceKm} km, maks {option.maxRadiusKm || 10} km)
+                          </p>
+                        </div>
+                      )}
+
+                      {isSelected && option.type === 'cod' && distanceKm <= (option.maxRadiusKm || 10) && (
+                        <div className="mt-2 p-3 bg-emerald-50/50 rounded-xl border border-emerald-100">
+                          <p className="text-[11px] font-bold text-emerald-800 flex items-center gap-1">
+                            ✅ Alamat dalam zona COD — bayar tunai saat barang sampai
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>
@@ -946,6 +1322,13 @@ export const CheckoutPage: React.FC = () => {
             <div className="flex items-center gap-1.5 text-[#063104] font-extrabold uppercase tracking-wider pb-1 border-b border-gray-100">
               <Receipt className="w-4 h-4" />
               <span>Rincian Pembayaran</span>
+            </div>
+
+            <div className="flex items-center justify-between text-gray-600 bg-slate-50 p-2 rounded-xl border border-slate-100">
+              <span className="font-semibold text-slate-700">Total Bobot Paket</span>
+              <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                {formattedTotalWeight} ({checkoutItems.length} item)
+              </span>
             </div>
 
             <div className="flex items-center justify-between text-gray-600">

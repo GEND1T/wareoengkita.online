@@ -15,6 +15,9 @@ export const getShippingOptions = async (req: Request, res: Response) => {
 
     const options = await prisma.shippingOption.findMany({
       where: whereClause,
+      include: {
+        scheduleSlots: { where: { isActive: true }, orderBy: { startTime: 'asc' } },
+      },
       orderBy: { baseFee: 'asc' },
     });
 
@@ -26,15 +29,20 @@ export const getShippingOptions = async (req: Request, res: Response) => {
 
 export const createShippingOption = async (req: Request, res: Response) => {
   try {
-    const { code, name, courier, estimatedTime, estimated, baseFee, fee, feePerKm, iconUrl, storeId, isActive } = req.body;
+    const { code, name, type, courier, estimatedTime, estimated, baseFee, fee, feePerKm, pickupFee, maxRadiusKm, codEnabled, scheduleMode, iconUrl, storeId, isActive } = req.body;
     const option = await prisma.shippingOption.create({
       data: {
         code: code || `ship-${Date.now()}`,
         name,
+        type: type || 'instant',
         courier,
         estimatedTime: estimatedTime || estimated || '1-2 Hari',
         baseFee: parseFloat(baseFee !== undefined ? baseFee : (fee || 10000)),
         feePerKm: parseFloat(feePerKm || 2000),
+        pickupFee: parseFloat(pickupFee || 0),
+        maxRadiusKm: parseFloat(maxRadiusKm || 50),
+        codEnabled: codEnabled !== undefined ? Boolean(codEnabled) : false,
+        scheduleMode: scheduleMode || 'user_request',
         iconUrl,
         storeId: storeId || null,
         isActive: isActive !== undefined ? Boolean(isActive) : true,
@@ -50,11 +58,12 @@ export const createShippingOption = async (req: Request, res: Response) => {
 export const updateShippingOption = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { code, name, courier, estimatedTime, estimated, baseFee, fee, feePerKm, iconUrl, storeId, isActive } = req.body;
+    const { code, name, type, courier, estimatedTime, estimated, baseFee, fee, feePerKm, pickupFee, maxRadiusKm, codEnabled, scheduleMode, iconUrl, storeId, isActive } = req.body;
 
     const dataToUpdate: any = {};
     if (code !== undefined) dataToUpdate.code = code;
     if (name !== undefined) dataToUpdate.name = name;
+    if (type !== undefined) dataToUpdate.type = type;
     if (courier !== undefined) dataToUpdate.courier = courier;
     if (estimatedTime !== undefined || estimated !== undefined) {
       dataToUpdate.estimatedTime = estimatedTime || estimated;
@@ -63,6 +72,10 @@ export const updateShippingOption = async (req: Request, res: Response) => {
       dataToUpdate.baseFee = parseFloat(baseFee !== undefined ? baseFee : fee);
     }
     if (feePerKm !== undefined) dataToUpdate.feePerKm = parseFloat(feePerKm);
+    if (pickupFee !== undefined) dataToUpdate.pickupFee = parseFloat(pickupFee);
+    if (maxRadiusKm !== undefined) dataToUpdate.maxRadiusKm = parseFloat(maxRadiusKm);
+    if (codEnabled !== undefined) dataToUpdate.codEnabled = Boolean(codEnabled);
+    if (scheduleMode !== undefined) dataToUpdate.scheduleMode = scheduleMode;
     if (iconUrl !== undefined) dataToUpdate.iconUrl = iconUrl;
     if (storeId !== undefined) dataToUpdate.storeId = storeId;
     if (isActive !== undefined) dataToUpdate.isActive = Boolean(isActive);

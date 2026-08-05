@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../prisma/client';
 import { AuthRequest } from '../middlewares/authMiddleware';
+import { generatePickupCode } from '../services/shippingService';
 
 // POST /api/orders (Create Order from Checkout)
 export const createOrder = async (req: AuthRequest, res: Response) => {
@@ -17,6 +18,11 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
       discountAmount,
       totalPrice,
       paymentMethod,
+      // Shipping system fields
+      shippingType,
+      pickupLocationId,
+      scheduledDate,
+      scheduledSlot,
     } = req.body;
 
     if (!paymentMethod) {
@@ -31,13 +37,22 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
     const orderTime = now.toTimeString().split(' ')[0].slice(0, 5) + ' WIB';
     const orderDate = now.toISOString().split('T')[0];
 
+    // Generate pickup code if self-pickup
+    let pickupCode: string | null = null;
+    let pickupQrData: string | null = null;
+    if (shippingType === 'pickup') {
+      const pickup = generatePickupCode();
+      pickupCode = pickup.pin;
+      pickupQrData = pickup.qrData;
+    }
+
     const newOrder = await prisma.order.create({
       data: {
         orderNo,
         customerId: customerId || req.user?.id || null,
         customerName: customerName || 'Pembeli',
         customerPhone: customerPhone || '',
-        shippingAddress: shippingAddress || '',
+        shippingAddress: shippingType === 'pickup' ? 'Self-Pickup' : (shippingAddress || ''),
         storeId: storeId || 'store-1',
         itemsJson: JSON.stringify(items || []),
         subtotal: parseFloat(subtotal || 0),
@@ -53,6 +68,14 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
         trackingNumber: null,
         orderTime,
         orderDate,
+        // Shipping system fields
+        shippingType: shippingType || 'instant',
+        pickupCode,
+        pickupQrData,
+        pickupLocationId: pickupLocationId || null,
+        pickupStatus: shippingType === 'pickup' ? 'preparing' : null,
+        scheduledDate: scheduledDate || null,
+        scheduledSlot: scheduledSlot || null,
       },
     });
 
