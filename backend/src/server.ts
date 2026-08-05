@@ -15,7 +15,9 @@ import optionRoutes from './routes/optionRoutes';
 import uploadRoutes from './routes/uploadRoutes';
 import pembayaranRoutes from './routes/pembayaranRoutes';
 import withdrawalRoutes from './routes/withdrawalRoutes';
+import shippingRoutes from './routes/shippingRoutes';
 import { handleDisbursementWebhook } from './controllers/disbursementWebhookController';
+import { handleBiteshipWebhook } from './controllers/shippingController';
 import { errorHandler } from './middlewares/errorHandler';
 
 dotenv.config();
@@ -39,6 +41,7 @@ app.get('/api/health', (req, res) => {
 
 // Webhook Disbursement Callback Endpoint
 app.post('/api/webhook/disbursement', handleDisbursementWebhook);
+app.post('/api/webhook/biteship', handleBiteshipWebhook);
 
 // API Routes Mounting
 app.use('/api/auth', authRoutes);
@@ -55,6 +58,7 @@ app.use('/api/options', optionRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/pembayaran', pembayaranRoutes);
 app.use('/api/withdrawals', withdrawalRoutes);
+app.use('/api/shipping', shippingRoutes);
 
 // Global Error Handler Middleware
 app.use(errorHandler);

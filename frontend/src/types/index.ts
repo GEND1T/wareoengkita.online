@@ -7,6 +7,7 @@ export interface Product {
   discountTag?: string | null;
   badge?: string | null;
   unit: string; // e.g. "/ikat", "/pak"
+  weightInGrams?: number; // e.g. 500
   image: string;
   imagesJson?: string | null;
   category: string;
@@ -86,12 +87,29 @@ export interface AdminOrder {
   phone: string;
   orderTime: string;
   orderDate: string;
-  itemsSummary: string; // e.g. "Bayam (2), Tomat (1)..."
+  itemsSummary: string;
   items: AdminOrderItem[];
   totalPrice: number;
   status: OrderStatus;
   shippingAddress: string;
   paymentMethod: string;
+  // Shipping system fields
+  shippingType?: ShippingType;
+  shippingFee?: number;
+  pickupCode?: string;
+  pickupQrData?: string;
+  pickupLocationId?: string;
+  pickupStatus?: string;
+  scheduledDate?: string;
+  scheduledSlot?: string;
+  biteshipOrderId?: string;
+  biteshipTrackingUrl?: string;
+  biteshipWaybillId?: string;
+  codVerified?: boolean;
+  codCashCollected?: boolean;
+  driverName?: string;
+  driverPhone?: string;
+  driverPlate?: string;
 }
 
 export interface PromoBanner {
@@ -117,18 +135,93 @@ export interface StoreProfile {
   openingHours?: string;
 }
 
+export type ShippingType = 'instant' | 'pickup' | 'scheduled' | 'cod';
+
+export interface PickupLocation {
+  id: string;
+  storeId: string;
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  operatingHours?: string;
+  pickupFee?: number;
+  isActive: boolean;
+}
+
+export interface ScheduleSlot {
+  id: string;
+  shippingOptionId: string;
+  label: string;
+  dayOfWeek?: number | null;
+  startTime: string;
+  endTime: string;
+  maxOrders: number;
+  isActive: boolean;
+  currentOrders?: number;
+  available?: boolean;
+}
+
 export interface ShippingOptionAdmin {
   id: string;
   code?: string;
   name: string;
+  type: ShippingType;
   courier: string;
   fee: number;
   baseFee?: number;
   feePerKm?: number;
+  pickupFee?: number;
+  maxRadiusKm?: number;
+  codEnabled?: boolean;
+  scheduleMode?: string;
   estimated: string;
   estimatedTime?: string;
   isActive: boolean;
   storeId?: string;
+  scheduleSlots?: ScheduleSlot[];
+}
+
+export interface CourierCashRecord {
+  id: string;
+  orderId: string;
+  storeId: string;
+  courierName: string;
+  courierPhone: string;
+  cashAmount: number;
+  status: 'HOLDING' | 'DEPOSITED';
+  depositedAt?: string;
+  createdAt: string;
+  order?: { orderNo: string; totalPrice: number; customerName: string };
+}
+
+export interface BiteshipRate {
+  courierName: string;
+  courierCode: string;
+  serviceName: string;
+  serviceCode: string;
+  description: string;
+  price: number;
+  duration: string;
+  durationUnit: string;
+  type: string;
+  availableCashOnDelivery?: boolean;
+  maxWeightKg?: number;
+}
+
+export interface BiteshipCourierConfig {
+  id: string;
+  courierCode: string;
+  courierName: string;
+  serviceCode: string;
+  serviceName: string;
+  description: string;
+  shipmentDuration: string;
+  availableCashOnDelivery: boolean;
+  isActive: boolean;
+  maxWeightKg: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface PaymentOptionAdmin {

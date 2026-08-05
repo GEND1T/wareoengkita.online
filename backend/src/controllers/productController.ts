@@ -151,6 +151,7 @@ export const createProduct = async (req: Request, res: Response) => {
         originalPrice: originalPrice ? parseFloat(originalPrice) : null,
         discountTag: discountTag || null,
         stock: stock !== undefined ? parseInt(stock) : 0,
+        weightInGrams: req.body.weightInGrams !== undefined ? parseInt(req.body.weightInGrams) : (req.body.weight !== undefined ? parseInt(req.body.weight) : 500),
         unit: unit || 'per kg',
         badge: badge || null,
         image: safeImage,
@@ -215,6 +216,9 @@ export const updateProduct = async (req: Request, res: Response) => {
     if (originalPrice !== undefined) updatePayload.originalPrice = originalPrice ? parseFloat(originalPrice) : null;
     if (discountTag !== undefined) updatePayload.discountTag = discountTag || null;
     if (stock !== undefined) updatePayload.stock = parseInt(stock);
+    if (req.body.weightInGrams !== undefined || req.body.weight !== undefined) {
+      updatePayload.weightInGrams = parseInt(req.body.weightInGrams ?? req.body.weight);
+    }
     if (unit !== undefined) updatePayload.unit = unit;
     if (badge !== undefined) updatePayload.badge = badge || null;
     if (safeImage !== undefined) updatePayload.image = safeImage;

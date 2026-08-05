@@ -79,14 +79,16 @@ model Store {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  products         Product[]
-  orders           Order[]
-  payments         Payment[]
-  shippingOptions  ShippingOption[]
-  paymentOptions   PaymentOption[]
-  promos           PromoBanner[]
-  balanceMutations BalanceMutation[]
-  withdrawals      Withdrawal[]
+  products           Product[]
+  orders             Order[]
+  payments           Payment[]
+  shippingOptions    ShippingOption[]
+  paymentOptions     PaymentOption[]
+  promos             PromoBanner[]
+  balanceMutations   BalanceMutation[]
+  withdrawals        Withdrawal[]
+  courierCashRecords CourierCashRecord[]
+  pickupLocations    PickupLocation[]
 }
 
 model Category {
@@ -109,6 +111,7 @@ model Product {
   originalPrice      Float?
   discountTag        String?
   stock              Int      @default(0)
+  weightInGrams      Int      @default(500)
   unit               String   @default(" ")
   badge              String?
   image              String
@@ -149,12 +152,27 @@ model Order {
   trackingNumber  String?
   orderTime       String
   orderDate       String
+  // Shipping system fields
+  shippingType        String?  // "instant" | "pickup" | "scheduled" | "cod"
+  pickupCode          String?  // Kode unik pengambilan (Self-Pickup)
+  pickupQrData        String?  // QR data string
+  pickupLocationId    String?  // Referensi ke PickupLocation
+  pickupStatus        String?  // "preparing" | "ready" | "picked_up"
+  scheduledDate       String?  // Tanggal pengiriman terjadwal "YYYY-MM-DD"
+  scheduledSlot       String?  // "09:00-11:00"
+  biteshipOrderId     String?  // ID Order dari Biteship API
+  biteshipTrackingUrl String?  // URL tracking Biteship
+  biteshipWaybillId   String?  // Waybill number
+  codVerified         Boolean  @default(false)
+  codCashCollected    Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  user     User?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  store    Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  payments Payment[]
+  user               User?              @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  store              Store              @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  payments           Payment[]
+  codVerification    CodVerification?
+  courierCashRecords CourierCashRecord[]
 }
 
 model BalanceMutation {
@@ -231,14 +249,76 @@ model ShippingOption {
   id            String   @id @default(uuid())
   code          String
   name          String
+  type          String   @default("instant") // "instant" | "pickup" | "scheduled" | "cod"
   courier       String?
   estimatedTime String
   baseFee       Float
   feePerKm      Float    @default(2000)
+  pickupFee     Float    @default(0)         // Biaya pickup (untuk self-pickup)
+  maxRadiusKm   Float    @default(50)        // Radius maksimal pengiriman (km)
+  codEnabled    Boolean  @default(false)     // Apakah opsi ini support COD
   iconUrl       String?
   isActive      Boolean  @default(true)
   storeId       String?
+  // Schedule mode: "admin_defined" (admin set fixed days/times) | "user_request" (user picks date+slot)
+  scheduleMode  String?  @default("user_request")
   store         Store?   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  scheduleSlots ScheduleSlot[]
+}
+
+model PickupLocation {
+  id               String   @id @default(uuid())
+  storeId          String
+  name             String          // "Toko Cabang Senopati"
+  address          String
+  latitude         Float
+  longitude        Float
+  operatingHours   String?         // "08:00-21:00"
+  pickupFee        Float    @default(0) // Biaya pengambilan (opsional)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+
+  store            Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+}
+
+model ScheduleSlot {
+  id               String   @id @default(uuid())
+  shippingOptionId String
+  label            String          // "Pagi (09:00 - 11:00)" or "Rabu, 08:00-12:00"
+  dayOfWeek        Int?            // 0=Minggu..6=Sabtu (for admin_defined mode)
+  startTime        String          // "09:00"
+  endTime          String          // "11:00"
+  maxOrders        Int      @default(10)  // Maks pesanan per slot
+  isActive         Boolean  @default(true)
+
+  shippingOption   ShippingOption @relation(fields: [shippingOptionId], references: [id], onDelete: Cascade)
+}
+
+model CodVerification {
+  id          String   @id @default(uuid())
+  orderId     String   @unique
+  phone       String
+  otpCode     String
+  verified    Boolean  @default(false)
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model CourierCashRecord {
+  id            String    @id @default(uuid())
+  orderId       String
+  storeId       String
+  courierName   String
+  courierPhone  String
+  cashAmount    Float
+  status        String    @default("HOLDING") // "HOLDING" | "DEPOSITED"
+  depositedAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  order         Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  store         Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
 }
 
 model PaymentOption {
@@ -332,5 +412,22 @@ model Payment {
 
   order Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
   store Store? @relation(fields: [storeId], references: [id], onDelete: Cascade)
+}
+
+model BiteshipCourier {
+  id                      String   @id @default(uuid())
+  courierCode             String   // "gojek", "grab"
+  courierName             String   // "Gojek", "Grab"
+  serviceCode             String   // "instant", "same_day", "instant_car"
+  serviceName             String   // "Instant", "Same Day", "Instant Car"
+  description             String   // "On Demand Instant (bike)", etc.
+  shipmentDuration        String   // "0-2 jam", "0-4 jam", "0-6 jam"
+  availableCashOnDelivery Boolean  @default(false)
+  isActive                Boolean  @default(true)
+  maxWeightKg             Float    @default(5.0)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@unique([courierCode, serviceCode])
 }
 
