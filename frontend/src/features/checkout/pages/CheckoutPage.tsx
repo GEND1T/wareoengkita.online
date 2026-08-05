@@ -43,6 +43,7 @@ interface ShippingOption {
   courier: string;
   fee: number;
   estimated: string;
+  internalFee?: number;
   baseFee?: number;
   feePerKm?: number;
   pickupFee?: number;
@@ -113,7 +114,7 @@ export const CheckoutPage: React.FC = () => {
   const [isDuitkuSuccessOpen, setIsDuitkuSuccessOpen] = useState(false);
 
   // Active Shipping Options derived dynamically from Rates API or Admin Store fallback
-  const availableShippingOptions: any[] = (
+  const availableShippingOptions: ShippingOption[] = (
     shippingRatesData.length > 0 ? shippingRatesData : adminShippingOptions.filter((s) => s.isActive)
   ).map((s: any) => ({
     id: s.id,
@@ -171,7 +172,6 @@ export const CheckoutPage: React.FC = () => {
     (sum, item) => sum + (item.product.weightInGrams || 500) * item.quantity,
     0
   );
-  const isWeightExceeded = totalPackageWeightGrams > 5000;
   const formattedTotalWeight =
     totalPackageWeightGrams >= 1000
       ? `${(totalPackageWeightGrams / 1000).toFixed(1)} kg`
