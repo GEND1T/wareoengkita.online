@@ -14,6 +14,9 @@ export * from './components/SystemSettingsView';
 export * from './components/UsersManagementView';
 export * from './components/WalletWithdrawalView';
 export * from './components/WithdrawalModal';
+export * from './components/MobileBottomNav';
+export * from './components/MobileMoreMenu';
+export * from './components/MobileHeader';
 
 export * from './pages/AdminDashboard'
 

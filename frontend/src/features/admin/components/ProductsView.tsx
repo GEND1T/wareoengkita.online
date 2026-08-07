@@ -113,7 +113,7 @@ export const ProductsView: React.FC = () => {
     <div className="space-y-5 animate-fade-in">
       {/* Title & Add Product Top Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
+        <div className="hidden md:block">
           <h1 className="text-2xl font-black text-gray-900">Manajemen Produk (Katalog)</h1>
           <p className="text-xs text-gray-500">
             Atur stok harian, harga, status aktif, dan penambahan sayuran/buah segar.
@@ -123,7 +123,7 @@ export const ProductsView: React.FC = () => {
         <button
           type="button"
           onClick={handleOpenAddModal}
-          className="bg-[#063104] hover:bg-[#084205] text-white font-extrabold px-4.5 py-3 rounded-2xl text-xs shadow-lg hover:shadow-emerald-900/20 transition-all duration-200 flex items-center gap-2.5 shrink-0 active:scale-95 border border-emerald-900/30 cursor-pointer self-start sm:self-auto"
+          className="hidden md:flex bg-[#063104] hover:bg-[#084205] text-white font-extrabold px-4.5 py-3 rounded-2xl text-xs shadow-lg hover:shadow-emerald-900/20 transition-all duration-200 items-center gap-2.5 shrink-0 active:scale-95 border border-emerald-900/30 cursor-pointer self-start sm:self-auto"
         >
           <div className="w-5 h-5 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
             <Plus className="w-3.5 h-3.5 stroke-[3]" />
@@ -172,8 +172,146 @@ export const ProductsView: React.FC = () => {
         </div>
       </div>
 
-      {/* Product Catalog Table */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+      {/* ═══ MOBILE: Card-Based Product List ═══ */}
+      <div className="md:hidden space-y-3">
+        {filteredProducts.length === 0 ? (
+          <div className="text-center py-12 text-gray-400 text-sm">
+            Tidak ada produk yang cocok dengan pencarian / filter Anda.
+          </div>
+        ) : (
+          filteredProducts.map((prod) => {
+            const isLowStock = prod.stock > 0 && prod.stock < 5;
+            const isOutOfStock = prod.stock === 0;
+            const storeName = stores.find((s) => s.id === prod.storeId)?.name || prod.storeId || 'Senopati (Pusat)';
+
+            return (
+              <div
+                key={prod.id}
+                className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all ${
+                  !prod.isActive ? 'border-gray-200 opacity-60' : 'border-gray-100'
+                }`}
+              >
+                {/* Card Top: Image + Info */}
+                <div className="flex items-start gap-3 p-3.5">
+                  {/* Product Image */}
+                  <img
+                    src={prod.image}
+                    alt={prod.name}
+                    className="w-16 h-16 object-contain rounded-xl border border-gray-100 bg-gray-50 p-1 shrink-0"
+                  />
+
+                  {/* Product Details */}
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h3 className="font-bold text-gray-900 text-xs leading-tight truncate">{prod.name}</h3>
+                        <p className="text-[10px] text-gray-400 truncate">{prod.subtitle}</p>
+                      </div>
+                      {/* Toggle Status */}
+                      <button
+                        type="button"
+                        onClick={() => toggleProductStatus(prod.id, prod.storeId)}
+                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${prod.isActive ? 'bg-[#063104]' : 'bg-gray-300'}`}
+                        title={prod.isActive ? 'Aktif' : 'Nonaktif'}
+                      >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition duration-200 ${prod.isActive ? 'translate-x-4' : 'translate-x-0'}`} />
+                      </button>
+                    </div>
+
+                    {/* Price + Stock Row */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <span className="font-extrabold text-gray-900 text-xs">
+                          {formatCurrency(prod.price)}
+                        </span>
+                        <span className="text-[10px] text-gray-400 ml-0.5">{prod.unit}</span>
+                      </div>
+
+                      {/* Stock Badge */}
+                      {editingStockId === prod.id ? (
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="number"
+                            autoFocus
+                            min={0}
+                            value={tempStockValue}
+                            onChange={(e) => setTempStockValue(e.target.value === '' ? '' : Number(e.target.value))}
+                            className="w-14 bg-white text-[11px] font-bold px-1.5 py-0.5 border border-[#063104] rounded-lg focus:outline-none"
+                          />
+                          <button type="button" onClick={() => saveInlineStock(prod.id)} className="p-0.5 rounded bg-[#063104] text-white">
+                            <Check className="w-3 h-3" />
+                          </button>
+                          <button type="button" onClick={() => setEditingStockId(null)} className="p-0.5 rounded bg-gray-200 text-gray-600">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => startStockEdit(prod)}
+                          className={`px-2 py-0.5 rounded-lg font-extrabold text-[10px] border transition-all ${
+                            isOutOfStock ? 'bg-red-100 text-red-800 border-red-300' :
+                            isLowStock ? 'bg-amber-100 text-amber-900 border-amber-300' :
+                            'bg-emerald-50 text-[#063104] border-emerald-200'
+                          }`}
+                        >
+                          {isOutOfStock ? '❌ Habis' : isLowStock ? `⚠️ ${prod.stock}` : `${prod.stock} ${prod.unit.replace('/', '')}`}
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Category + Store Badges */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="bg-emerald-50 text-[#063104] font-bold text-[9px] px-2 py-0.5 rounded-md capitalize">
+                        {typeof prod.category === 'object' && (prod.category as any)?.name
+                          ? (prod.category as any).name
+                          : (categories.find(c => c.id === prod.categoryId || c.slug === prod.categorySlug || c.slug === prod.category)?.name || (typeof prod.category === 'string' ? prod.category : 'Sayur Segar'))}
+                      </span>
+                      <span className="bg-gray-100 text-gray-600 font-medium text-[9px] px-2 py-0.5 rounded-md flex items-center gap-0.5">
+                        <Store className="w-2.5 h-2.5" />
+                        {storeName}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card Footer: Actions */}
+                <div className="px-3.5 py-2 border-t border-gray-100 bg-gray-50/50 flex items-center justify-end gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenEditModal(prod)}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white border border-gray-200 text-gray-700 text-[11px] font-bold hover:bg-[#063104] hover:text-white transition-colors active:scale-95"
+                  >
+                    <Pencil className="w-3 h-3" />
+                    <span>Edit</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(prod.id, prod.name)}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white border border-gray-200 text-gray-700 text-[11px] font-bold hover:bg-red-600 hover:text-white transition-colors active:scale-95"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    <span>Hapus</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Mobile FAB: Add Product */}
+      <button
+        type="button"
+        onClick={handleOpenAddModal}
+        className="md:hidden fixed bottom-20 right-4 z-[2550] w-14 h-14 bg-[#063104] text-white rounded-2xl shadow-lg shadow-emerald-900/30 flex items-center justify-center active:scale-90 transition-transform"
+        aria-label="Tambah Produk"
+      >
+        <Plus className="w-6 h-6 stroke-[2.5]" />
+      </button>
+
+      {/* ═══ DESKTOP: Table Layout (unchanged) ═══ */}
+      <div className="hidden md:block bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -204,7 +342,6 @@ export const ProductsView: React.FC = () => {
 
                   return (
                     <tr key={prod.id} className="hover:bg-emerald-50/30 transition-colors">
-                      {/* Foto Thumbnail */}
                       <td className="py-3 px-4">
                         <img
                           src={prod.image}
@@ -212,24 +349,16 @@ export const ProductsView: React.FC = () => {
                           className="w-11 h-11 object-contain rounded-xl border border-gray-100 bg-gray-50 p-1"
                         />
                       </td>
-
-                      {/* Nama Produk */}
                       <td className="py-3 px-4">
                         <div className="font-bold text-gray-900 text-xs">{prod.name}</div>
-                        <div className="text-[11px] text-gray-400 line-clamp-1">
-                          {prod.subtitle}
-                        </div>
+                        <div className="text-[11px] text-gray-400 line-clamp-1">{prod.subtitle}</div>
                       </td>
-
-                      {/* Cabang Toko */}
                       <td className="py-3 px-4">
                         <span className="bg-emerald-100/70 text-[#063104] font-bold text-[10px] px-2.5 py-1 rounded-lg flex items-center gap-1.5 w-max">
                           <Store className="w-3 h-3 text-[#063104]" />
                           {storeName}
                         </span>
                       </td>
-
-                      {/* Kategori */}
                       <td className="py-3 px-4">
                         <span className="bg-emerald-50 text-[#063104] font-bold text-[11px] px-2.5 py-1 rounded-lg capitalize">
                           {typeof prod.category === 'object' && (prod.category as any)?.name
@@ -237,16 +366,10 @@ export const ProductsView: React.FC = () => {
                             : (categories.find(c => c.id === prod.categoryId || c.slug === prod.categorySlug || c.slug === prod.category)?.name || (typeof prod.category === 'string' ? prod.category : 'Sayur Segar'))}
                         </span>
                       </td>
-
-                      {/* Harga / Satuan */}
                       <td className="py-3 px-4 font-black text-gray-900">
                         {formatCurrency(prod.price)}{' '}
-                        <span className="text-gray-500 font-medium text-[11px]">
-                          {prod.unit}
-                        </span>
+                        <span className="text-gray-500 font-medium text-[11px]">{prod.unit}</span>
                       </td>
-
-                      {/* Stok Harian (dengan IN-LINE EDIT & Warning Alert < 5) */}
                       <td className="py-3 px-4">
                         {editingStockId === prod.id ? (
                           <div className="flex items-center gap-1.5">
@@ -255,91 +378,46 @@ export const ProductsView: React.FC = () => {
                               autoFocus
                               min={0}
                               value={tempStockValue}
-                              onChange={(e) =>
-                                setTempStockValue(
-                                  e.target.value === '' ? '' : Number(e.target.value)
-                                )
-                              }
+                              onChange={(e) => setTempStockValue(e.target.value === '' ? '' : Number(e.target.value))}
                               className="w-16 bg-white text-xs font-bold px-2 py-1 border border-[#063104] rounded-lg focus:outline-none"
                             />
-                            <button
-                              type="button"
-                              onClick={() => saveInlineStock(prod.id)}
-                              className="p-1 rounded-lg bg-[#063104] text-white hover:bg-[#084205]"
-                              title="Simpan Stok"
-                            >
+                            <button type="button" onClick={() => saveInlineStock(prod.id)} className="p-1 rounded-lg bg-[#063104] text-white hover:bg-[#084205]" title="Simpan Stok">
                               <Check className="w-3.5 h-3.5 stroke-[3]" />
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => setEditingStockId(null)}
-                              className="p-1 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300"
-                              title="Batal"
-                            >
+                            <button type="button" onClick={() => setEditingStockId(null)} className="p-1 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300" title="Batal">
                               <X className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         ) : (
-                          <div
-                            onClick={() => startStockEdit(prod)}
-                            className="cursor-pointer group flex items-center gap-1.5 w-fit"
-                            title="Klik untuk quick edit stok"
-                          >
-                            <span
-                              className={`px-2.5 py-1 rounded-lg font-black text-xs transition-all border ${isOutOfStock
-                                ? 'bg-red-100 text-red-800 border-red-300'
-                                : isLowStock
-                                  ? 'bg-amber-100 text-amber-900 border-amber-300 shadow-xs'
-                                  : 'bg-emerald-50 text-[#063104] border-emerald-200'
-                                }`}
-                            >
-                              {isOutOfStock
-                                ? '❌ Habis (0)'
-                                : isLowStock
-                                  ? `⚠️ ${prod.stock} ${prod.unit.replace('/', '')}`
-                                  : `${prod.stock} ${prod.unit.replace('/', '')}`}
+                          <div onClick={() => startStockEdit(prod)} className="cursor-pointer group flex items-center gap-1.5 w-fit" title="Klik untuk quick edit stok">
+                            <span className={`px-2.5 py-1 rounded-lg font-black text-xs transition-all border ${
+                              isOutOfStock ? 'bg-red-100 text-red-800 border-red-300' :
+                              isLowStock ? 'bg-amber-100 text-amber-900 border-amber-300 shadow-xs' :
+                              'bg-emerald-50 text-[#063104] border-emerald-200'
+                            }`}>
+                              {isOutOfStock ? '❌ Habis (0)' : isLowStock ? `⚠️ ${prod.stock} ${prod.unit.replace('/', '')}` : `${prod.stock} ${prod.unit.replace('/', '')}`}
                             </span>
                             <Pencil className="w-3 h-3 text-gray-400 group-hover:text-[#063104] transition-colors" />
                           </div>
                         )}
                       </td>
-
-                      {/* Status Toggle (Aktif/Nonaktif) */}
                       <td className="py-3 px-4 text-center">
                         <button
                           type="button"
                           onClick={() => toggleProductStatus(prod.id, prod.storeId)}
-                          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${prod.isActive ? 'bg-[#063104]' : 'bg-gray-300'
-                            }`}
+                          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${prod.isActive ? 'bg-[#063104]' : 'bg-gray-300'}`}
                           title={prod.isActive ? 'Klik untuk nonaktifkan' : 'Klik untuk aktifkan'}
                         >
-                          <span
-                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${prod.isActive ? 'translate-x-5' : 'translate-x-0'
-                              }`}
-                          />
+                          <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${prod.isActive ? 'translate-x-5' : 'translate-x-0'}`} />
                         </button>
-                        <span className="block text-[10px] font-bold text-gray-500 mt-0.5">
-                          {prod.isActive ? 'Tampil' : 'Sembunyi'}
-                        </span>
+                        <span className="block text-[10px] font-bold text-gray-500 mt-0.5">{prod.isActive ? 'Tampil' : 'Sembunyi'}</span>
                       </td>
-
-                      {/* Aksi (Edit / Hapus) */}
                       <td className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEditModal(prod)}
-                            className="p-1.5 rounded-lg bg-gray-100 hover:bg-[#063104] hover:text-white text-gray-700 transition-colors"
-                            title="Edit Detail Produk"
-                          >
+                          <button type="button" onClick={() => handleOpenEditModal(prod)} className="p-1.5 rounded-lg bg-gray-100 hover:bg-[#063104] hover:text-white text-gray-700 transition-colors" title="Edit Detail Produk">
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(prod.id, prod.name)}
-                            className="p-1.5 rounded-lg bg-gray-100 hover:bg-red-600 hover:text-white text-gray-700 transition-colors"
-                            title="Hapus Produk"
-                          >
+                          <button type="button" onClick={() => handleDelete(prod.id, prod.name)} className="p-1.5 rounded-lg bg-gray-100 hover:bg-red-600 hover:text-white text-gray-700 transition-colors" title="Hapus Produk">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>

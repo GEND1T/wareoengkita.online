@@ -169,7 +169,7 @@ export const PaymentView: React.FC = () => {
     <div className="space-y-6 animate-fade-in">
       {/* Title & Top Action */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
+        <div className="hidden md:block">
           <h1 className="text-2xl font-black text-gray-900">Metode Pembayaran</h1>
           <p className="text-xs text-gray-500">
             Kelola pilihan metode transaksi pembayaran (Duitku Gateway &amp; Transfer Toko) yang diaktifkan untuk pembeli saat checkout.
@@ -179,12 +179,12 @@ export const PaymentView: React.FC = () => {
         <button
           type="button"
           onClick={handleOpenAdd}
-          className="bg-[#063104] hover:bg-[#084205] text-white font-extrabold px-4.5 py-3 rounded-2xl text-xs shadow-lg hover:shadow-emerald-900/20 transition-all duration-200 flex items-center gap-2.5 shrink-0 active:scale-95 border border-emerald-900/30 cursor-pointer self-start sm:self-auto"
+          className="bg-[#063104] hover:bg-[#084205] text-white font-extrabold px-4 py-2.5 md:px-4.5 md:py-3 rounded-2xl text-xs shadow-lg hover:shadow-emerald-900/20 transition-all duration-200 flex items-center gap-2 md:gap-2.5 shrink-0 active:scale-95 border border-emerald-900/30 cursor-pointer self-start sm:self-auto"
         >
           <div className="w-5 h-5 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
             <Plus className="w-3.5 h-3.5 stroke-[3]" />
           </div>
-          <span>Tambah Metode Pembayaran</span>
+          <span>Tambah Metode</span>
         </button>
       </div>
 
@@ -228,7 +228,63 @@ export const PaymentView: React.FC = () => {
 
               {/* Accordion Table Content */}
               {isOpen && (
-                <div className="overflow-x-auto">
+                <>
+                  {/* MOBILE: Card list */}
+                  <div className="md:hidden divide-y divide-gray-100">
+                    {items.length === 0 ? (
+                      <div className="py-8 text-center text-gray-400 italic font-medium text-xs">
+                        Belum ada opsi pembayaran dalam kategori ini.
+                      </div>
+                    ) : (
+                      items.map((method) => {
+                        const isDuitku = method.type === 'duitku' || method.category?.includes('Duitku');
+                        return (
+                          <div key={method.id} className="p-3.5 flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-gray-50 border border-gray-200/80 shrink-0">
+                              {renderIcon(method)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="font-extrabold text-gray-900 text-xs">{method.name}</span>
+                                {method.code && (
+                                  <span className="bg-gray-100 text-gray-600 text-[8px] font-mono font-bold px-1 py-0.5 rounded">
+                                    {method.code}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                {isDuitku ? (
+                                  <span className="bg-amber-100/90 text-amber-900 text-[8px] font-extrabold px-1.5 py-0.5 rounded-full border border-amber-200 uppercase">Duitku</span>
+                                ) : (
+                                  <span className="bg-emerald-100/80 text-[#063104] text-[8px] font-extrabold px-1.5 py-0.5 rounded-full border border-emerald-200 uppercase">Manual</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => togglePaymentStatus(method.id)}
+                                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${method.isActive ? 'bg-[#063104]' : 'bg-gray-300'}`}
+                              >
+                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition duration-200 ${method.isActive ? 'translate-x-4' : 'translate-x-0'}`} />
+                              </button>
+                              <button onClick={() => handleOpenEdit(method)} className="p-1.5 rounded-lg bg-gray-100 text-gray-700">
+                                <Pencil className="w-3 h-3" />
+                              </button>
+                              {!isDuitku && (
+                                <button onClick={() => handleDelete(method.id, method.name)} className="p-1.5 rounded-lg bg-gray-100 text-gray-700">
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* DESKTOP: Table */}
+                  <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-[#F9F8F6] text-gray-700 text-xs font-extrabold uppercase border-b border-gray-200/80">
@@ -337,7 +393,8 @@ export const PaymentView: React.FC = () => {
                       )}
                     </tbody>
                   </table>
-                </div>
+                  </div>
+                </>
               )}
             </div>
           );

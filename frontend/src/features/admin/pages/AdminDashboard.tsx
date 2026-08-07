@@ -37,6 +37,10 @@ import { WalletWithdrawalView } from '../components/WalletWithdrawalView';
 import { Snackbar, Alert } from '@mui/material';
 
 import { useUserStore } from '../../auth/store/useUserStore';
+import { useIsMobile } from '../../../hooks/useIsMobile';
+import { MobileBottomNav } from '../components/MobileBottomNav';
+import { MobileMoreMenu } from '../components/MobileMoreMenu';
+import { MobileHeader } from '../components/MobileHeader';
 
 export const AdminDashboard: React.FC = () => {
   const { profile, openProfileDrawer } = useUserStore();
@@ -53,6 +57,8 @@ export const AdminDashboard: React.FC = () => {
   } = useAdminStore();
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const isMobile = useIsMobile();
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
 
   useEffect(() => {
     if (isAdminOpen) {
@@ -67,6 +73,107 @@ export const AdminDashboard: React.FC = () => {
     closeAdmin();
     openProfileDrawer('profile');
   };
+
+  const isSuperAdmin = profile.role === 'superadmin';
+
+  // ── Shared Content View Renderer ──
+  const renderActiveView = () => (
+    <>
+      {activeTab === 'overview' && <OverviewView />}
+      {activeTab === 'orders' && <OrdersView />}
+      {activeTab === 'products' && <ProductsView />}
+      {activeTab === 'categories' && <CategoriesView />}
+      {activeTab === 'promos' && <PromosView />}
+      {activeTab === 'store_profile' && <StoreProfileView />}
+      {activeTab === 'shipping_options' && <ShippingView />}
+      {activeTab === 'payment_methods' && <PaymentView />}
+      {activeTab === 'wallet_pencairan' && <WalletWithdrawalView />}
+      {activeTab === 'users_management' && <UsersManagementView />}
+      {activeTab === 'stores_management' && <StoresManagementView />}
+      {activeTab === 'analytics_reports' && <AnalyticsReportsView />}
+      {activeTab === 'system_settings' && <SystemSettingsView />}
+    </>
+  );
+
+  // ── Toast Component (shared) ──
+  const renderToast = () => (
+    <Snackbar
+      open={!!toastMessage}
+      autoHideDuration={3500}
+      onClose={hideToast}
+      anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      sx={{ mt: 2, zIndex: 9999 }}
+    >
+      <Alert
+        onClose={hideToast}
+        severity="success"
+        variant="filled"
+        sx={{
+          width: '100%',
+          backgroundColor: '#063104',
+          color: '#FFFFFF',
+          borderRadius: '16px',
+          fontWeight: 600,
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.2)',
+        }}
+      >
+        {toastMessage}
+      </Alert>
+    </Snackbar>
+  );
+
+  // ╔══════════════════════════════════════════╗
+  // ║  MOBILE LAYOUT (<768px)                  ║
+  // ╚══════════════════════════════════════════╝
+  if (isMobile) {
+    return (
+      <div className="fixed inset-0 z-[2500] bg-[#F9F8F6] flex flex-col overflow-hidden font-sans animate-fade-in">
+        {/* Mobile Header */}
+        <MobileHeader
+          activeTab={activeTab}
+          profileName={profile.fullName || 'Admin'}
+          profileRole={profile.role}
+          profileStoreName={profile.assignedStoreName}
+          unreadOrdersCount={unreadNewOrdersCount}
+          onNotificationPress={() => setActiveTab('orders')}
+          onExitAdmin={handleExitAdmin}
+        />
+
+        {/* Main Scrollable Content */}
+        <main className="flex-1 overflow-y-auto overscroll-contain">
+          <div className="px-4 py-4 pb-24">
+            {renderActiveView()}
+          </div>
+        </main>
+
+        {/* Bottom Navigation Bar */}
+        <MobileBottomNav
+          activeTab={activeTab}
+          onTabChange={(tab) => {
+            setActiveTab(tab);
+            setIsMoreMenuOpen(false);
+          }}
+          onMorePress={() => setIsMoreMenuOpen(true)}
+          unreadOrdersCount={unreadNewOrdersCount}
+        />
+
+        {/* More Menu Overlay */}
+        <MobileMoreMenu
+          isOpen={isMoreMenuOpen}
+          onClose={() => setIsMoreMenuOpen(false)}
+          onTabChange={setActiveTab}
+          activeTab={activeTab}
+          isSuperAdmin={isSuperAdmin}
+        />
+
+        {renderToast()}
+      </div>
+    );
+  }
+
+  // ╔══════════════════════════════════════════╗
+  // ║  DESKTOP LAYOUT (≥768px) — UNCHANGED     ║
+  // ╚══════════════════════════════════════════╝
 
   const storeMenuItems: { id: AdminTab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: 'overview', label: 'Ringkasan (Overview)', icon: <LayoutDashboard className="w-5 h-5" /> },
@@ -92,8 +199,6 @@ export const AdminDashboard: React.FC = () => {
     { id: 'system_settings', label: 'Pengaturan System', icon: <Settings className="w-5 h-5" /> },
   ];
 
-  const isSuperAdmin = profile.role === 'superadmin';
-
   return (
     <div className="fixed inset-0 z-[2500] bg-[#F9F8F6] flex overflow-hidden font-sans selection:bg-[#77a160] selection:text-white animate-fade-in">
       {/* ---------------------------------------------------- */}
@@ -110,7 +215,7 @@ export const AdminDashboard: React.FC = () => {
               }`}
           >
             <div className="w-10 h-10 rounded-2xl bg-[#063104] text-white flex items-center justify-center font-black shadow-md shrink-0">
-              <ShieldCheck className="w-6 h-6 text-[#FACC15]" />
+              <ShieldCheck className="w-6 h-6 text-[#C8956A]" />
             </div>
 
             {!isSidebarCollapsed && (
@@ -323,47 +428,12 @@ export const AdminDashboard: React.FC = () => {
         {/* Dynamic Content View Area */}
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-7xl mx-auto">
-            {activeTab === 'overview' && <OverviewView />}
-            {activeTab === 'orders' && <OrdersView />}
-            {activeTab === 'products' && <ProductsView />}
-            {activeTab === 'categories' && <CategoriesView />}
-            {activeTab === 'promos' && <PromosView />}
-            {activeTab === 'store_profile' && <StoreProfileView />}
-            {activeTab === 'shipping_options' && <ShippingView />}
-            {activeTab === 'payment_methods' && <PaymentView />}
-            {activeTab === 'wallet_pencairan' && <WalletWithdrawalView />}
-            {activeTab === 'users_management' && <UsersManagementView />}
-            {activeTab === 'stores_management' && <StoresManagementView />}
-            {activeTab === 'analytics_reports' && <AnalyticsReportsView />}
-            {activeTab === 'system_settings' && <SystemSettingsView />}
+            {renderActiveView()}
           </div>
         </main>
       </div>
 
-      {/* Admin Toast Alerts */}
-      <Snackbar
-        open={!!toastMessage}
-        autoHideDuration={3500}
-        onClose={hideToast}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-        sx={{ mt: 2, zIndex: 9999 }}
-      >
-        <Alert
-          onClose={hideToast}
-          severity="success"
-          variant="filled"
-          sx={{
-            width: '100%',
-            backgroundColor: '#063104',
-            color: '#FFFFFF',
-            borderRadius: '16px',
-            fontWeight: 600,
-            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.2)',
-          }}
-        >
-          {toastMessage}
-        </Alert>
-      </Snackbar>
+      {renderToast()}
     </div>
   );
 };

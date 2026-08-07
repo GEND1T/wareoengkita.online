@@ -32,22 +32,22 @@ export const SystemSettingsView: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-5 md:space-y-6 animate-fade-in">
       {/* Title */}
-      <div>
+      <div className="hidden md:block">
         <h1 className="text-2xl font-black text-gray-900">Pengaturan Global Platform</h1>
         <p className="text-xs text-gray-500">
           Konfigurasi pengumuman banner global, integrasi WhatsApp Gateway notifikasi, dan nama platform.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-5 md:space-y-6">
         {/* Section 1: Global Announcement Banner */}
-        <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-4">
+        <div className="bg-white rounded-2xl md:rounded-3xl p-4 md:p-6 border border-gray-100 shadow-sm space-y-3 md:space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-            <div className="flex items-center gap-2 font-extrabold text-sm text-[#063104]">
-              <Megaphone className="w-5 h-5 text-[#063104]" />
-              <span>Pengumuman Global (Banner Atas)</span>
+            <div className="flex items-center gap-2 font-extrabold text-xs md:text-sm text-[#063104]">
+              <Megaphone className="w-4 h-4 md:w-5 md:h-5 text-[#063104]" />
+              <span>Pengumuman Global</span>
             </div>
 
             {/* Toggle Active */}
@@ -84,10 +84,10 @@ export const SystemSettingsView: React.FC = () => {
         </div>
 
         {/* Section 2: WhatsApp Gateway & Notifications */}
-        <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-4">
-          <div className="flex items-center gap-2 pb-3 border-b border-gray-100 font-extrabold text-sm text-blue-900">
-            <MessageSquare className="w-5 h-5 text-blue-700" />
-            <span>Integrasi WhatsApp Gateway Notifikasi</span>
+        <div className="bg-white rounded-2xl md:rounded-3xl p-4 md:p-6 border border-gray-100 shadow-sm space-y-3 md:space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-gray-100 font-extrabold text-xs md:text-sm text-blue-900">
+            <MessageSquare className="w-4 h-4 md:w-5 md:h-5 text-blue-700" />
+            <span>WhatsApp Gateway</span>
           </div>
 
           <div>
@@ -133,10 +133,10 @@ export const SystemSettingsView: React.FC = () => {
         </div>
 
         {/* Section 3: Branding & Support Info */}
-        <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-4">
-          <div className="flex items-center gap-2 pb-3 border-b border-gray-100 font-extrabold text-sm text-[#063104]">
-            <Globe className="w-5 h-5 text-[#063104]" />
-            <span>Identitas Platform & Layanan Pembeli</span>
+        <div className="bg-white rounded-2xl md:rounded-3xl p-4 md:p-6 border border-gray-100 shadow-sm space-y-3 md:space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-gray-100 font-extrabold text-xs md:text-sm text-[#063104]">
+            <Globe className="w-4 h-4 md:w-5 md:h-5 text-[#063104]" />
+            <span>Identitas Platform</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -163,17 +163,17 @@ export const SystemSettingsView: React.FC = () => {
         </div>
 
         {/* Save Bar */}
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex items-center justify-between">
-          <span className="text-xs text-gray-500 font-medium">
+        <div className="bg-white rounded-xl md:rounded-2xl p-3 md:p-4 border border-gray-100 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+          <span className="text-[10px] md:text-xs text-gray-500 font-medium">
             Simpan konfigurasi sistem untuk menerapkan ke seluruh cabang toko.
           </span>
 
           <button
             type="submit"
-            className="bg-[#063104] hover:bg-[#084205] text-white font-black px-6 py-3 rounded-xl text-xs shadow-md transition-all active:scale-95 flex items-center gap-2"
+            className="bg-[#063104] hover:bg-[#084205] text-white font-black px-5 py-2.5 md:px-6 md:py-3 rounded-xl text-xs shadow-md transition-all active:scale-95 flex items-center gap-2 w-full md:w-auto justify-center"
           >
             <Save className="w-4 h-4" />
-            <span>Simpan Pengaturan System</span>
+            <span>Simpan Pengaturan</span>
           </button>
         </div>
       </form>

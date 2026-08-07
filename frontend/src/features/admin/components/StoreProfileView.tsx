@@ -99,20 +99,20 @@ export const StoreProfileView: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div>
+    <div className="space-y-5 md:space-y-6 animate-fade-in">
+      <div className="hidden md:block">
         <h1 className="text-2xl font-black text-gray-900">Profil Toko & Lokasi Map</h1>
         <p className="text-xs text-gray-500">
           Kelola foto toko fisik, identitas, jadwal operasional buka toko, serta titik koordinat lokasi di peta.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <form onSubmit={handleSubmit} className="space-y-5 md:space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 md:gap-6">
           {/* Left Side: Store Identity, Photo Upload & Schedule */}
-          <div className="lg:col-span-6 bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-4">
-            <div className="flex items-center gap-2 pb-3 border-b border-gray-100 font-extrabold text-sm text-[#063104]">
-              <Store className="w-5 h-5 text-[#063104]" />
+          <div className="lg:col-span-6 bg-white rounded-2xl md:rounded-3xl p-4 md:p-6 border border-gray-100 shadow-sm space-y-4">
+            <div className="flex items-center gap-2 pb-3 border-b border-gray-100 font-extrabold text-xs md:text-sm text-[#063104]">
+              <Store className="w-4 h-4 md:w-5 md:h-5 text-[#063104]" />
               <span>Identitas & Foto Fisik Toko</span>
             </div>
 

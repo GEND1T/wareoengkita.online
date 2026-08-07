@@ -335,7 +335,41 @@ export const ShippingView: React.FC = () => {
         </button>
       </div>
 
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+      {/* Mobile Card Layout */}
+      <div className="md:hidden space-y-3">
+        {shippingOptions.length === 0 ? (
+          <div className="text-center py-12 text-gray-400 text-sm">Belum ada opsi pengiriman.</div>
+        ) : (
+          shippingOptions.map((opt) => {
+            const typeInfo = SHIPPING_TYPE_LABELS[opt.type as ShippingType] || SHIPPING_TYPE_LABELS.instant;
+            return (
+              <div key={opt.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3.5">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${typeInfo.bg} ${typeInfo.color}`}>{typeInfo.icon}{typeInfo.label}</span>
+                    <span className="font-bold text-sm text-gray-900 truncate">{opt.name}</span>
+                  </div>
+                  <button onClick={() => toggleShippingStatus(opt.id)} className="cursor-pointer" title={opt.isActive ? 'Nonaktifkan' : 'Aktifkan'}>
+                    {opt.isActive ? <ToggleRight className="w-6 h-6 text-emerald-600" /> : <ToggleLeft className="w-6 h-6 text-gray-300" />}
+                  </button>
+                </div>
+                <div className="flex items-center gap-3 text-[10px] text-gray-500 flex-wrap">
+                  {opt.courier && <span>Kurir: <strong className="text-gray-700">{opt.courier}</strong></span>}
+                  <span>Estimasi: <strong className="text-gray-700">{opt.estimatedTime || opt.estimated}</strong></span>
+                  <span>Biaya: <strong className="text-gray-700">{formatCurrency(opt.baseFee || opt.fee)}</strong></span>
+                </div>
+                <div className="flex items-center gap-1.5 mt-2 justify-end">
+                  <button onClick={() => handleOpenEdit(opt)} className="p-1.5 rounded-lg bg-gray-100 text-gray-600 active:scale-95"><Pencil className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => handleDelete(opt.id, opt.name)} className="p-1.5 rounded-lg bg-gray-100 text-gray-600 active:scale-95"><Trash2 className="w-3.5 h-3.5" /></button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop Table Layout */}
+      <div className="hidden md:block bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -734,16 +768,16 @@ export const ShippingView: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Page Title */}
-      <div>
+      <div className="hidden md:block">
         <h1 className="text-2xl font-black text-gray-900">Opsi Pengiriman Pesanan</h1>
         <p className="text-xs text-gray-500">Kelola semua tipe pengiriman, lokasi pickup, jadwal, dan kas COD.</p>
       </div>
 
       {/* Tabs */}
       {tabs.length > 1 && (
-        <div className="flex gap-1 bg-gray-100 rounded-2xl p-1 overflow-x-auto">
+        <div className="flex gap-1 bg-gray-100 rounded-2xl p-1 overflow-x-auto no-scrollbar">
           {tabs.map((tab, idx) => (
-            <button key={idx} onClick={() => setActiveTab(idx)} className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${activeTab === idx ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'}`}>
+            <button key={idx} onClick={() => setActiveTab(idx)} className={`flex items-center gap-1.5 px-3 md:px-4 py-2 md:py-2.5 rounded-xl text-[11px] md:text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${activeTab === idx ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'}`}>
               {tab.icon}
               {tab.label}
             </button>
@@ -756,9 +790,9 @@ export const ShippingView: React.FC = () => {
 
       {/* ——— Shipping Option Modal ——— */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={() => setIsModalOpen(false)}>
+        <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center md:p-4" onClick={() => setIsModalOpen(false)}>
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+          <div className="relative bg-white rounded-t-3xl md:rounded-3xl shadow-2xl w-full max-w-lg max-h-[92vh] md:max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="sticky top-0 bg-white z-10 flex items-center justify-between p-5 border-b border-gray-100 rounded-t-3xl">
               <h3 className="text-lg font-black text-gray-900">{shippingToEdit ? 'Edit Opsi Pengiriman' : 'Tambah Opsi Pengiriman'}</h3>
               <button onClick={() => setIsModalOpen(false)} className="p-2 rounded-xl hover:bg-gray-100 transition cursor-pointer"><X className="w-5 h-5" /></button>
