@@ -81,15 +81,6 @@ interface UserState {
   fetchUserOrders: (userPhoneOrId?: string) => Promise<void>;
 }
 
-const DEFAULT_PROFILE: UserProfile = {
-  fullName: 'Pengguna',
-  username: '',
-  phone: '',
-  role: 'customer',
-  gender: 'Laki-laki',
-  birthDate: '',
-};
-
 const DEFAULT_ORDERS: Order[] = [];
 
 export const useUserStore = create<UserState>()(

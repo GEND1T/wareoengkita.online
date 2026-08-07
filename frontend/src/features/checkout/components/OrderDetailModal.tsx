@@ -14,7 +14,6 @@ import {
   Copy,
   Receipt,
   Star,
-  Navigation,
   Phone,
   ExternalLink,
   Package,

@@ -21,7 +21,7 @@ import { useLocationStore } from '../../store-location/store/useLocationStore';
 
 export const CartDrawer: React.FC = () => {
   const { isCartDrawerOpen, closeCartDrawer, openCheckout, skipCartAnimation } = useCategoryStore();
-  const { items, removeItem, updateQuantity, getTotalPriceByStore, getTotalPrice } = useCartStore();
+  const { items, removeItem, updateQuantity, getTotalPriceByStore } = useCartStore();
   const { stores, selectedStoreId, setSelectedStoreId } = useStoreSelectorStore();
   const { products: adminProducts } = useAdminStore();
   const { isLoggedIn, openAuthModal } = useUserStore();

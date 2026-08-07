@@ -799,8 +799,8 @@ export const OrdersView: React.FC = () => {
 
                 <div className="text-xs text-gray-700 space-y-1 bg-white/80 p-2.5 rounded-xl border border-emerald-100">
                   <p className="font-bold text-gray-900">{scannedOrder.customerName} ({scannedOrder.phone})</p>
-                  <p className="text-[11px] text-gray-600">Alamat / Lokasi: {scannedOrder.address || 'Self-Pickup di Toko'}</p>
-                  <p className="text-[11px] text-gray-600">Total: <strong className="text-[#063104] font-bold">{formatCurrency(scannedOrder.totalAmount)}</strong></p>
+                  <p className="text-[11px] text-gray-600">Alamat / Lokasi: {scannedOrder.shippingAddress || 'Self-Pickup di Toko'}</p>
+                  <p className="text-[11px] text-gray-600">Total: <strong className="text-[#063104] font-bold">{formatCurrency(scannedOrder.totalPrice)}</strong></p>
                   <p className="text-[11px] text-gray-600">Status Saat Ini: <span className="uppercase text-amber-800 font-extrabold">{scannedOrder.status}</span></p>
                 </div>
 

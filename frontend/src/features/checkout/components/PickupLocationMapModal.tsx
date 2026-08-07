@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, MapPin, Navigation, Clock, Phone, Banknote, Check, Map as MapIcon } from 'lucide-react';
+import { X, MapPin, Clock, Phone, Check, Map as MapIcon } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import type { PickupLocation } from '../../../types';

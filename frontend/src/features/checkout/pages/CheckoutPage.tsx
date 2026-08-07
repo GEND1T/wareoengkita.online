@@ -27,7 +27,6 @@ import {
   HandCoins,
   Phone,
   Clock,
-  Home,
 } from 'lucide-react';
 import PickupLocationMapModal from '../components/PickupLocationMapModal';
 import { useCategoryStore } from '../../catalog/store/useCategoryStore';
@@ -1681,7 +1680,7 @@ export const CheckoutPage: React.FC = () => {
         selectedLocationId={selectedPickupLocationId}
         customerLat={activeAddress?.latitude}
         customerLon={activeAddress?.longitude}
-        customerAddressName={activeAddress?.recipientName ? `${activeAddress.recipientName} - ${activeAddress.street}` : activeAddress?.address}
+        customerAddressName={activeAddress ? `${activeAddress.fullName} - ${activeAddress.streetAddress}` : undefined}
         onSelectLocation={(locId: string) => {
           const pickupOpt = availableShippingOptions.find(o => o.type === 'pickup');
           if (pickupOpt) {
