@@ -26,7 +26,7 @@ export const PaymentConfirmPage: React.FC<PaymentConfirmPageProps> = ({
 }) => {
   const { activePayment, checkStatus } = usePembayaranStore();
   const [copied, setCopied] = useState(false);
-  const [timeLeft, setTimeLeft] = useState<number>(24 * 3600); // default 24h
+  const [timeLeft, setTimeLeft] = useState<number>(0);
   const [isChecking, setIsChecking] = useState(false);
   const [showInstructions, setShowInstructions] = useState(true);
 
@@ -44,16 +44,38 @@ export const PaymentConfirmPage: React.FC<PaymentConfirmPageProps> = ({
     return () => clearInterval(interval);
   }, [isOpen, activePayment?.merchantOrderId, checkStatus, onPaymentSuccess]);
 
-  // Countdown timer logic
+  // Dynamic countdown timer logic based on activePayment linkExpiry & expiryPeriod
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !activePayment) return;
+
+    const computeTimeLeft = () => {
+      let expiryTime = 0;
+      if (activePayment.linkExpiry) {
+        expiryTime = new Date(activePayment.linkExpiry).getTime();
+      } else if (activePayment.createdAt) {
+        const created = new Date(activePayment.createdAt).getTime();
+        const mins = activePayment.expiryPeriod || 1440;
+        expiryTime = created + mins * 60 * 1000;
+      } else {
+        expiryTime = Date.now() + 24 * 3600 * 1000;
+      }
+      const diff = Math.floor((expiryTime - Date.now()) / 1000);
+      return diff > 0 ? diff : 0;
+    };
+
+    setTimeLeft(computeTimeLeft());
 
     const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+      const remaining = computeTimeLeft();
+      setTimeLeft(remaining);
+      if (remaining <= 0) {
+        clearInterval(timer);
+        checkStatus(activePayment.merchantOrderId);
+      }
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isOpen]);
+  }, [isOpen, activePayment, checkStatus]);
 
   if (!isOpen || !activePayment) return null;
 

@@ -151,25 +151,39 @@ export async function getRates(params: RatesRequest): Promise<RatesResponse> {
 // ============================================================
 
 export interface CreateOrderRequest {
+  shipper_contact_name?: string;
+  shipper_contact_phone?: string;
+  shipper_contact_email?: string;
+  shipper_organization?: string;
   origin_contact_name: string;
   origin_contact_phone: string;
   origin_address: string;
+  origin_note?: string;
   origin_coordinate: { latitude: number; longitude: number };
   origin_postal_code?: number;
   destination_contact_name: string;
   destination_contact_phone: string;
+  destination_contact_email?: string;
   destination_address: string;
+  destination_note?: string;
   destination_coordinate: { latitude: number; longitude: number };
   destination_postal_code?: number;
-  courier_company: string;    // "gosend" or "grab"
+  courier_company: string;    // "gosend" | "grab" | "biteship"
   courier_type: string;       // "instant"
-  delivery_type: string;      // "now" or "later"
+  courier_insurance?: number;
+  delivery_type: string;      // "now"
   order_note?: string;
+  metadata?: Record<string, any>;
   items: Array<{
     name: string;
+    description?: string;
+    category?: string;
     value: number;
-    weight: number;
     quantity: number;
+    height?: number;
+    length?: number;
+    width?: number;
+    weight: number;
   }>;
 }
 
@@ -198,12 +212,106 @@ export interface CreateOrderResponse {
 }
 
 export async function createCourierOrder(params: CreateOrderRequest): Promise<CreateOrderResponse> {
-  console.log('[Biteship] Creating courier order...');
-  const result = await biteshipFetch('/v1/orders', {
-    method: 'POST',
-    body: JSON.stringify(params),
-  });
-  return result;
+  console.log('[Biteship] Creating courier order for company:', params.courier_company);
+
+  const formattedItems = (params.items || []).map((item) => ({
+    name: String(item.name || 'Produk Organik').substring(0, 50),
+    description: String(item.description || item.name || 'Produk Segar OrganikStore'),
+    category: item.category || 'groceries',
+    value: Math.max(1000, Math.round(item.value || 10000)),
+    quantity: Math.max(1, Math.round(item.quantity || 1)),
+    height: Math.max(1, item.height || 10),
+    length: Math.max(1, item.length || 10),
+    width: Math.max(1, item.width || 10),
+    weight: Math.max(100, Math.round(item.weight || 500)),
+  }));
+
+  if (formattedItems.length === 0) {
+    formattedItems.push({
+      name: 'Paket Belanja Organik',
+      description: 'Paket belanja kebutuhan sehari-hari',
+      category: 'groceries',
+      value: 50000,
+      quantity: 1,
+      height: 10,
+      length: 10,
+      width: 10,
+      weight: 1000,
+    });
+  }
+
+  // Detect if using Biteship Sandbox test key (biteship_test.xxx)
+  const isTestKey = BITESHIP_API_KEY.startsWith('biteship_test');
+  
+  // In Biteship Sandbox mode, real couriers like "gosend" / "grab" cannot be picked up.
+  // Biteship Sandbox requires courier_company: "biteship" to create test orders on Biteship Dashboard.
+  const courierCompany = isTestKey ? 'biteship' : (params.courier_company || 'biteship');
+
+  const payload: any = {
+    shipper_contact_name: params.shipper_contact_name || params.origin_contact_name || 'OrganikStore Admin',
+    shipper_contact_phone: params.shipper_contact_phone || params.origin_contact_phone || '088888888888',
+    shipper_contact_email: params.shipper_contact_email || 'biteship@test.com',
+    shipper_organization: params.shipper_organization || 'OrganikStore Indonesia',
+    origin_contact_name: params.origin_contact_name || 'Admin Toko Organik',
+    origin_contact_phone: params.origin_contact_phone || '088888888888',
+    origin_address: params.origin_address || 'Plaza Senayan, Jalan Asia Afrika No. 8, Jakarta Selatan',
+    origin_note: params.origin_note || 'Pintu Masuk Utama Toko Organik',
+    origin_coordinate: {
+      latitude: params.origin_coordinate?.latitude || -6.2253114,
+      longitude: params.origin_coordinate?.longitude || 106.7993735,
+    },
+    destination_contact_name: params.destination_contact_name || 'Pembeli',
+    destination_contact_phone: params.destination_contact_phone || '088888888888',
+    destination_contact_email: params.destination_contact_email || 'jon@test.com',
+    destination_address: params.destination_address || 'Lebak Bulus MRT Station, Jakarta Selatan',
+    destination_note: params.destination_note || 'Dekat Pos Satpam',
+    destination_coordinate: {
+      latitude: params.destination_coordinate?.latitude || -6.28927,
+      longitude: params.destination_coordinate?.longitude || 106.77492,
+    },
+    courier_company: courierCompany,
+    courier_type: params.courier_type || 'instant',
+    delivery_type: params.delivery_type || 'now',
+    order_note: params.order_note || 'Mohon ditangani dengan hati-hati',
+    metadata: params.metadata || {},
+    items: formattedItems,
+  };
+
+  console.log('[Biteship Request Payload]:', JSON.stringify(payload, null, 2));
+
+  try {
+    const result = await biteshipFetch('/v1/orders', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    console.log('[Biteship Success Response]:', JSON.stringify(result, null, 2));
+    return result;
+  } catch (err: any) {
+    console.warn('[Biteship Order Creation Failed]:', err.message);
+
+    // If first attempt with requested courier failed, retry with courier_company: "biteship"
+    if (payload.courier_company !== 'biteship') {
+      try {
+        console.log('[Biteship] Retrying order creation with courier_company: "biteship"...');
+        const fallbackPayload = {
+          ...payload,
+          courier_company: 'biteship',
+          courier_type: 'instant',
+        };
+        const fallbackResult = await biteshipFetch('/v1/orders', {
+          method: 'POST',
+          body: JSON.stringify(fallbackPayload),
+        });
+        console.log('[Biteship Fallback Success Response]:', JSON.stringify(fallbackResult, null, 2));
+        return fallbackResult;
+      } catch (fallbackErr: any) {
+        console.error('[Biteship Fallback Failed]:', fallbackErr.message);
+        throw fallbackErr;
+      }
+    }
+
+    throw err;
+  }
 }
 
 // ============================================================

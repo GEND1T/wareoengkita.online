@@ -384,6 +384,8 @@ export const CheckoutPage: React.FC = () => {
         pickupLocationId: selectedShipping?.type === 'pickup' ? selectedPickupLocationId : undefined,
         scheduledDate: selectedShipping?.type === 'scheduled' ? selectedScheduledDate : undefined,
         scheduledSlot: selectedShipping?.type === 'scheduled' ? selectedScheduledSlot : undefined,
+        customerLat: activeAddress?.latitude,
+        customerLon: activeAddress?.longitude,
       };
 
       const res = await fetch(`${API_BASE_URL}/orders`, {
@@ -982,43 +984,68 @@ export const CheckoutPage: React.FC = () => {
                 {/* 1. VIRTUAL ACCOUNT (ACCORDION) */}
                 {(() => {
                   const vaMethods = duitkuMethods.filter((m) =>
-                    ['A1', 'BC', 'I1', 'BR', 'BV', 'M2', 'BT', 'VA', 'NC', 'S1', 'DM', 'AG'].includes(m.paymentMethod)
+                    ['A1', 'BC', 'I1', 'BR', 'BV'].includes(m.paymentMethod)
                   );
                   if (vaMethods.length === 0) return null;
 
+                  const hasActiveVA =
+                    selectedPaymentMode === 'duitku' &&
+                    vaMethods.some((m) => m.paymentMethod === selectedDuitkuCode);
+                  const selectedVAMethod = vaMethods.find((m) => m.paymentMethod === selectedDuitkuCode);
+                  const isCategoryOpen = openCategoryAccordion === 'va';
+
                   return (
-                    <div className="border border-slate-200 rounded-xl overflow-hidden transition-all">
+                    <div
+                      className={`border rounded-xl overflow-hidden transition-all duration-200 ${
+                        hasActiveVA
+                          ? 'border-[#063104] ring-2 ring-emerald-600/30 bg-emerald-50/40 shadow-xs'
+                          : 'border-slate-200 bg-white hover:border-emerald-300'
+                      }`}
+                    >
                       <button
                         type="button"
                         onClick={() => {
                           setSelectedPaymentMode('duitku');
-                          setOpenCategoryAccordion(openCategoryAccordion === 'va' ? null : 'va');
+                          setOpenCategoryAccordion(isCategoryOpen ? null : 'va');
                         }}
-                        className={`w-full p-3 flex items-center justify-between text-left transition-colors ${selectedPaymentMode === 'duitku' && openCategoryAccordion === 'va'
-                          ? 'bg-emerald-50/70 border-b border-emerald-100'
-                          : 'bg-slate-50 hover:bg-slate-100'
-                          }`}
+                        className={`w-full p-3 flex items-center justify-between text-left transition-colors cursor-pointer ${
+                          hasActiveVA
+                            ? 'bg-emerald-100/80 border-b border-emerald-200 text-[#063104]'
+                            : isCategoryOpen
+                            ? 'bg-emerald-50/60 border-b border-emerald-100'
+                            : 'bg-slate-50 hover:bg-emerald-50/40'
+                        }`}
                       >
-                        <div className="flex items-center gap-2.5">
-                          <Building2 className="w-4 h-4 text-emerald-700 shrink-0" />
-                          <div>
-                            <p className="text-xs font-bold text-slate-800">Virtual Account (Bank Transfer)</p>
-                            <p className="text-[10px] text-slate-500">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <Building2 className="w-4.5 h-4.5 text-[#063104] shrink-0" />
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-xs font-extrabold text-slate-900 truncate">
+                                Virtual Account (Bank Transfer)
+                              </p>
+                              {hasActiveVA && selectedVAMethod && (
+                                <span className="bg-[#063104] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full shrink-0 shadow-xs">
+                                  Terpilih: {selectedVAMethod.paymentName}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-slate-500 truncate mt-0.5">
                               {vaMethods.map((m) => m.paymentName).join(', ')}
                             </p>
                           </div>
                         </div>
-                        {openCategoryAccordion === 'va' ? (
-                          <ChevronUp className="w-4 h-4 text-slate-500 shrink-0" />
+                        {isCategoryOpen ? (
+                          <ChevronUp className="w-4 h-4 text-emerald-800 shrink-0 ml-2" />
                         ) : (
-                          <ChevronDown className="w-4 h-4 text-slate-500 shrink-0" />
+                          <ChevronDown className="w-4 h-4 text-slate-500 shrink-0 ml-2" />
                         )}
                       </button>
 
-                      {openCategoryAccordion === 'va' && (
+                      {isCategoryOpen && (
                         <div className="p-3 bg-white grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {vaMethods.map((m) => {
-                            const isSelected = selectedPaymentMode === 'duitku' && selectedDuitkuCode === m.paymentMethod;
+                            const isSelected =
+                              selectedPaymentMode === 'duitku' && selectedDuitkuCode === m.paymentMethod;
                             const feeVal = parseInt(m.totalFee || '0') || 0;
                             const feeStr = feeVal > 0 ? `+ ${formatCurrency(feeVal)}` : 'Bebas Biaya';
 
@@ -1030,19 +1057,26 @@ export const CheckoutPage: React.FC = () => {
                                   setSelectedPaymentMode('duitku');
                                   setSelectedDuitkuCode(m.paymentMethod);
                                 }}
-                                className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${isSelected
-                                  ? 'bg-emerald-50 border-[#063104] ring-1 ring-[#063104]'
-                                  : 'bg-white border-slate-200 hover:border-slate-300'
-                                  }`}
+                                className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-emerald-50 border-[#063104] ring-1 ring-[#063104] shadow-xs'
+                                    : 'bg-white border-slate-200 hover:border-emerald-300'
+                                }`}
                               >
                                 <div className="flex items-center gap-2 min-w-0">
                                   {m.paymentImage ? (
-                                    <img src={m.paymentImage} alt={m.paymentName} className="w-7 h-5 object-contain shrink-0" />
+                                    <img
+                                      src={m.paymentImage}
+                                      alt={m.paymentName}
+                                      className="w-7 h-5 object-contain shrink-0"
+                                    />
                                   ) : (
                                     <Building2 className="w-4 h-4 text-emerald-700 shrink-0" />
                                   )}
                                   <div className="truncate">
-                                    <p className="text-[11px] font-bold text-slate-800 truncate">{m.paymentName}</p>
+                                    <p className="text-[11px] font-bold text-slate-800 truncate">
+                                      {m.paymentName}
+                                    </p>
                                     <p className="text-[10px] text-emerald-700 font-semibold">{feeStr}</p>
                                   </div>
                                 </div>
@@ -1059,43 +1093,68 @@ export const CheckoutPage: React.FC = () => {
                 {/* 2. E-WALLET (ACCORDION) */}
                 {(() => {
                   const ewMethods = duitkuMethods.filter((m) =>
-                    ['DA', 'LF', 'LA', 'OV', 'SA', 'SL', 'OL'].includes(m.paymentMethod)
+                    ['DA', 'LA', 'OV', 'SA'].includes(m.paymentMethod)
                   );
                   if (ewMethods.length === 0) return null;
 
+                  const hasActiveEW =
+                    selectedPaymentMode === 'duitku' &&
+                    ewMethods.some((m) => m.paymentMethod === selectedDuitkuCode);
+                  const selectedEWMethod = ewMethods.find((m) => m.paymentMethod === selectedDuitkuCode);
+                  const isCategoryOpen = openCategoryAccordion === 'ewallet';
+
                   return (
-                    <div className="border border-slate-200 rounded-xl overflow-hidden transition-all">
+                    <div
+                      className={`border rounded-xl overflow-hidden transition-all duration-200 ${
+                        hasActiveEW
+                          ? 'border-[#063104] ring-2 ring-emerald-600/30 bg-emerald-50/40 shadow-xs'
+                          : 'border-slate-200 bg-white hover:border-emerald-300'
+                      }`}
+                    >
                       <button
                         type="button"
                         onClick={() => {
                           setSelectedPaymentMode('duitku');
-                          setOpenCategoryAccordion(openCategoryAccordion === 'ewallet' ? null : 'ewallet');
+                          setOpenCategoryAccordion(isCategoryOpen ? null : 'ewallet');
                         }}
-                        className={`w-full p-3 flex items-center justify-between text-left transition-colors ${selectedPaymentMode === 'duitku' && openCategoryAccordion === 'ewallet'
-                          ? 'bg-blue-50/70 border-b border-blue-100'
-                          : 'bg-slate-50 hover:bg-slate-100'
-                          }`}
+                        className={`w-full p-3 flex items-center justify-between text-left transition-colors cursor-pointer ${
+                          hasActiveEW
+                            ? 'bg-emerald-100/80 border-b border-emerald-200 text-[#063104]'
+                            : isCategoryOpen
+                            ? 'bg-emerald-50/60 border-b border-emerald-100'
+                            : 'bg-slate-50 hover:bg-emerald-50/40'
+                        }`}
                       >
-                        <div className="flex items-center gap-2.5">
-                          <Wallet className="w-4 h-4 text-blue-600 shrink-0" />
-                          <div>
-                            <p className="text-xs font-bold text-slate-800">E-Wallet & Dompet Digital</p>
-                            <p className="text-[10px] text-slate-500">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <Wallet className="w-4.5 h-4.5 text-[#063104] shrink-0" />
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-xs font-extrabold text-slate-900 truncate">
+                                E-Wallet &amp; Dompet Digital
+                              </p>
+                              {hasActiveEW && selectedEWMethod && (
+                                <span className="bg-[#063104] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full shrink-0 shadow-xs">
+                                  Terpilih: {selectedEWMethod.paymentName}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-slate-500 truncate mt-0.5">
                               {ewMethods.map((m) => m.paymentName).join(', ')}
                             </p>
                           </div>
                         </div>
-                        {openCategoryAccordion === 'ewallet' ? (
-                          <ChevronUp className="w-4 h-4 text-slate-500 shrink-0" />
+                        {isCategoryOpen ? (
+                          <ChevronUp className="w-4 h-4 text-emerald-800 shrink-0 ml-2" />
                         ) : (
-                          <ChevronDown className="w-4 h-4 text-slate-500 shrink-0" />
+                          <ChevronDown className="w-4 h-4 text-slate-500 shrink-0 ml-2" />
                         )}
                       </button>
 
-                      {openCategoryAccordion === 'ewallet' && (
+                      {isCategoryOpen && (
                         <div className="p-3 bg-white grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {ewMethods.map((m) => {
-                            const isSelected = selectedPaymentMode === 'duitku' && selectedDuitkuCode === m.paymentMethod;
+                            const isSelected =
+                              selectedPaymentMode === 'duitku' && selectedDuitkuCode === m.paymentMethod;
                             const feeVal = parseInt(m.totalFee || '0') || 0;
                             const feeStr = feeVal > 0 ? `+ ${formatCurrency(feeVal)}` : 'Bebas Biaya';
 
@@ -1107,23 +1166,30 @@ export const CheckoutPage: React.FC = () => {
                                   setSelectedPaymentMode('duitku');
                                   setSelectedDuitkuCode(m.paymentMethod);
                                 }}
-                                className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${isSelected
-                                  ? 'bg-blue-50 border-blue-600 ring-1 ring-blue-600'
-                                  : 'bg-white border-slate-200 hover:border-slate-300'
-                                  }`}
+                                className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-emerald-50 border-[#063104] ring-1 ring-[#063104] shadow-xs'
+                                    : 'bg-white border-slate-200 hover:border-emerald-300'
+                                }`}
                               >
                                 <div className="flex items-center gap-2 min-w-0">
                                   {m.paymentImage ? (
-                                    <img src={m.paymentImage} alt={m.paymentName} className="w-7 h-5 object-contain shrink-0" />
+                                    <img
+                                      src={m.paymentImage}
+                                      alt={m.paymentName}
+                                      className="w-7 h-5 object-contain shrink-0"
+                                    />
                                   ) : (
-                                    <Wallet className="w-4 h-4 text-blue-600 shrink-0" />
+                                    <Wallet className="w-4 h-4 text-emerald-700 shrink-0" />
                                   )}
                                   <div className="truncate">
-                                    <p className="text-[11px] font-bold text-slate-800 truncate">{m.paymentName}</p>
-                                    <p className="text-[10px] text-blue-700 font-semibold">{feeStr}</p>
+                                    <p className="text-[11px] font-bold text-slate-800 truncate">
+                                      {m.paymentName}
+                                    </p>
+                                    <p className="text-[10px] text-emerald-700 font-semibold">{feeStr}</p>
                                   </div>
                                 </div>
-                                {isSelected && <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />}
+                                {isSelected && <CheckCircle2 className="w-4 h-4 text-[#063104] shrink-0" />}
                               </button>
                             );
                           })}
@@ -1136,43 +1202,68 @@ export const CheckoutPage: React.FC = () => {
                 {/* 3. QRIS (ACCORDION) */}
                 {(() => {
                   const qrisMethods = duitkuMethods.filter((m) =>
-                    ['SP', 'LQ', 'NQ', 'GQ'].includes(m.paymentMethod)
+                    ['SP', 'LQ'].includes(m.paymentMethod)
                   );
                   if (qrisMethods.length === 0) return null;
 
+                  const hasActiveQR =
+                    selectedPaymentMode === 'duitku' &&
+                    qrisMethods.some((m) => m.paymentMethod === selectedDuitkuCode);
+                  const selectedQRMethod = qrisMethods.find((m) => m.paymentMethod === selectedDuitkuCode);
+                  const isCategoryOpen = openCategoryAccordion === 'qris';
+
                   return (
-                    <div className="border border-slate-200 rounded-xl overflow-hidden transition-all">
+                    <div
+                      className={`border rounded-xl overflow-hidden transition-all duration-200 ${
+                        hasActiveQR
+                          ? 'border-[#063104] ring-2 ring-emerald-600/30 bg-emerald-50/40 shadow-xs'
+                          : 'border-slate-200 bg-white hover:border-emerald-300'
+                      }`}
+                    >
                       <button
                         type="button"
                         onClick={() => {
                           setSelectedPaymentMode('duitku');
-                          setOpenCategoryAccordion(openCategoryAccordion === 'qris' ? null : 'qris');
+                          setOpenCategoryAccordion(isCategoryOpen ? null : 'qris');
                         }}
-                        className={`w-full p-3 flex items-center justify-between text-left transition-colors ${selectedPaymentMode === 'duitku' && openCategoryAccordion === 'qris'
-                          ? 'bg-rose-50/70 border-b border-rose-100'
-                          : 'bg-slate-50 hover:bg-slate-100'
-                          }`}
+                        className={`w-full p-3 flex items-center justify-between text-left transition-colors cursor-pointer ${
+                          hasActiveQR
+                            ? 'bg-emerald-100/80 border-b border-emerald-200 text-[#063104]'
+                            : isCategoryOpen
+                            ? 'bg-emerald-50/60 border-b border-emerald-100'
+                            : 'bg-slate-50 hover:bg-emerald-50/40'
+                        }`}
                       >
-                        <div className="flex items-center gap-2.5">
-                          <QrCode className="w-4 h-4 text-rose-600 shrink-0" />
-                          <div>
-                            <p className="text-xs font-bold text-slate-800">QRIS (Scan Kode QR)</p>
-                            <p className="text-[10px] text-slate-500">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <QrCode className="w-4.5 h-4.5 text-[#063104] shrink-0" />
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-xs font-extrabold text-slate-900 truncate">
+                                QRIS (Scan Kode QR)
+                              </p>
+                              {hasActiveQR && selectedQRMethod && (
+                                <span className="bg-[#063104] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full shrink-0 shadow-xs">
+                                  Terpilih: {selectedQRMethod.paymentName}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-slate-500 truncate mt-0.5">
                               {qrisMethods.map((m) => m.paymentName).join(', ')}
                             </p>
                           </div>
                         </div>
-                        {openCategoryAccordion === 'qris' ? (
-                          <ChevronUp className="w-4 h-4 text-slate-500 shrink-0" />
+                        {isCategoryOpen ? (
+                          <ChevronUp className="w-4 h-4 text-emerald-800 shrink-0 ml-2" />
                         ) : (
-                          <ChevronDown className="w-4 h-4 text-slate-500 shrink-0" />
+                          <ChevronDown className="w-4 h-4 text-slate-500 shrink-0 ml-2" />
                         )}
                       </button>
 
-                      {openCategoryAccordion === 'qris' && (
+                      {isCategoryOpen && (
                         <div className="p-3 bg-white grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {qrisMethods.map((m) => {
-                            const isSelected = selectedPaymentMode === 'duitku' && selectedDuitkuCode === m.paymentMethod;
+                            const isSelected =
+                              selectedPaymentMode === 'duitku' && selectedDuitkuCode === m.paymentMethod;
                             const feeVal = parseInt(m.totalFee || '0') || 0;
                             const feeStr = feeVal > 0 ? `+ ${formatCurrency(feeVal)}` : 'Bebas Biaya';
 
@@ -1184,23 +1275,30 @@ export const CheckoutPage: React.FC = () => {
                                   setSelectedPaymentMode('duitku');
                                   setSelectedDuitkuCode(m.paymentMethod);
                                 }}
-                                className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${isSelected
-                                  ? 'bg-rose-50 border-rose-600 ring-1 ring-rose-600'
-                                  : 'bg-white border-slate-200 hover:border-slate-300'
-                                  }`}
+                                className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-emerald-50 border-[#063104] ring-1 ring-[#063104] shadow-xs'
+                                    : 'bg-white border-slate-200 hover:border-emerald-300'
+                                }`}
                               >
                                 <div className="flex items-center gap-2 min-w-0">
                                   {m.paymentImage ? (
-                                    <img src={m.paymentImage} alt={m.paymentName} className="w-7 h-5 object-contain shrink-0" />
+                                    <img
+                                      src={m.paymentImage}
+                                      alt={m.paymentName}
+                                      className="w-7 h-5 object-contain shrink-0"
+                                    />
                                   ) : (
-                                    <QrCode className="w-4 h-4 text-rose-600 shrink-0" />
+                                    <QrCode className="w-4 h-4 text-emerald-700 shrink-0" />
                                   )}
                                   <div className="truncate">
-                                    <p className="text-[11px] font-bold text-slate-800 truncate">{m.paymentName}</p>
-                                    <p className="text-[10px] text-rose-700 font-semibold">{feeStr}</p>
+                                    <p className="text-[11px] font-bold text-slate-800 truncate">
+                                      {m.paymentName}
+                                    </p>
+                                    <p className="text-[10px] text-emerald-700 font-semibold">{feeStr}</p>
                                   </div>
                                 </div>
-                                {isSelected && <CheckCircle2 className="w-4 h-4 text-rose-600 shrink-0" />}
+                                {isSelected && <CheckCircle2 className="w-4 h-4 text-[#063104] shrink-0" />}
                               </button>
                             );
                           })}
@@ -1210,74 +1308,94 @@ export const CheckoutPage: React.FC = () => {
                   );
                 })()}
 
-                {/* 4. KARTU KREDIT & LAINNYA */}
+                {/* 4. BAYAR DI TEMPAT (COD) / MANUAL TOKO (ACCORDION) */}
                 {(() => {
-                  const otherMethods = duitkuMethods.filter((m) =>
-                    ['VC', 'DN', 'IR', 'FT'].includes(m.paymentMethod)
+                  const manualMethods = adminPaymentMethods.filter(
+                    (p) => p.isActive && p.type !== 'duitku' && !p.category?.includes('Duitku')
                   );
-                  if (otherMethods.length === 0) return null;
+                  if (manualMethods.length === 0) return null;
+
+                  const hasActiveManual =
+                    selectedPaymentMode === 'manual' &&
+                    manualMethods.some((m) => m.id === selectedManualPaymentId);
+                  const activeManualMethod = manualMethods.find((m) => m.id === selectedManualPaymentId);
+                  const isCategoryOpen = openCategoryAccordion === 'manual';
 
                   return (
-                    <div className="border border-slate-200 rounded-xl overflow-hidden transition-all">
+                    <div
+                      className={`border rounded-xl overflow-hidden transition-all duration-200 ${
+                        hasActiveManual
+                          ? 'border-[#063104] ring-2 ring-emerald-600/30 bg-emerald-50/40 shadow-xs'
+                          : 'border-slate-200 bg-white hover:border-emerald-300'
+                      }`}
+                    >
                       <button
                         type="button"
                         onClick={() => {
-                          setSelectedPaymentMode('duitku');
-                          setOpenCategoryAccordion(openCategoryAccordion === 'other' ? null : 'other');
+                          setSelectedPaymentMode('manual');
+                          setOpenCategoryAccordion(isCategoryOpen ? null : 'manual');
                         }}
-                        className={`w-full p-3 flex items-center justify-between text-left transition-colors ${selectedPaymentMode === 'duitku' && openCategoryAccordion === 'other'
-                          ? 'bg-purple-50/70 border-b border-purple-100'
-                          : 'bg-slate-50 hover:bg-slate-100'
-                          }`}
+                        className={`w-full p-3 flex items-center justify-between text-left transition-colors cursor-pointer ${
+                          hasActiveManual
+                            ? 'bg-emerald-100/80 border-b border-emerald-200 text-[#063104]'
+                            : isCategoryOpen
+                            ? 'bg-emerald-50/60 border-b border-emerald-100'
+                            : 'bg-slate-50 hover:bg-emerald-50/40'
+                        }`}
                       >
-                        <div className="flex items-center gap-2.5">
-                          <CreditCard className="w-4 h-4 text-purple-600 shrink-0" />
-                          <div>
-                            <p className="text-xs font-bold text-slate-800">Kartu Kredit & Retail / PayLater</p>
-                            <p className="text-[10px] text-slate-500">
-                              {otherMethods.map((m) => m.paymentName).join(', ')}
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <Banknote className="w-4.5 h-4.5 text-[#063104] shrink-0" />
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-xs font-extrabold text-slate-900 truncate">
+                                Transfer Bank &amp; Bayar di Tempat (Internal Toko)
+                              </p>
+                              {hasActiveManual && activeManualMethod && (
+                                <span className="bg-[#063104] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full shrink-0 shadow-xs">
+                                  Terpilih: {activeManualMethod.name}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-slate-500 truncate mt-0.5">
+                              {manualMethods.map((m) => m.name).join(', ')}
                             </p>
                           </div>
                         </div>
-                        {openCategoryAccordion === 'other' ? (
-                          <ChevronUp className="w-4 h-4 text-slate-500 shrink-0" />
+                        {isCategoryOpen ? (
+                          <ChevronUp className="w-4 h-4 text-emerald-800 shrink-0 ml-2" />
                         ) : (
-                          <ChevronDown className="w-4 h-4 text-slate-500 shrink-0" />
+                          <ChevronDown className="w-4 h-4 text-slate-500 shrink-0 ml-2" />
                         )}
                       </button>
 
-                      {openCategoryAccordion === 'other' && (
+                      {isCategoryOpen && (
                         <div className="p-3 bg-white grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          {otherMethods.map((m) => {
-                            const isSelected = selectedPaymentMode === 'duitku' && selectedDuitkuCode === m.paymentMethod;
-                            const feeVal = parseInt(m.totalFee || '0') || 0;
-                            const feeStr = feeVal > 0 ? `+ ${formatCurrency(feeVal)}` : 'Bebas Biaya';
+                          {manualMethods.map((m) => {
+                            const isSelected =
+                              selectedPaymentMode === 'manual' && selectedManualPaymentId === m.id;
 
                             return (
                               <button
-                                key={m.paymentMethod}
+                                key={m.id}
                                 type="button"
                                 onClick={() => {
-                                  setSelectedPaymentMode('duitku');
-                                  setSelectedDuitkuCode(m.paymentMethod);
+                                  setSelectedPaymentMode('manual');
+                                  setSelectedManualPaymentId(m.id);
                                 }}
-                                className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${isSelected
-                                  ? 'bg-purple-50 border-purple-600 ring-1 ring-purple-600'
-                                  : 'bg-white border-slate-200 hover:border-slate-300'
-                                  }`}
+                                className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-emerald-50 border-[#063104] ring-1 ring-[#063104] shadow-xs'
+                                    : 'bg-white border-slate-200 hover:border-emerald-300'
+                                }`}
                               >
                                 <div className="flex items-center gap-2 min-w-0">
-                                  {m.paymentImage ? (
-                                    <img src={m.paymentImage} alt={m.paymentName} className="w-7 h-5 object-contain shrink-0" />
-                                  ) : (
-                                    <CreditCard className="w-4 h-4 text-purple-600 shrink-0" />
-                                  )}
+                                  <Banknote className="w-4 h-4 text-emerald-800 shrink-0" />
                                   <div className="truncate">
-                                    <p className="text-[11px] font-bold text-slate-800 truncate">{m.paymentName}</p>
-                                    <p className="text-[10px] text-purple-700 font-semibold">{feeStr}</p>
+                                    <p className="text-[11px] font-bold text-slate-800 truncate">{m.name}</p>
+                                    <p className="text-[10px] text-emerald-700 font-semibold">{m.category} • Bebas Biaya</p>
                                   </div>
                                 </div>
-                                {isSelected && <CheckCircle2 className="w-4 h-4 text-purple-600 shrink-0" />}
+                                {isSelected && <CheckCircle2 className="w-4 h-4 text-[#063104] shrink-0" />}
                               </button>
                             );
                           })}
@@ -1286,33 +1404,6 @@ export const CheckoutPage: React.FC = () => {
                     </div>
                   );
                 })()}
-
-                {/* 5. BAYAR DI TEMPAT (COD) / MANUAL TOKO */}
-                {adminPaymentMethods.filter((p) => p.isActive).map((manualP) => (
-                  <button
-                    key={manualP.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedPaymentMode('manual');
-                      setSelectedManualPaymentId(manualP.id);
-                    }}
-                    className={`w-full p-3 rounded-xl border text-left flex items-center justify-between transition-all ${selectedPaymentMode === 'manual' && selectedManualPaymentId === manualP.id
-                      ? 'bg-amber-50 border-amber-600 ring-1 ring-amber-600'
-                      : 'bg-slate-50 border-slate-200 hover:border-slate-300'
-                      }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Banknote className="w-4 h-4 text-amber-700 shrink-0" />
-                      <div>
-                        <p className="text-xs font-bold text-slate-800">{manualP.name}</p>
-                        <p className="text-[10px] text-slate-500">{manualP.category} • Bebas Biaya</p>
-                      </div>
-                    </div>
-                    {selectedPaymentMode === 'manual' && selectedManualPaymentId === manualP.id && (
-                      <CheckCircle2 className="w-4 h-4 text-amber-700 shrink-0" />
-                    )}
-                  </button>
-                ))}
               </div>
             )}
           </div>

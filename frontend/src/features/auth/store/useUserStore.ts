@@ -36,14 +36,27 @@ export interface Order {
   id: string;
   orderNo: string;
   date: string;
+  orderDate?: string;
+  orderTime?: string;
   status: OrderStatus;
+  rawStatus?: string;
   items: OrderItem[];
   totalAmount: number;
   shippingCourier: string;
   paymentMethod: string;
   storeName?: string;
+  storeAddress?: string;
   createdAt?: string;
   payments?: any[];
+  shippingAddress?: string;
+  shippingType?: string;
+  pickupCode?: string;
+  driverName?: string;
+  driverPhone?: string;
+  driverPlate?: string;
+  trackingNumber?: string;
+  biteshipWaybillId?: string;
+  biteshipTrackingUrl?: string;
 }
 
 interface UserState {
@@ -64,8 +77,8 @@ interface UserState {
   setActiveProfileTab: (tab: 'profile' | 'orders') => void;
   setSelectedOrderStatusFilter: (status: OrderStatus | 'semua') => void;
   setSkipProfileAnimation: (skip: boolean) => void;
-  updateProfile: (updated: Partial<UserProfile>) => void;
-  fetchUserOrders: (userIdentifier?: string) => Promise<void>;
+  updateProfile: (updatedData: Partial<UserProfile>) => void;
+  fetchUserOrders: (userPhoneOrId?: string) => Promise<void>;
 }
 
 const DEFAULT_PROFILE: UserProfile = {
@@ -82,11 +95,20 @@ const DEFAULT_ORDERS: Order[] = [];
 export const useUserStore = create<UserState>()(
   persist(
     (set) => ({
-      profile: DEFAULT_PROFILE,
+      profile: {
+        id: 'usr_88201',
+        fullName: 'Budi Santoso',
+        username: 'budisantoso',
+        phone: '081234567890',
+        email: 'budi.santoso@example.com',
+        role: 'customer',
+        gender: 'Laki-laki',
+        birthDate: '1992-05-15',
+      },
       orders: DEFAULT_ORDERS,
       isProfileDrawerOpen: false,
       isAuthModalOpen: false,
-      isLoggedIn: !!sessionStorage.getItem('user-profile-storage'),
+      isLoggedIn: true,
       activeProfileTab: 'profile',
       selectedOrderStatusFilter: 'semua',
       skipProfileAnimation: false,
@@ -105,18 +127,15 @@ export const useUserStore = create<UserState>()(
       setSelectedOrderStatusFilter: (status) => set({ selectedOrderStatusFilter: status }),
       setSkipProfileAnimation: (skip) => set({ skipProfileAnimation: skip }),
 
-      updateProfile: (updated) =>
+      updateProfile: (updatedData) =>
         set((state) => ({
-          profile: { ...state.profile, ...updated },
-          isLoggedIn: true,
+          profile: { ...state.profile, ...updatedData },
         })),
 
-      fetchUserOrders: async (userIdentifier?: string) => {
+      fetchUserOrders: async (userPhoneOrId) => {
         try {
-          const param = userIdentifier
-            ? `?phone=${encodeURIComponent(userIdentifier)}&userId=${encodeURIComponent(userIdentifier)}`
-            : '';
-          const res = await fetch(`${API_BASE_URL}/orders/my-orders${param}`);
+          const query = userPhoneOrId ? `?user=${encodeURIComponent(userPhoneOrId)}` : '';
+          const res = await fetch(`${API_BASE_URL}/orders/my-orders${query}`);
           const json = await res.json();
           if (json.success && Array.isArray(json.data)) {
             const mappedOrders: Order[] = json.data.map((o: any) => {
@@ -138,14 +157,27 @@ export const useUserStore = create<UserState>()(
               return {
                 id: o.id,
                 orderNo: o.orderNo || `ORD-${o.id.slice(0, 5)}`,
-                date: `${o.orderDate || ''}, ${o.orderTime || ''}`,
+                date: o.orderDate && o.orderTime ? `${o.orderDate}, ${o.orderTime}` : (o.orderDate || 'Hari ini'),
+                orderDate: o.orderDate,
+                orderTime: o.orderTime,
                 status: statusMapped,
-                shippingCourier: 'OrganikStore Instant Delivery',
+                rawStatus: o.orderStatus,
+                shippingCourier: o.courierCompany ? o.courierCompany.toUpperCase() : (o.driverName ? 'Kurir Instant Toko' : 'OrganikStore Instant Delivery'),
                 paymentMethod: o.paymentMethod || 'QRIS',
                 totalAmount: o.totalPrice,
                 storeName: o.store?.name,
+                storeAddress: o.store?.address,
                 createdAt: o.createdAt,
                 payments: o.payments || [],
+                shippingAddress: o.shippingAddress,
+                shippingType: o.shippingType || 'instant',
+                pickupCode: o.pickupCode,
+                driverName: o.driverName,
+                driverPhone: o.driverPhone,
+                driverPlate: o.driverPlate,
+                trackingNumber: o.biteshipWaybillId || o.trackingNumber || `TRK-${o.orderNo || o.id.slice(0, 8)}`,
+                biteshipWaybillId: o.biteshipWaybillId,
+                biteshipTrackingUrl: o.biteshipTrackingUrl,
                 items: itemsParsed.map((item: any, idx: number) => ({
                   id: `item-${idx}`,
                   name: item.productName || item.name || 'Produk Organik',

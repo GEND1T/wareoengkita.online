@@ -166,11 +166,59 @@ export interface DuitkuInquiryResponse {
 }
 
 /**
+ * Duitku Expiry Period Helper (in minutes) based on Official Duitku Channel Specs:
+ * Credit Card (VC): 30 mins
+ * OVO (OV) / ShopeePay (SP) / QRIS (LQ, QR) / Jenius (JP): 10 mins
+ * OVO Account Link (OL): 15 mins
+ * NOBU QRIS (NQ) / LinkAja (LA): 24 mins
+ * ShopeePay Account Link (SL): 30 mins
+ * ATOME (AT): 720 mins
+ * VA (BC, M2, B1, A1, NC, BT, FT, AG) / DANA (DA) / Indodana (DN) / Tokopedia (TK): 1440 mins
+ */
+export function getDuitkuExpiryMinutes(paymentMethodCode: string): number {
+  const code = (paymentMethodCode || '').toUpperCase().trim();
+  switch (code) {
+    case 'VC':
+      return 30;
+    case 'OV':
+    case 'SP':
+    case 'LQ':
+    case 'QR':
+    case 'JP':
+      return 10;
+    case 'OL':
+      return 15;
+    case 'NQ':
+    case 'LA':
+      return 24;
+    case 'SL':
+      return 30;
+    case 'AT':
+      return 720;
+    case 'DA':
+    case 'DN':
+    case 'TK':
+    case 'BC':
+    case 'M2':
+    case 'B1':
+    case 'A1':
+    case 'I1':
+    case 'NC':
+    case 'BT':
+    case 'FT':
+    case 'AG':
+    default:
+      return 1440;
+  }
+}
+
+/**
  * Create a new transaction via Duitku Inquiry API
  * POST /api/merchant/v2/inquiry
  */
 export async function createTransaction(data: CreateTransactionParams): Promise<DuitkuInquiryResponse> {
   const signature = generateInquirySignature(data.merchantOrderId, data.paymentAmount);
+  const defaultExpiry = getDuitkuExpiryMinutes(data.paymentMethod);
 
   const params: Record<string, any> = {
     merchantCode: DUITKU_CONFIG.merchantCode,
@@ -186,7 +234,7 @@ export async function createTransaction(data: CreateTransactionParams): Promise<
     callbackUrl: DUITKU_CONFIG.callbackUrl,
     returnUrl: DUITKU_CONFIG.returnUrl,
     signature,
-    expiryPeriod: data.expiryPeriod || 1440, // default 24 hours
+    expiryPeriod: data.expiryPeriod || defaultExpiry,
   };
 
   if (data.itemDetails) {

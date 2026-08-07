@@ -9,6 +9,9 @@ import {
   QrCode,
   Building2,
   Banknote,
+  Wallet,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { useUserStore } from '../../auth/store/useUserStore';
@@ -29,6 +32,21 @@ export const PaymentView: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [paymentToEdit, setPaymentToEdit] = useState<PaymentOptionAdmin | null>(null);
 
+  // Accordion open/close state for categories
+  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({
+    'Virtual Account': true,
+    'E-Wallet': true,
+    'QRIS': true,
+    'Manual Toko': true,
+  });
+
+  const toggleCategory = (catKey: string) => {
+    setOpenCategories((prev) => ({
+      ...prev,
+      [catKey]: !prev[catKey],
+    }));
+  };
+
   // Form State
   const [name, setName] = useState('');
   const [category, setCategory] = useState('');
@@ -46,7 +64,7 @@ export const PaymentView: React.FC = () => {
     setPaymentToEdit(method);
     setName(method.name);
     setCategory(method.category);
-    setIconType(method.iconType);
+    setIconType((method.iconType as any) || 'qris');
     setIsModalOpen(true);
   };
 
@@ -76,7 +94,20 @@ export const PaymentView: React.FC = () => {
     setIsModalOpen(false);
   };
 
-  const renderIcon = (type: string) => {
+  const renderIcon = (method: PaymentOptionAdmin) => {
+    if (method.iconUrl) {
+      return (
+        <img
+          src={method.iconUrl}
+          alt={method.name}
+          className="w-6 h-6 object-contain"
+          onError={(e) => {
+            (e.target as HTMLElement).style.display = 'none';
+          }}
+        />
+      );
+    }
+    const type = method.iconType || '';
     switch (type) {
       case 'qris':
         return <QrCode className="w-5 h-5 text-emerald-700" />;
@@ -96,6 +127,44 @@ export const PaymentView: React.FC = () => {
     return <TableSkeleton rows={5} />;
   }
 
+  const categoriesConfig = [
+    {
+      key: 'Virtual Account',
+      title: 'Virtual Account (Bank Transfer)',
+      subtitle: 'Opsi pembayaran Virtual Account resmi Duitku (ATM Bersama, BNI, BCA, BRI, BSI)',
+      icon: <Building2 className="w-5 h-5 text-emerald-700" />,
+      filter: (m: PaymentOptionAdmin) =>
+        m.type === 'duitku' &&
+        (m.category === 'Virtual Account' || ['A1', 'I1', 'BC', 'BR', 'BV'].includes(m.code || '')),
+    },
+    {
+      key: 'E-Wallet',
+      title: 'E-Wallet & Dompet Digital',
+      subtitle: 'Opsi pembayaran E-Wallet resmi Duitku (OVO, DANA, LinkAja, ShopeePay)',
+      icon: <Wallet className="w-5 h-5 text-blue-600" />,
+      filter: (m: PaymentOptionAdmin) =>
+        m.type === 'duitku' &&
+        (m.category === 'E-Wallet' || ['OV', 'DA', 'LA', 'SA'].includes(m.code || '')),
+    },
+    {
+      key: 'QRIS',
+      title: 'QRIS (Scan Kode QR)',
+      subtitle: 'Opsi pembayaran QRIS Duitku (ShopeePay QRIS, LinkAja QRIS)',
+      icon: <QrCode className="w-5 h-5 text-rose-600" />,
+      filter: (m: PaymentOptionAdmin) =>
+        m.type === 'duitku' &&
+        (m.category === 'QRIS' || ['SP', 'LQ'].includes(m.code || '')),
+    },
+    {
+      key: 'Manual Toko',
+      title: 'Transfer Bank & Bayar di Tempat (Manual Toko)',
+      subtitle: 'Metode pembayaran internal toko yang dikelola secara manual',
+      icon: <CreditCard className="w-5 h-5 text-amber-700" />,
+      filter: (m: PaymentOptionAdmin) =>
+        m.type !== 'duitku' && !m.category?.includes('Duitku'),
+    },
+  ];
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Title & Top Action */}
@@ -103,7 +172,7 @@ export const PaymentView: React.FC = () => {
         <div>
           <h1 className="text-2xl font-black text-gray-900">Metode Pembayaran</h1>
           <p className="text-xs text-gray-500">
-            Kelola pilihan metode transaksi pembayaran yang diterima di toko untuk pembeli saat checkout.
+            Kelola pilihan metode transaksi pembayaran (Duitku Gateway &amp; Transfer Toko) yang diaktifkan untuk pembeli saat checkout.
           </p>
         </div>
 
@@ -119,93 +188,160 @@ export const PaymentView: React.FC = () => {
         </button>
       </div>
 
-      {/* Payment Options Table */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-[#F9F8F6] text-gray-700 text-xs font-extrabold uppercase border-b border-gray-200/80">
-                <th className="py-3.5 px-4 w-14">Icon</th>
-                <th className="py-3.5 px-4">Nama Metode Pembayaran</th>
-                <th className="py-3.5 px-4">Kategori / Provider</th>
-                <th className="py-3.5 px-4 text-center">Status</th>
-                <th className="py-3.5 px-4 text-center">Aksi</th>
-              </tr>
-            </thead>
+      {/* Category Accordion Cards */}
+      <div className="space-y-4">
+        {categoriesConfig.map((catConfig) => {
+          const items = paymentMethods.filter(catConfig.filter);
+          const activeCount = items.filter((i) => i.isActive).length;
+          const isOpen = openCategories[catConfig.key] !== false;
 
-            <tbody className="divide-y divide-gray-100 text-xs">
-              {paymentMethods.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="py-12 text-center text-gray-400">
-                    Belum ada metode pembayaran. Klik "Tambah Metode Pembayaran" untuk menambah.
-                  </td>
-                </tr>
-              ) : (
-                paymentMethods.map((method) => (
-                  <tr key={method.id} className="hover:bg-emerald-50/30 transition-colors">
-                    {/* Icon */}
-                    <td className="py-3.5 px-4">
-                      <div className="p-2 rounded-xl bg-gray-50 border border-gray-200/80 w-fit">
-                        {renderIcon(method.iconType)}
-                      </div>
-                    </td>
-
-                    {/* Nama Metode */}
-                    <td className="py-3.5 px-4 font-extrabold text-gray-900">
-                      {method.name}
-                    </td>
-
-                    {/* Kategori / Provider */}
-                    <td className="py-3.5 px-4 text-gray-600 font-medium">
-                      {method.category}
-                    </td>
-
-                    {/* Status Toggle */}
-                    <td className="py-3.5 px-4 text-center">
-                      <button
-                        type="button"
-                        onClick={() => togglePaymentStatus(method.id)}
-                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${method.isActive ? 'bg-[#063104]' : 'bg-gray-300'
-                          }`}
-                        title={method.isActive ? 'Klik untuk nonaktifkan' : 'Klik untuk aktifkan'}
-                      >
-                        <span
-                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${method.isActive ? 'translate-x-5' : 'translate-x-0'
-                            }`}
-                        />
-                      </button>
-                      <span className="block text-[10px] font-bold text-gray-500 mt-0.5">
-                        {method.isActive ? 'Aktif' : 'Nonaktif'}
+          return (
+            <div key={catConfig.key} className="bg-white rounded-3xl border border-gray-200/80 shadow-xs overflow-hidden transition-all">
+              {/* Accordion Header */}
+              <button
+                type="button"
+                onClick={() => toggleCategory(catConfig.key)}
+                className="w-full p-4 flex items-center justify-between text-left bg-gradient-to-r from-gray-50/80 to-white hover:bg-emerald-50/20 transition-colors border-b border-gray-100 cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-2xl bg-white border border-gray-200/80 shadow-xs shrink-0">
+                    {catConfig.icon}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className="text-sm font-extrabold text-gray-900">{catConfig.title}</h2>
+                      <span className="bg-gray-100 text-gray-700 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-gray-200">
+                        {items.length} Metode ({activeCount} Aktif)
                       </span>
-                    </td>
+                    </div>
+                    <p className="text-xs text-gray-500 font-medium mt-0.5">{catConfig.subtitle}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {isOpen ? (
+                    <ChevronUp className="w-5 h-5 text-gray-400" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-gray-400" />
+                  )}
+                </div>
+              </button>
 
-                    {/* Aksi */}
-                    <td className="py-3.5 px-4 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEdit(method)}
-                          className="p-1.5 rounded-lg bg-gray-100 hover:bg-[#063104] hover:text-white text-gray-700 transition-colors"
-                          title="Edit Metode Pembayaran"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(method.id, method.name)}
-                          className="p-1.5 rounded-lg bg-gray-100 hover:bg-red-600 hover:text-white text-gray-700 transition-colors"
-                          title="Hapus Metode"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+              {/* Accordion Table Content */}
+              {isOpen && (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-[#F9F8F6] text-gray-700 text-xs font-extrabold uppercase border-b border-gray-200/80">
+                        <th className="py-3 px-4 w-16">Icon</th>
+                        <th className="py-3 px-4">Nama Metode Pembayaran</th>
+                        <th className="py-3 px-4">Kategori / Provider</th>
+                        <th className="py-3 px-4 text-center">Status</th>
+                        <th className="py-3 px-4 text-center">Aksi</th>
+                      </tr>
+                    </thead>
+
+                    <tbody className="divide-y divide-gray-100 text-xs">
+                      {items.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="py-8 text-center text-gray-400 italic font-medium">
+                            Belum ada opsi pembayaran dalam kategori ini.
+                          </td>
+                        </tr>
+                      ) : (
+                        items.map((method) => {
+                          const isDuitku = method.type === 'duitku' || method.category?.includes('Duitku');
+                          return (
+                            <tr key={method.id} className="hover:bg-emerald-50/30 transition-colors">
+                              {/* Icon */}
+                              <td className="py-3.5 px-4">
+                                <div className="p-2 rounded-xl bg-gray-50 border border-gray-200/80 w-fit flex items-center justify-center">
+                                  {renderIcon(method)}
+                                </div>
+                              </td>
+
+                              {/* Nama Metode */}
+                              <td className="py-3.5 px-4">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-extrabold text-gray-900">{method.name}</span>
+                                  {method.code && (
+                                    <span className="bg-gray-100 text-gray-600 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-gray-200">
+                                      {method.code}
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+
+                              {/* Kategori / Provider */}
+                              <td className="py-3.5 px-4 font-medium">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-gray-700 font-bold">{method.category}</span>
+                                  {isDuitku ? (
+                                    <span className="bg-amber-100/90 text-amber-900 text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-amber-200 uppercase">
+                                      Duitku Gateway
+                                    </span>
+                                  ) : (
+                                    <span className="bg-emerald-100/80 text-[#063104] text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-emerald-200 uppercase">
+                                      Manual Toko
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+
+                              {/* Status Toggle */}
+                              <td className="py-3.5 px-4 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => togglePaymentStatus(method.id)}
+                                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                    method.isActive ? 'bg-[#063104]' : 'bg-gray-300'
+                                  }`}
+                                  title={method.isActive ? 'Klik untuk nonaktifkan' : 'Klik untuk aktifkan'}
+                                >
+                                  <span
+                                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                                      method.isActive ? 'translate-x-5' : 'translate-x-0'
+                                    }`}
+                                  />
+                                </button>
+                                <span className="block text-[10px] font-bold text-gray-500 mt-0.5">
+                                  {method.isActive ? 'Aktif' : 'Nonaktif'}
+                                </span>
+                              </td>
+
+                              {/* Aksi */}
+                              <td className="py-3.5 px-4 text-center">
+                                <div className="flex items-center justify-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenEdit(method)}
+                                    className="p-1.5 rounded-lg bg-gray-100 hover:bg-[#063104] hover:text-white text-gray-700 transition-colors"
+                                    title="Edit Metode Pembayaran"
+                                  >
+                                    <Pencil className="w-3.5 h-3.5" />
+                                  </button>
+                                  {!isDuitku && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDelete(method.id, method.name)}
+                                      className="p-1.5 rounded-lg bg-gray-100 hover:bg-red-600 hover:text-white text-gray-700 transition-colors"
+                                      title="Hapus Metode"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               )}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Modal Add/Edit Payment Option */}

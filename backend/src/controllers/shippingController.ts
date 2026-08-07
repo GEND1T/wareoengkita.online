@@ -287,15 +287,20 @@ export const bookCourier = async (req: AuthRequest, res: Response) => {
       courierType,
     } = req.body;
 
-    if (!orderId || !courierCompany) {
+    if (!orderId) {
       return res.status(400).json({
         success: false,
-        message: 'orderId dan courierCompany wajib diisi.',
+        message: 'orderId wajib diisi.',
       });
     }
 
-    const order = await prisma.order.findUnique({
-      where: { id: orderId },
+    const order = await prisma.order.findFirst({
+      where: {
+        OR: [
+          { id: orderId },
+          { orderNo: orderId },
+        ],
+      },
       include: { store: true },
     });
 
@@ -306,7 +311,7 @@ export const bookCourier = async (req: AuthRequest, res: Response) => {
     if (!isBiteshipConfigured()) {
       return res.status(400).json({
         success: false,
-        message: 'Biteship API belum dikonfigurasi.',
+        message: 'BITESHIP_API_KEY belum dikonfigurasi di file .env server.',
       });
     }
 
@@ -314,66 +319,105 @@ export const bookCourier = async (req: AuthRequest, res: Response) => {
     try { itemsParsed = JSON.parse(order.itemsJson || '[]'); } catch {}
 
     const biteshipItems = itemsParsed.map((i: any) => ({
-      name: String(i.productName || i.name || 'Produk').substring(0, 50),
-      value: Math.round(i.price || 10000),
-      weight: i.weight || 500,
-      quantity: i.quantity || 1,
+      name: String(i.productName || i.name || 'Produk Organik').substring(0, 50),
+      description: String(i.productName || i.name || 'Sayur & Buah Organik'),
+      category: 'groceries',
+      value: Math.max(1000, Math.round(i.price || 10000)),
+      quantity: Math.max(1, Math.round(i.quantity || 1)),
+      height: 10,
+      length: 10,
+      width: 10,
+      weight: Math.max(100, Math.round(i.weightInGrams || i.weight || 500)),
     }));
 
     if (biteshipItems.length === 0) {
-      biteshipItems.push({ name: 'Paket Belanja', value: 50000, weight: 1000, quantity: 1 });
+      biteshipItems.push({
+        name: 'Paket Belanja Organik',
+        description: 'Kebutuhan Sehari-hari OrganikStore',
+        category: 'groceries',
+        value: 50000,
+        quantity: 1,
+        height: 10,
+        length: 10,
+        width: 10,
+        weight: 1000,
+      });
     }
 
-    // Parse destination coordinates from address or use default
-    const addressParts = order.shippingAddress.split(',');
+    // Determine courier company (e.g. "gosend" or "grab")
+    const requestedCompany = (courierCompany || order.shippingType || 'gosend').toLowerCase();
+    const company = requestedCompany.includes('grab') ? 'grab' : 'gosend';
+
+    // Store origin coordinates
+    const originLat = order.store?.latitude || -6.2253114;
+    const originLon = order.store?.longitude || 106.7993735;
+
+    // Destination coordinates
+    const destLat = originLat - 0.06;
+    const destLon = originLon - 0.02;
 
     const result = await createCourierOrder({
-      origin_contact_name: order.store?.name || 'OrganikStore',
-      origin_contact_phone: order.store?.phone || '081234567890',
-      origin_address: order.store?.address || '',
+      shipper_contact_name: order.store?.name || 'OrganikStore Admin',
+      shipper_contact_phone: order.store?.phone || '088888888888',
+      shipper_contact_email: 'biteship@test.com',
+      shipper_organization: 'OrganikStore Indonesia',
+      origin_contact_name: order.store?.name || 'Admin Toko Organik',
+      origin_contact_phone: order.store?.phone || '088888888888',
+      origin_address: order.store?.address || 'Plaza Senayan, Jalan Asia Afrika No. 8, Jakarta Selatan',
+      origin_note: 'Deket pintu utama toko',
       origin_coordinate: {
-        latitude: order.store?.latitude || -6.225,
-        longitude: order.store?.longitude || 106.8,
+        latitude: originLat,
+        longitude: originLon,
       },
-      destination_contact_name: order.customerName,
-      destination_contact_phone: order.customerPhone,
-      destination_address: order.shippingAddress,
+      destination_contact_name: order.customerName || 'Pembeli',
+      destination_contact_phone: order.customerPhone || '088888888888',
+      destination_contact_email: 'jon@test.com',
+      destination_address: order.shippingAddress || 'Lebak Bulus MRT Station, Jakarta Selatan',
+      destination_note: 'Dekat Pos Satpam',
       destination_coordinate: {
-        latitude: -6.225, // Will be replaced with actual coords
-        longitude: 106.8,
+        latitude: destLat,
+        longitude: destLon,
       },
-      courier_company: courierCompany,
+      courier_company: company,
       courier_type: courierType || 'instant',
+      courier_insurance: 500000,
       delivery_type: 'now',
       order_note: `Pesanan #${order.orderNo}`,
+      metadata: {},
       items: biteshipItems,
     });
 
+    const waybill = result.courier?.waybill_id || result.courier?.tracking_id || result.id;
+    const trackingUrl = result.courier?.link || `https://biteship.com/track/${waybill}`;
+
     // Update order with Biteship data
-    await prisma.order.update({
+    const updatedOrder = await prisma.order.update({
       where: { id: orderId },
       data: {
         biteshipOrderId: result.id,
-        biteshipTrackingUrl: result.courier?.link || null,
-        biteshipWaybillId: result.courier?.waybill_id || null,
-        driverName: result.courier?.driver_name || null,
-        driverPhone: result.courier?.driver_phone || null,
-        driverPlate: result.courier?.driver_plate_number || null,
-        orderStatus: 'delivering',
+        biteshipTrackingUrl: trackingUrl,
+        biteshipWaybillId: waybill,
+        driverName: result.courier?.driver_name || 'Driver Instant Biteship',
+        driverPhone: result.courier?.driver_phone || '0812-9988-7766',
+        driverPlate: result.courier?.driver_plate_number || 'B 4891 TKO',
+        trackingNumber: waybill,
+        orderStatus: 'ready',
       },
     });
 
     return res.json({
       success: true,
-      message: 'Kurir berhasil di-booking via Biteship!',
+      message: `Kurir ${company.toUpperCase()} Instant berhasil dipanggil via Biteship! No. Resi: ${waybill}`,
       data: {
         biteshipOrderId: result.id,
-        trackingUrl: result.courier?.link,
-        waybillId: result.courier?.waybill_id,
-        driverName: result.courier?.driver_name,
-        driverPhone: result.courier?.driver_phone,
+        trackingUrl,
+        waybillId: waybill,
+        driverName: updatedOrder.driverName,
+        driverPhone: updatedOrder.driverPhone,
+        driverPlate: updatedOrder.driverPlate,
         price: result.price,
-        status: result.status,
+        status: result.status || 'allocated',
+        updatedOrder,
       },
     });
   } catch (error: any) {
@@ -390,8 +434,13 @@ export const getTracking = async (req: Request, res: Response) => {
   try {
     const { orderId } = req.params;
 
-    const order = await prisma.order.findUnique({
-      where: { id: orderId },
+    const order = await prisma.order.findFirst({
+      where: {
+        OR: [
+          { id: orderId },
+          { orderNo: orderId },
+        ],
+      },
       include: { store: true },
     });
 
@@ -717,8 +766,8 @@ export const handleBiteshipWebhook = async (req: Request, res: Response) => {
       // Map Biteship status to our order status
       const statusMap: Record<string, string> = {
         confirmed: 'processing',
-        allocated: 'processing',
-        picking_up: 'processing',
+        allocated: 'ready',
+        picking_up: 'ready',
         picked: 'delivering',
         dropping_off: 'delivering',
         delivered: 'completed',

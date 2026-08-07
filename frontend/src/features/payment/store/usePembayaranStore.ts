@@ -28,6 +28,7 @@ export interface PaymentData {
   isPaymentLink?: boolean;
   linkToken?: string;
   linkExpiry?: string;
+  expiryPeriod?: number;
   itemsJson?: string;
   createdAt: string;
 }

@@ -165,6 +165,9 @@ model Order {
   biteshipWaybillId   String?  // Waybill number
   codVerified         Boolean  @default(false)
   codCashCollected    Boolean  @default(false)
+  cancelReason        String?
+  customerLat         Float?
+  customerLon         Float?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
