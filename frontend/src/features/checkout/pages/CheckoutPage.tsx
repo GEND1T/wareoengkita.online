@@ -21,7 +21,15 @@ import {
   ChevronUp,
   Wallet,
   Zap,
+  Package,
+  Map as MapIcon,
+  CalendarDays,
+  HandCoins,
+  Phone,
+  Clock,
+  Home,
 } from 'lucide-react';
+import PickupLocationMapModal from '../components/PickupLocationMapModal';
 import { useCategoryStore } from '../../catalog/store/useCategoryStore';
 import { useCartStore } from '../../cart/store/useCartStore';
 import { useLocationStore } from '../../store-location/store/useLocationStore';
@@ -83,10 +91,11 @@ export const CheckoutPage: React.FC = () => {
 
   const activeAddress = getSelectedAddress();
 
+  const targetStoreId = selectedStoreId || 'store-1';
   const storeCheckoutItems = items.filter(
-    (item) => (item.product.storeId || 'store-1') === (selectedStoreId || 'store-1')
+    (item) => (item.product.storeId || 'store-1') === targetStoreId
   );
-  const checkoutItems = storeCheckoutItems.length > 0 ? storeCheckoutItems : items;
+  const checkoutItems = storeCheckoutItems;
 
   // State Declarations
   const [shippingRatesData, setShippingRatesData] = useState<any[]>([]);
@@ -109,6 +118,7 @@ export const CheckoutPage: React.FC = () => {
   const [selectedScheduledSlot, setSelectedScheduledSlot] = useState<string>('');
   const [pickupLocations, setPickupLocations] = useState<any[]>([]);
   const [openShippingAccordion, setOpenShippingAccordion] = useState<string | null>('instant');
+  const [isPickupMapModalOpen, setIsPickupMapModalOpen] = useState(false);
 
   const [isDuitkuConfirmOpen, setIsDuitkuConfirmOpen] = useState(false);
   const [isDuitkuSuccessOpen, setIsDuitkuSuccessOpen] = useState(false);
@@ -277,6 +287,24 @@ export const CheckoutPage: React.FC = () => {
 
   const distanceKm = getNumericalDistanceKm();
 
+  const getDistanceToPickupKm = (plLat?: number, plLon?: number): number | null => {
+    if (!activeAddress?.latitude || !activeAddress?.longitude || !plLat || !plLon) return null;
+    const uLat = activeAddress.latitude;
+    const uLon = activeAddress.longitude;
+    const R = 6371;
+    const dLat = ((plLat - uLat) * Math.PI) / 180;
+    const dLon = ((plLon - uLon) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((uLat * Math.PI) / 180) *
+        Math.cos((plLat * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const dist = R * c;
+    return parseFloat(dist.toFixed(1));
+  };
+
   const calculateDynamicShippingFee = (option: any): number => {
     if (!option) return 0;
     if (option.type === 'pickup') return option.pickupFee || 0;
@@ -305,9 +333,7 @@ export const CheckoutPage: React.FC = () => {
 
   const selectedShipping = availableShippingOptions.find((s) => s.id === selectedShippingId) || null;
 
-  const subtotalItems = storeCheckoutItems.length > 0
-    ? getTotalPriceByStore(selectedStoreId)
-    : useCartStore.getState().getTotalPrice();
+  const subtotalItems = getTotalPriceByStore(targetStoreId);
   const subtotalShipping = selectedShipping ? calculateDynamicShippingFee(selectedShipping) : 0;
   const serviceFee = subtotalItems > 0 ? 1000 : 0;
 
@@ -589,12 +615,12 @@ export const CheckoutPage: React.FC = () => {
             <div className="flex items-center justify-between pb-1 border-b border-gray-100">
               <div className="flex items-center gap-1.5 text-[#063104] font-extrabold text-xs uppercase tracking-wider">
                 <ShoppingBag className="w-4 h-4" />
-                <span>Daftar Belanjaan ({items.length} Barang)</span>
+                <span>Daftar Belanjaan ({checkoutItems.length} Barang)</span>
               </div>
             </div>
 
             <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
-              {items.map(({ product, quantity }) => (
+              {checkoutItems.map(({ product, quantity }) => (
                 <div
                   key={product.id}
                   className="flex items-center justify-between text-xs py-1 border-b border-gray-50 last:border-0"
@@ -684,11 +710,11 @@ export const CheckoutPage: React.FC = () => {
               <div className="space-y-2">
                 {availableShippingOptions.map((option) => {
                   const isSelected = option.id === selectedShippingId;
-                  const typeLabels: Record<string, { label: string; emoji: string; color: string }> = {
-                    instant: { label: 'Instant', emoji: '⚡', color: 'bg-amber-50 text-amber-700 border-amber-200' },
-                    pickup: { label: 'Ambil di Tempat', emoji: '📦', color: 'bg-blue-50 text-blue-700 border-blue-200' },
-                    scheduled: { label: 'Terjadwal', emoji: '📅', color: 'bg-purple-50 text-purple-700 border-purple-200' },
-                    cod: { label: 'COD', emoji: '💰', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+                  const typeLabels: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
+                    instant: { label: 'Instant', icon: <Zap className="w-3 h-3 text-amber-700 fill-amber-500" />, color: 'bg-amber-50 text-amber-800 border-amber-200' },
+                    pickup: { label: 'Self-Pickup', icon: <Package className="w-3 h-3 text-[#063104]" />, color: 'bg-emerald-50 text-[#063104] border-emerald-200' },
+                    scheduled: { label: 'Terjadwal', icon: <CalendarDays className="w-3 h-3 text-purple-700" />, color: 'bg-purple-50 text-purple-800 border-purple-200' },
+                    cod: { label: 'COD', icon: <HandCoins className="w-3 h-3 text-emerald-700" />, color: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
                   };
                   const typeInfo = typeLabels[option.type] || typeLabels.instant;
                   const fee = calculateDynamicShippingFee(option);
@@ -717,8 +743,9 @@ export const CheckoutPage: React.FC = () => {
                               <div>
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <span className="font-bold text-gray-900 text-xs">{option.name}</span>
-                                  <span className="bg-emerald-100/80 text-[#063104] text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200">
-                                    ⚡ {typeInfo.label}
+                                  <span className="bg-emerald-100/80 text-[#063104] text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                                    <Zap className="w-3 h-3 text-[#063104]" />
+                                    <span>{typeInfo.label}</span>
                                   </span>
                                   {selectedBiteshipServiceCode ? (
                                     <span className="bg-amber-100 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-300">
@@ -753,7 +780,8 @@ export const CheckoutPage: React.FC = () => {
                             <div className="p-3 bg-white space-y-2 border-t border-emerald-100">
                               <div className="flex items-center justify-between px-1 pb-1">
                                 <p className="text-[11px] font-extrabold text-[#063104] flex items-center gap-1.5">
-                                  ⚡ Pilih Penyedia Kurir Instan:
+                                  <Zap className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
+                                  <span>Pilih Penyedia Kurir Instan:</span>
                                 </p>
                                 {isLoadingRates && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#063104]" />}
                               </div>
@@ -845,6 +873,142 @@ export const CheckoutPage: React.FC = () => {
                             </div>
                           )}
                         </div>
+                      ) : option.type === 'pickup' ? (
+                        <div className="border border-emerald-200/80 rounded-xl overflow-hidden transition-all shadow-2xs">
+                          {/* Header Category Accordion Button (Buka/Tutup) */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedShippingId(option.id);
+                              setOpenShippingAccordion(openShippingAccordion === option.id ? null : option.id);
+                            }}
+                            className={`w-full p-3 flex items-center justify-between text-left transition-colors cursor-pointer ${
+                              isSelected && openShippingAccordion === option.id
+                                ? 'bg-emerald-50/90 border-b border-emerald-200'
+                                : isSelected
+                                ? 'bg-emerald-50/60 hover:bg-emerald-50/80'
+                                : 'bg-slate-50 hover:bg-slate-100'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-7 h-7 rounded-lg bg-emerald-100/80 flex items-center justify-center shrink-0">
+                                <Package className="w-4 h-4 text-[#063104]" />
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-bold text-gray-900 text-xs">{option.name}</span>
+                                  <span className="bg-emerald-100/80 text-[#063104] text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                                    <Package className="w-3 h-3 text-[#063104]" />
+                                    <span>Self-Pickup</span>
+                                  </span>
+                                  {selectedPickupLocationId && (
+                                    <span className="bg-[#063104] text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                      <MapPin className="w-2.5 h-2.5 text-emerald-300" />
+                                      <span>{pickupLocations.find((p: any) => p.id === selectedPickupLocationId)?.name || 'Toko Terpilih'}</span>
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-[11px] text-gray-500 mt-0.5">
+                                  Ambil pesanan Anda langsung di lokasi toko
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <span className={`font-extrabold text-xs shrink-0 ${fee === 0 ? 'text-emerald-600' : 'text-[#063104]'}`}>
+                                {fee === 0 ? 'GRATIS' : formatCurrency(fee)}
+                              </span>
+                              {openShippingAccordion === option.id ? (
+                                <ChevronUp className="w-4 h-4 text-[#063104] shrink-0" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-gray-500 shrink-0" />
+                              )}
+                            </div>
+                          </button>
+
+                          {/* Accordion Body when open */}
+                          {openShippingAccordion === option.id && (
+                            <div className="p-3 bg-white space-y-3 border-t border-emerald-100">
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="text-[11px] font-extrabold text-[#063104] flex items-center gap-1.5">
+                                  <MapPin className="w-3.5 h-3.5 text-emerald-700" />
+                                  <span>Pilih Lokasi Pengambilan:</span>
+                                </p>
+                                <button
+                                  type="button"
+                                  onClick={() => setIsPickupMapModalOpen(true)}
+                                  className="bg-[#063104] hover:bg-[#084205] text-white font-bold px-3 py-1.5 rounded-xl text-[11px] transition-all flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 border border-emerald-900/30"
+                                >
+                                  <MapIcon className="w-3.5 h-3.5" />
+                                  <span>Lihat Peta</span>
+                                </button>
+                              </div>
+
+                              {pickupLocations.length === 0 ? (
+                                <p className="text-xs text-gray-500 py-2 text-center bg-gray-50 rounded-xl border border-gray-100">
+                                  Lokasi pengambilan belum tersedia.
+                                </p>
+                              ) : (
+                                <div className="space-y-2">
+                                  {pickupLocations.map((pl: any) => {
+                                    const isPlSelected = selectedPickupLocationId === pl.id;
+                                    const distKm = getDistanceToPickupKm(pl.latitude, pl.longitude);
+
+                                    return (
+                                      <button
+                                        key={pl.id}
+                                        type="button"
+                                        onClick={() => {
+                                          setSelectedShippingId(option.id);
+                                          setSelectedPickupLocationId(pl.id);
+                                        }}
+                                        className={`w-full text-left p-3 rounded-xl border text-xs transition-all cursor-pointer ${
+                                          isPlSelected
+                                            ? 'bg-emerald-50/90 border-[#063104] ring-2 ring-[#063104] font-medium shadow-xs'
+                                            : 'bg-white border-gray-200 hover:border-emerald-300 text-gray-800'
+                                        }`}
+                                      >
+                                        <div className="flex items-start justify-between gap-2">
+                                          <div className="space-y-1">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                              <span className="font-extrabold text-gray-900 text-xs">{pl.name}</span>
+                                              {distKm !== null && (
+                                                <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                                                  <MapPin className="w-3 h-3 text-emerald-700 shrink-0" />
+                                                  <span>{distKm < 1 ? `${Math.round(distKm * 1000)} m` : `${distKm.toFixed(1)} km`} dari lokasi Anda</span>
+                                                </span>
+                                              )}
+                                            </div>
+                                            <p className="text-[11px] text-gray-600 leading-snug">{pl.address}</p>
+                                          </div>
+
+                                          <span className="text-[11px] font-bold text-[#063104] shrink-0 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                            {pl.pickupFee ? formatCurrency(pl.pickupFee) : 'GRATIS'}
+                                          </span>
+                                        </div>
+
+                                        <div className="flex flex-wrap items-center gap-3 mt-2 text-[10px] text-gray-500 pt-1.5 border-t border-gray-100">
+                                          {pl.operatingHours && (
+                                            <span className="flex items-center gap-1">
+                                              <Clock className="w-3 h-3 text-gray-400 shrink-0" />
+                                              <span>Jam Operasional: {pl.operatingHours}</span>
+                                            </span>
+                                          )}
+                                          {pl.phone && (
+                                            <span className="flex items-center gap-1 text-emerald-700 font-bold">
+                                              <Phone className="w-3 h-3 text-emerald-600 shrink-0" />
+                                              <span>WA: {pl.phone}</span>
+                                            </span>
+                                          )}
+                                        </div>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       ) : (
                         <div>
                           <button
@@ -860,16 +1024,14 @@ export const CheckoutPage: React.FC = () => {
                               <div>
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <span className="font-bold text-gray-900 text-xs">{option.name}</span>
-                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${typeInfo.color}`}>
-                                    {typeInfo.emoji} {typeInfo.label}
+                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 ${typeInfo.color}`}>
+                                    {typeInfo.icon}
+                                    <span>{typeInfo.label}</span>
                                   </span>
                                   <span className="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded">
                                     {option.estimated}
                                   </span>
                                 </div>
-                                {option.type === 'pickup' && (
-                                  <p className="text-[11px] text-gray-500 mt-0.5">Ambil langsung di lokasi toko</p>
-                                )}
                                 {option.type === 'scheduled' && (
                                   <p className="text-[11px] text-gray-500 mt-0.5">Pilih tanggal &amp; waktu pengiriman</p>
                                 )}
@@ -887,31 +1049,12 @@ export const CheckoutPage: React.FC = () => {
                         </div>
                       )}
 
-                      {isSelected && option.type === 'pickup' && (
-                        <div className="mt-2 p-3 bg-blue-50/50 rounded-xl border border-blue-100 space-y-2">
-                          <p className="text-[11px] font-bold text-blue-800">📍 Pilih Lokasi Pengambilan:</p>
-                          {pickupLocations.length === 0 ? (
-                            <p className="text-[10px] text-gray-500">Lokasi pengambilan akan ditampilkan saat tersedia.</p>
-                          ) : (
-                            pickupLocations.map((pl: any) => (
-                              <button
-                                key={pl.id}
-                                type="button"
-                                onClick={() => setSelectedPickupLocationId(pl.id)}
-                                className={`w-full text-left p-2.5 rounded-lg border text-xs transition-all ${selectedPickupLocationId === pl.id ? 'bg-blue-100 border-blue-400 ring-1 ring-blue-400' : 'bg-white border-gray-200 hover:border-blue-300'}`}
-                              >
-                                <span className="font-bold text-gray-900">{pl.name}</span>
-                                <p className="text-[10px] text-gray-500 mt-0.5">{pl.address}</p>
-                                {pl.operatingHours && <p className="text-[10px] text-gray-400">🕐 {pl.operatingHours}</p>}
-                              </button>
-                            ))
-                          )}
-                        </div>
-                      )}
-
                       {isSelected && option.type === 'scheduled' && (
                         <div className="mt-2 p-3 bg-purple-50/50 rounded-xl border border-purple-100 space-y-2">
-                          <p className="text-[11px] font-bold text-purple-800">📅 Pilih Jadwal Pengiriman:</p>
+                          <p className="text-[11px] font-extrabold text-purple-900 flex items-center gap-1.5">
+                            <CalendarDays className="w-3.5 h-3.5 text-purple-700 shrink-0" />
+                            <span>Pilih Jadwal Pengiriman:</span>
+                          </p>
                           <input
                             type="date"
                             value={selectedScheduledDate}
@@ -1528,6 +1671,24 @@ export const CheckoutPage: React.FC = () => {
           closeCheckout();
           openProfileDrawer('orders');
           setSelectedOrderStatusFilter('dikemas');
+        }}
+      />
+      {/* Visual Pickup Location Map Modal */}
+      <PickupLocationMapModal
+        isOpen={isPickupMapModalOpen}
+        onClose={() => setIsPickupMapModalOpen(false)}
+        pickupLocations={pickupLocations}
+        selectedLocationId={selectedPickupLocationId}
+        customerLat={activeAddress?.latitude}
+        customerLon={activeAddress?.longitude}
+        customerAddressName={activeAddress?.recipientName ? `${activeAddress.recipientName} - ${activeAddress.street}` : activeAddress?.address}
+        onSelectLocation={(locId: string) => {
+          const pickupOpt = availableShippingOptions.find(o => o.type === 'pickup');
+          if (pickupOpt) {
+            setSelectedShippingId(pickupOpt.id);
+            setOpenShippingAccordion(pickupOpt.id);
+          }
+          setSelectedPickupLocationId(locId);
         }}
       />
     </Drawer>

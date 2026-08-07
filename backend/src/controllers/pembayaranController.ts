@@ -9,6 +9,7 @@ import {
   getDuitkuExpiryMinutes,
 } from '../services/duitkuService';
 import crypto from 'crypto';
+import { notifyOrderPaid, notifyOrderStatusChanged } from '../services/wahaNotificationHelper';
 
 // ============================================================
 // Pembayaran Controller — Duitku Payment Gateway Integration
@@ -286,6 +287,10 @@ export const handleCallback = async (req: Request, res: Response) => {
           paymentMethod: `duitku_${paymentCode || updatedPayment.paymentMethod}`,
         },
       });
+
+      // Send WAHA WhatsApp notifications
+      notifyOrderPaid(updatedPayment.orderId).catch(err => console.error('[WAHA Notify Error]:', err));
+      notifyOrderStatusChanged(updatedPayment.orderId, 'processing').catch(err => console.error('[WAHA Notify Error]:', err));
     }
 
     console.log('[Duitku Callback] Processed successfully:', merchantOrderId);
@@ -383,6 +388,10 @@ export const checkPaymentStatus = async (req: Request, res: Response) => {
               orderStatus: 'processing',
             },
           });
+
+          // Send WAHA WhatsApp notifications
+          notifyOrderPaid(payment.orderId).catch(err => console.error('[WAHA Notify Error]:', err));
+          notifyOrderStatusChanged(payment.orderId, 'processing').catch(err => console.error('[WAHA Notify Error]:', err));
         }
       }
 

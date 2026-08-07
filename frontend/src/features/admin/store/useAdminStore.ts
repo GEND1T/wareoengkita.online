@@ -183,6 +183,7 @@ export const useAdminStore = create<AdminState>()(
                 pickupCode: o.pickupCode,
                 pickupQrData: o.pickupQrData,
                 pickupLocationId: o.pickupLocationId,
+                pickupLocation: o.pickupLocation,
                 pickupStatus: o.pickupStatus,
                 scheduledDate: o.scheduledDate,
                 scheduledSlot: o.scheduledSlot,

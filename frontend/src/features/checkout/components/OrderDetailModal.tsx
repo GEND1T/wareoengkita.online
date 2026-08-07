@@ -14,8 +14,15 @@ import {
   Copy,
   Receipt,
   Star,
+  Navigation,
+  Phone,
+  ExternalLink,
+  Package,
+  Map as MapIcon,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../../config/api';
+import { PickupRouteMapModal } from './PickupRouteMapModal';
+import { useLocationStore } from '../../store-location/store/useLocationStore';
 
 const formatCurrency = (val: number) =>
   new Intl.NumberFormat('id-ID', {
@@ -46,6 +53,33 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showCancelReasonModal, setShowCancelReasonModal] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isRouteMapModalOpen, setIsRouteMapModalOpen] = useState(false);
+  const [fetchedPickupLocation, setFetchedPickupLocation] = useState<any>(null);
+
+  const { getSelectedAddress } = useLocationStore();
+  const activeAddr = getSelectedAddress();
+
+  React.useEffect(() => {
+    if (open && order?.shippingType === 'pickup') {
+      if (order.pickupLocation) {
+        setFetchedPickupLocation(order.pickupLocation);
+      } else {
+        fetch(`${API_BASE_URL}/shipping/pickup-locations`)
+          .then((res) => res.json())
+          .then((json) => {
+            if (json.success && Array.isArray(json.data)) {
+              const found = json.data.find((pl: any) => pl.id === order.pickupLocationId);
+              if (found) {
+                setFetchedPickupLocation(found);
+              } else if (json.data.length > 0) {
+                setFetchedPickupLocation(json.data[0]);
+              }
+            }
+          })
+          .catch((err) => console.error('Error fetching pickup location for order detail:', err));
+      }
+    }
+  }, [open, order?.id, order?.pickupLocationId, order?.shippingType, order?.pickupLocation]);
 
   if (!open || !order) return null;
 
@@ -255,22 +289,136 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
             </div>
           </div>
 
-          {/* Shipping Address Section */}
-          <div className="bg-white rounded-2xl p-3.5 border border-gray-200/80 space-y-1.5 shadow-2xs">
-            <div className="flex items-center gap-1.5 text-gray-900 font-extrabold">
-              <MapPin className="w-4 h-4 text-[#063104]" />
-              <span>Alamat Pengiriman</span>
-            </div>
-            <div className="pl-5 space-y-0.5">
-              <p className="font-bold text-gray-800 text-xs">
-                {order.customerName || 'Pembeli'}{' '}
-                {order.customerPhone && <span className="text-gray-500 font-normal">({order.customerPhone})</span>}
-              </p>
-              <p className="text-gray-600 text-[11px] leading-relaxed">
-                {order.shippingAddress || 'Alamat pengiriman toko'}
-              </p>
-            </div>
-          </div>
+          {/* Shipping Address / Pickup Location Section */}
+          {(() => {
+            const targetPickupLocation = fetchedPickupLocation || order.pickupLocation || (order.store ? {
+              name: order.store.name || 'Toko Utama',
+              address: order.store.address || 'Alamat Toko',
+              latitude: order.store.latitude || -6.2088,
+              longitude: order.store.longitude || 106.8456,
+              phone: order.store.phone || '',
+              operatingHours: '08:00 - 21:00',
+            } : null);
+
+            const effectiveCustomerLat = order.customerLat || activeAddr?.latitude || -6.2088;
+            const effectiveCustomerLon = order.customerLon || activeAddr?.longitude || 106.8456;
+
+            const distKm = (order.shippingType === 'pickup' && targetPickupLocation)
+              ? (() => {
+                  const lat1 = effectiveCustomerLat;
+                  const lon1 = effectiveCustomerLon;
+                  const lat2 = targetPickupLocation.latitude;
+                  const lon2 = targetPickupLocation.longitude;
+                  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+                  const R = 6371;
+                  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+                  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+                  const a =
+                    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos((lat1 * Math.PI) / 180) *
+                      Math.cos((lat2 * Math.PI) / 180) *
+                      Math.sin(dLon / 2) *
+                      Math.sin(dLon / 2);
+                  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                  return parseFloat((R * c).toFixed(1));
+                })()
+              : null;
+
+            return (
+              <div className="bg-white rounded-2xl p-3.5 border border-gray-200/80 space-y-2.5 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-gray-900 font-extrabold">
+                    {order.shippingType === 'pickup' ? (
+                      <Package className="w-4 h-4 text-[#063104]" />
+                    ) : (
+                      <MapPin className="w-4 h-4 text-[#063104]" />
+                    )}
+                    <span>{order.shippingType === 'pickup' ? 'Lokasi Pengambilan Toko' : 'Alamat Pengiriman'}</span>
+                  </div>
+                  {order.shippingType === 'pickup' && (
+                    <span className="bg-emerald-100 text-[#063104] text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-emerald-200">
+                      Self-Pickup
+                    </span>
+                  )}
+                </div>
+
+                <div className="pl-5 space-y-2">
+                  <div>
+                    <h4 className="font-extrabold text-gray-900 text-xs flex items-center gap-2 flex-wrap">
+                      <span>{order.shippingType === 'pickup' ? (targetPickupLocation?.name || 'Toko Pengambilan') : (order.customerName || 'Pembeli')}</span>
+                      {order.shippingType === 'pickup' && distKm !== null && (
+                        <span className="bg-emerald-100 text-[#063104] text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-emerald-700 shrink-0" />
+                          <span>{distKm < 1 ? `${Math.round(distKm * 1000)} m` : `${distKm.toFixed(1)} km`} dari lokasi Anda</span>
+                        </span>
+                      )}
+                    </h4>
+                    <p className="text-gray-600 text-[11px] leading-relaxed mt-0.5">
+                      {order.shippingType === 'pickup'
+                        ? (targetPickupLocation?.address || order.shippingAddress || 'Alamat Toko Pengambilan')
+                        : (order.shippingAddress || 'Alamat pengiriman')}
+                    </p>
+                  </div>
+
+                  {/* Operational Details for Pickup: Hours & Phone */}
+                  {order.shippingType === 'pickup' && targetPickupLocation && (
+                    <div className="flex flex-wrap items-center gap-3 text-[10px] text-gray-500 pt-1">
+                      {targetPickupLocation.operatingHours && (
+                        <span className="flex items-center gap-1 font-medium">
+                          <Clock className="w-3 h-3 text-gray-400 shrink-0" />
+                          <span>Jam Operasional: {targetPickupLocation.operatingHours}</span>
+                        </span>
+                      )}
+                      {targetPickupLocation.phone && (
+                        <span className="flex items-center gap-1 text-emerald-800 font-bold">
+                          <Phone className="w-3 h-3 text-emerald-600 shrink-0" />
+                          <span>WA: {targetPickupLocation.phone}</span>
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Action Buttons for Pickup: Lihat Map & Chat WA Toko */}
+                  {order.shippingType === 'pickup' && (
+                    <div className="pt-2 border-t border-gray-100 flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsRouteMapModalOpen(true)}
+                        className="bg-[#063104] hover:bg-[#084205] text-white font-extrabold px-3 py-1.5 rounded-xl text-[11px] flex items-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95 border border-emerald-900/30"
+                      >
+                        <MapIcon className="w-3.5 h-3.5 text-emerald-300" />
+                        <span>Lihat Map</span>
+                      </button>
+
+                      {targetPickupLocation?.phone && (
+                        <a
+                          href={`https://wa.me/${targetPickupLocation.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Halo ${targetPickupLocation.name}, saya ingin bertanya mengenai pesanan Self-Pickup #${order.orderNo}`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-emerald-50 hover:bg-emerald-100 text-[#063104] border border-emerald-200 font-bold px-3 py-1.5 rounded-xl text-[11px] flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                        >
+                          <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Chat WA Toko</span>
+                          <ExternalLink className="w-3 h-3 text-emerald-500" />
+                        </a>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Preparation & Storage Deadline Badges */}
+                  {order.shippingType === 'pickup' && (
+                    <div className="bg-emerald-50/70 border border-emerald-200/70 rounded-xl p-2.5 text-[10px] text-gray-700 space-y-1">
+                      <div className="flex items-center gap-1.5 font-bold text-[#063104]">
+                        <Clock className="w-3 h-3 text-emerald-700" />
+                        <span>Estimasi Penyiapan: 30-60 menit setelah pembayaran terkonfirmasi</span>
+                      </div>
+                      <p className="text-gray-500 pl-4">Batas penyimpanan pengambilan di toko maksimal 3x24 jam.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Order Products & Store Info Section */}
           <div className="bg-white rounded-2xl p-3.5 border border-gray-200/80 space-y-3 shadow-2xs">
@@ -572,6 +720,25 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
             </button>
           </div>
         </div>
+      )}
+      {/* Pickup Route Map Modal */}
+      {order.shippingType === 'pickup' && (
+        <PickupRouteMapModal
+          open={isRouteMapModalOpen}
+          onClose={() => setIsRouteMapModalOpen(false)}
+          customerLat={order.customerLat || activeAddr?.latitude || -6.2088}
+          customerLon={order.customerLon || activeAddr?.longitude || 106.8456}
+          customerAddressName={order.shippingAddress !== 'Self-Pickup' ? order.shippingAddress : (activeAddr?.streetAddress || 'Alamat Pelanggan')}
+          pickupLocation={fetchedPickupLocation || order.pickupLocation || (order.store ? {
+            name: order.store.name || 'Toko Utama',
+            address: order.store.address || 'Alamat Toko',
+            latitude: order.store.latitude || -6.2088,
+            longitude: order.store.longitude || 106.8456,
+            phone: order.store.phone || '',
+            operatingHours: '08:00 - 21:00',
+          } : null)}
+          orderNo={order.orderNo}
+        />
       )}
     </div>
   );

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { prisma } from '../prisma/client';
 import { AuthRequest } from '../middlewares/authMiddleware';
 import { generatePickupCode } from '../services/shippingService';
+import { notifyOrderStatusChanged, notifyOrderPaid } from '../services/wahaNotificationHelper';
 
 // POST /api/orders (Create Order from Checkout)
 export const createOrder = async (req: AuthRequest, res: Response) => {
@@ -120,6 +121,7 @@ export const getMyOrders = async (req: AuthRequest, res: Response) => {
             longitude: true,
           },
         },
+        pickupLocation: true,
         payments: {
           orderBy: { createdAt: 'desc' },
           take: 1,
@@ -218,6 +220,7 @@ export const getAdminOrders = async (req: AuthRequest, res: Response) => {
             longitude: true,
           },
         },
+        pickupLocation: true,
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -250,6 +253,9 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
         },
       },
     });
+
+    // Trigger WAHA WhatsApp status notification asynchronously
+    notifyOrderStatusChanged(updatedOrder.id, status).catch(err => console.error('[WAHA Notify Error]:', err));
 
     return res.json({
       success: true,
@@ -330,6 +336,9 @@ export const confirmOrderReceipt = async (req: AuthRequest, res: Response) => {
         },
       });
     });
+
+    // Trigger WAHA WhatsApp completion notification
+    notifyOrderStatusChanged(id, 'completed').catch(err => console.error('[WAHA Notify Error]:', err));
 
     return res.json({
       success: true,

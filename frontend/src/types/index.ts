@@ -99,6 +99,7 @@ export interface AdminOrder {
   pickupCode?: string;
   pickupQrData?: string;
   pickupLocationId?: string;
+  pickupLocation?: PickupLocation | any;
   pickupStatus?: string;
   scheduledDate?: string;
   scheduledSlot?: string;
@@ -156,6 +157,7 @@ export interface PickupLocation {
   latitude: number;
   longitude: number;
   operatingHours?: string;
+  phone?: string;
   pickupFee?: number;
   isActive: boolean;
 }

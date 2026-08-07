@@ -835,7 +835,7 @@ export const getPickupLocations = async (req: Request, res: Response) => {
 
 export const createPickupLocation = async (req: Request, res: Response) => {
   try {
-    const { storeId, name, address, latitude, longitude, operatingHours, pickupFee } = req.body;
+    const { storeId, name, address, latitude, longitude, operatingHours, phone, pickupFee } = req.body;
 
     if (!storeId || !name || !address || latitude === undefined || longitude === undefined) {
       return res.status(400).json({
@@ -852,6 +852,7 @@ export const createPickupLocation = async (req: Request, res: Response) => {
         latitude: parseFloat(latitude),
         longitude: parseFloat(longitude),
         operatingHours: operatingHours || null,
+        phone: phone || null,
         pickupFee: parseFloat(pickupFee || 0),
       },
     });
@@ -869,7 +870,7 @@ export const createPickupLocation = async (req: Request, res: Response) => {
 export const updatePickupLocation = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, address, latitude, longitude, operatingHours, pickupFee, isActive } = req.body;
+    const { name, address, latitude, longitude, operatingHours, phone, pickupFee, isActive } = req.body;
 
     const data: any = {};
     if (name !== undefined) data.name = name;
@@ -877,6 +878,7 @@ export const updatePickupLocation = async (req: Request, res: Response) => {
     if (latitude !== undefined) data.latitude = parseFloat(latitude);
     if (longitude !== undefined) data.longitude = parseFloat(longitude);
     if (operatingHours !== undefined) data.operatingHours = operatingHours;
+    if (phone !== undefined) data.phone = phone;
     if (pickupFee !== undefined) data.pickupFee = parseFloat(pickupFee);
     if (isActive !== undefined) data.isActive = Boolean(isActive);
 

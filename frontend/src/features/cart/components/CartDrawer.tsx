@@ -56,7 +56,7 @@ export const CartDrawer: React.FC = () => {
   }, [items, storeKeys, activeCheckoutStoreId, groupedByStore]);
 
   // Selected store items for active checkout
-  const activeCheckoutItems = groupedByStore[activeCheckoutStoreId] || items;
+  const activeCheckoutItems = groupedByStore[activeCheckoutStoreId] || [];
 
   // Live stock validation status map for active checkout store items
   const itemValidationMap = activeCheckoutItems.reduce((acc, { product, quantity }) => {
@@ -96,9 +96,7 @@ export const CartDrawer: React.FC = () => {
     openCheckout();
   };
 
-  const checkoutSubtotal = storeKeys.length > 0
-    ? getTotalPriceByStore(activeCheckoutStoreId)
-    : getTotalPrice();
+  const checkoutSubtotal = getTotalPriceByStore(activeCheckoutStoreId);
 
   const totalPriceFormatted = new Intl.NumberFormat('id-ID', {
     style: 'currency',

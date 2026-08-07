@@ -157,6 +157,7 @@ model Order {
   pickupCode          String?  // Kode unik pengambilan (Self-Pickup)
   pickupQrData        String?  // QR data string
   pickupLocationId    String?  // Referensi ke PickupLocation
+  pickupLocation      PickupLocation? @relation(fields: [pickupLocationId], references: [id], onDelete: SetNull)
   pickupStatus        String?  // "preparing" | "ready" | "picked_up"
   scheduledDate       String?  // Tanggal pengiriman terjadwal "YYYY-MM-DD"
   scheduledSlot       String?  // "09:00-11:00"
@@ -277,11 +278,13 @@ model PickupLocation {
   latitude         Float
   longitude        Float
   operatingHours   String?         // "08:00-21:00"
+  phone            String?         // No. WA / Telepon Kontak
   pickupFee        Float    @default(0) // Biaya pengambilan (opsional)
   isActive         Boolean  @default(true)
   createdAt        DateTime @default(now())
 
   store            Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  orders           Order[]
 }
 
 model ScheduleSlot {
