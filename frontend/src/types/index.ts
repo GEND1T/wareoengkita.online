@@ -130,9 +130,16 @@ export interface PromoBanner {
   subtitle: string;
   discountTag: string;
   image: string;
+  imageUrl?: string;
+  badgeText?: string;
   isActive: boolean;
-  storeId?: string;
-  targetStoreId?: string;
+  storeId?: string | null;
+  targetStoreId?: string | null;
+  storeName?: string;
+  bannerType?: 'template' | 'full';
+  imageScale?: number;
+  imagePositionX?: number;
+  imagePositionY?: number;
 }
 
 export interface StoreProfile {

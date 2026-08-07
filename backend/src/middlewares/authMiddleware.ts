@@ -23,14 +23,6 @@ export const authenticateToken = (
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-    if (process.env.NODE_ENV !== 'production') {
-      req.user = {
-        id: 'admin-dev-id',
-        email: 'admin@organikstore.id',
-        role: 'superadmin',
-      };
-      return next();
-    }
     return res.status(401).json({
       success: false,
       message: 'Akses ditolak. Token otentikasi tidak ditemukan.',
@@ -42,14 +34,6 @@ export const authenticateToken = (
     req.user = decoded;
     next();
   } catch (error) {
-    if (process.env.NODE_ENV !== 'production') {
-      req.user = {
-        id: 'admin-dev-id',
-        email: 'admin@organikstore.id',
-        role: 'superadmin',
-      };
-      return next();
-    }
     return res.status(403).json({
       success: false,
       message: 'Token otentikasi tidak valid atau telah kadaluarsa.',

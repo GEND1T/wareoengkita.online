@@ -244,6 +244,10 @@ model PromoBanner {
   startDate      String
   endDate        String
   isActive       Boolean  @default(true)
+  bannerType     String   @default("template")
+  imageScale     Float?   @default(1.0)
+  imagePositionX Float?   @default(50.0)
+  imagePositionY Float?   @default(50.0)
   createdAt      DateTime @default(now())
 
   store Store? @relation(fields: [storeId], references: [id], onDelete: Cascade)

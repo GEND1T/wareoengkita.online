@@ -81,25 +81,60 @@ interface UserState {
   fetchUserOrders: (userPhoneOrId?: string) => Promise<void>;
 }
 
+const EMPTY_PROFILE: UserProfile = {
+  id: '',
+  fullName: '',
+  username: '',
+  phone: '',
+  email: '',
+  role: 'customer',
+  gender: 'Laki-laki',
+  birthDate: '',
+};
+
+const getInitialUserSession = () => {
+  try {
+    const token = localStorage.getItem('authToken');
+    const rawUserData = localStorage.getItem('userData');
+    if (token && rawUserData) {
+      const user = JSON.parse(rawUserData);
+      return {
+        isLoggedIn: true,
+        profile: {
+          id: user.id || '',
+          fullName: user.name || user.fullName || '',
+          username: user.email ? user.email.split('@')[0] : (user.name || user.fullName || ''),
+          phone: user.phone || '',
+          email: user.email || '',
+          role: user.role || 'customer',
+          assignedStoreId: user.assignedStoreId,
+          assignedStoreName: user.assignedStoreName,
+          gender: user.gender || 'Laki-laki',
+          birthDate: user.birthDate || '',
+        },
+      };
+    }
+  } catch (err) {
+    console.error('Failed to parse user session:', err);
+  }
+
+  return {
+    isLoggedIn: false,
+    profile: EMPTY_PROFILE,
+  };
+};
+
+const initialSession = getInitialUserSession();
 const DEFAULT_ORDERS: Order[] = [];
 
 export const useUserStore = create<UserState>()(
   persist(
     (set) => ({
-      profile: {
-        id: 'usr_88201',
-        fullName: 'Budi Santoso',
-        username: 'budisantoso',
-        phone: '081234567890',
-        email: 'budi.santoso@example.com',
-        role: 'customer',
-        gender: 'Laki-laki',
-        birthDate: '1992-05-15',
-      },
+      profile: initialSession.profile,
       orders: DEFAULT_ORDERS,
       isProfileDrawerOpen: false,
       isAuthModalOpen: false,
-      isLoggedIn: true,
+      isLoggedIn: initialSession.isLoggedIn,
       activeProfileTab: 'profile',
       selectedOrderStatusFilter: 'semua',
       skipProfileAnimation: false,
@@ -112,21 +147,59 @@ export const useUserStore = create<UserState>()(
       logout: () => {
         localStorage.removeItem('authToken');
         localStorage.removeItem('userData');
-        set({ isLoggedIn: false });
+        sessionStorage.removeItem('user-profile-storage');
+        set({
+          isLoggedIn: false,
+          profile: EMPTY_PROFILE,
+          orders: [],
+        });
       },
       setActiveProfileTab: (tab) => set({ activeProfileTab: tab }),
       setSelectedOrderStatusFilter: (status) => set({ selectedOrderStatusFilter: status }),
       setSkipProfileAnimation: (skip) => set({ skipProfileAnimation: skip }),
 
       updateProfile: (updatedData) =>
-        set((state) => ({
-          profile: { ...state.profile, ...updatedData },
-        })),
+        set((state) => {
+          const newProfile = { ...state.profile, ...updatedData };
+          if (newProfile.phone || newProfile.fullName) {
+            localStorage.setItem(
+              'userData',
+              JSON.stringify({
+                id: newProfile.id,
+                name: newProfile.fullName,
+                phone: newProfile.phone,
+                email: newProfile.email,
+                role: newProfile.role,
+                assignedStoreId: newProfile.assignedStoreId,
+                assignedStoreName: newProfile.assignedStoreName,
+                gender: newProfile.gender,
+                birthDate: newProfile.birthDate,
+              })
+            );
+          }
+          return {
+            profile: newProfile,
+            isLoggedIn: true,
+          };
+        }),
 
       fetchUserOrders: async (userPhoneOrId) => {
         try {
-          const query = userPhoneOrId ? `?user=${encodeURIComponent(userPhoneOrId)}` : '';
-          const res = await fetch(`${API_BASE_URL}/orders/my-orders${query}`);
+          const profileState = (useUserStore.getState ? useUserStore.getState() : ({} as any)).profile;
+          const userIdent = (userPhoneOrId || (profileState ? (profileState.id || profileState.phone) : '') || '').trim();
+          if (!userIdent) {
+            set({ orders: [] });
+            return;
+          }
+
+          const token = localStorage.getItem('authToken');
+          const headers: Record<string, string> = {};
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+          }
+
+          const query = `?user=${encodeURIComponent(userIdent)}`;
+          const res = await fetch(`${API_BASE_URL}/orders/my-orders${query}`, { headers });
           const json = await res.json();
           if (json.success && Array.isArray(json.data)) {
             const mappedOrders: Order[] = json.data.map((o: any) => {

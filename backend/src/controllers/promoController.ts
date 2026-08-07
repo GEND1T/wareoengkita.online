@@ -7,15 +7,22 @@ export const getPromos = async (req: Request, res: Response) => {
     const { storeId } = req.query;
     const whereClause: any = { isActive: true };
 
-    if (storeId) {
+    if (storeId && String(storeId).trim() !== '' && String(storeId) !== 'all') {
+      const sId = String(storeId).trim();
+      // Strictly get promos that belong to this store OR global promos (storeId is null)
       whereClause.OR = [
-        { storeId: String(storeId) },
+        { storeId: sId },
         { storeId: null },
       ];
     }
 
     const promos = await prisma.promoBanner.findMany({
       where: whereClause,
+      include: {
+        store: {
+          select: { id: true, name: true, city: true }
+        }
+      },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -25,9 +32,9 @@ export const getPromos = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error('getPromos DB error:', error.message);
-    return res.status(503).json({
+    return res.status(500).json({
       success: false,
-      message: 'Koneksi server/database terputus.',
+      message: 'Gagal mengambil data banner promo.',
       error: error.message,
     });
   }
@@ -36,20 +43,24 @@ export const getPromos = async (req: Request, res: Response) => {
 // POST /api/promos
 export const createPromo = async (req: Request, res: Response) => {
   try {
-    const { title, subtitle, imageUrl, badgeText, targetCategory, storeId, discountCode, startDate, endDate, isActive } = req.body;
+    const { title, subtitle, imageUrl, image, badgeText, discountTag, targetCategory, storeId, discountCode, startDate, endDate, isActive, bannerType, imageScale, imagePositionX, imagePositionY } = req.body;
 
     const newPromo = await prisma.promoBanner.create({
       data: {
-        title,
+        title: title || 'Promo Banner',
         subtitle: subtitle || 'Promo Spesial',
-        imageUrl,
-        badgeText,
+        imageUrl: imageUrl || image || 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1200&q=80',
+        badgeText: badgeText || discountTag || 'PROMO',
         targetCategory,
-        storeId: storeId || null,
+        storeId: storeId && String(storeId).trim() !== '' ? String(storeId) : null,
         discountCode,
         startDate: startDate || new Date().toISOString().split('T')[0],
         endDate: endDate || '2026-12-31',
         isActive: isActive !== undefined ? Boolean(isActive) : true,
+        bannerType: bannerType || 'template',
+        imageScale: imageScale !== undefined ? parseFloat(imageScale) : 1.0,
+        imagePositionX: imagePositionX !== undefined ? parseFloat(imagePositionX) : 50.0,
+        imagePositionY: imagePositionY !== undefined ? parseFloat(imagePositionY) : 50.0,
       },
     });
 

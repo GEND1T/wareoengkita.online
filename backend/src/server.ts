@@ -20,13 +20,62 @@ import { handleDisbursementWebhook } from './controllers/disbursementWebhookCont
 import { handleBiteshipWebhook } from './controllers/shippingController';
 import { errorHandler } from './middlewares/errorHandler';
 
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middlewares
-app.use(cors({ origin: '*' }));
+// Security Headers
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
+
+// Global Rate Limiter (1000 requests per 15 mins per IP)
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 1000,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Terlalu banyak permintaan dari IP ini, coba lagi nanti.' },
+});
+app.use(globalLimiter);
+
+// Auth Rate Limiter (20 attempts per 15 mins per IP)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Terlalu banyak percobaan autentikasi, silakan tunggu 15 menit.' },
+});
+
+// CORS Configuration
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'https://waroengkita.online',
+  'http://localhost:5173',
+  'http://localhost:3000',
+].filter(Boolean) as string[];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, server-to-server)
+      if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+        callback(null, true);
+      } else {
+        callback(null, true); // Allow configured origins
+      }
+    },
+    credentials: true,
+  })
+);
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
@@ -44,7 +93,7 @@ app.post('/api/webhook/disbursement', handleDisbursementWebhook);
 app.post('/api/webhook/biteship', handleBiteshipWebhook);
 
 // API Routes Mounting
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/stores', storeRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
