@@ -39,7 +39,8 @@ export const BackgroundPrefetcher: React.FC = () => {
 
   // 2. PRIVATE USER DATA BACKGROUND PREFETCH & CACHE
   useEffect(() => {
-    if (!isLoggedIn) return;
+    const userIdent = (profile.id || profile.phone || '').trim();
+    if (!isLoggedIn || !userIdent) return;
 
     const prefetchUserData = async () => {
       try {

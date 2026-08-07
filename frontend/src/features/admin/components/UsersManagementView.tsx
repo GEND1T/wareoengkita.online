@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Users,
   Search,
@@ -19,8 +19,12 @@ import type { ManagedUser, UserRole, UserStatus } from '../../../types';
 import { TableSkeleton } from '../../../components/common/AdminSkeletons';
 
 export const UsersManagementView: React.FC = () => {
-  const { users, addUser, updateUser, toggleUserStatus, deleteUser, isLoadingData } = useAdminStore();
+  const { users, fetchUsers, addUser, updateUser, toggleUserStatus, deleteUser, isLoadingData } = useAdminStore();
   const { stores } = useStoreSelectorStore();
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const [roleFilter, setRoleFilter] = useState<'all' | UserRole>('all');
   const [searchQuery, setSearchQuery] = useState('');

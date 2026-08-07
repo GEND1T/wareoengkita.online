@@ -194,6 +194,7 @@ export const AdminDashboard: React.FC = () => {
   ];
 
   const superadminMenuItems: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
+    { id: 'promos', label: 'Promo & Banner Global', icon: <Sparkles className="w-5 h-5" /> },
     { id: 'users_management', label: 'Kelola User', icon: <Users className="w-5 h-5" /> },
     { id: 'stores_management', label: 'Kelola Multi-Store', icon: <Building2 className="w-5 h-5" /> },
     { id: 'system_settings', label: 'Pengaturan System', icon: <Settings className="w-5 h-5" /> },

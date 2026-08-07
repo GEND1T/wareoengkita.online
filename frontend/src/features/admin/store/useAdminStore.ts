@@ -66,11 +66,12 @@ interface AdminState {
   // Category & Promo Management
   addCategory: (category: Omit<Category, 'id'>) => void;
   togglePromoStatus: (id: string) => void;
-  addPromo: (promo: Omit<PromoBanner, 'id'>, storeId?: string) => void;
+  addPromo: (promo: Omit<PromoBanner, 'id'>, storeId?: string | null) => void;
   updatePromo: (id: string, promo: Partial<PromoBanner>) => void;
   deletePromo: (id: string) => void;
 
   // Superadmin: User Management
+  fetchUsers: () => Promise<void>;
   addUser: (user: Omit<ManagedUser, 'id'>) => void;
   updateUser: (id: string, user: Partial<ManagedUser>) => void;
   toggleUserStatus: (id: string) => void;
@@ -204,14 +205,7 @@ export const useAdminStore = create<AdminState>()(
             set({ orders: mappedOrders, unreadNewOrdersCount: newCount });
           }
 
-          // 2. Fetch Users
-          const userRes = await fetch(`${API_HOST}/users`);
-          const userData = await userRes.json();
-          if (userData.success && Array.isArray(userData.data)) {
-            set({ users: userData.data });
-          }
-
-          // 3. Fetch Products (includeInactive=true for Admin)
+          // 2. Fetch Products (includeInactive=true for Admin)
           const prodQuery = storeId ? `?includeInactive=true&storeId=${storeId}` : '?includeInactive=true';
           const prodRes = await fetch(`${API_HOST}/products${prodQuery}`);
           const prodData = await prodRes.json();
@@ -534,8 +528,9 @@ export const useAdminStore = create<AdminState>()(
         }));
       },
 
-      addPromo: async (promoData, storeId?: string) => {
+      addPromo: async (promoData, storeId?: string | null) => {
         try {
+          const payloadStoreId = storeId !== undefined ? storeId : (promoData.storeId !== undefined ? promoData.storeId : null);
           const res = await fetch(`${API_BASE_URL}/promos`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -544,14 +539,26 @@ export const useAdminStore = create<AdminState>()(
               subtitle: promoData.subtitle,
               imageUrl: promoData.image,
               badgeText: promoData.discountTag,
-              storeId: storeId || promoData.targetStoreId,
+              storeId: payloadStoreId,
+              bannerType: promoData.bannerType || 'template',
+              imageScale: promoData.imageScale,
+              imagePositionX: promoData.imagePositionX,
+              imagePositionY: promoData.imagePositionY,
             }),
           });
           const json = await res.json();
           if (json.success && json.data) {
             set((state) => ({
-              promos: [json.data, ...state.promos],
-              toastMessage: 'Banner promo baru berhasil ditambahkan ke Supabase!',
+              promos: [{
+                ...json.data,
+                image: json.data.imageUrl || json.data.image || promoData.image,
+                discountTag: json.data.badgeText || promoData.discountTag,
+                bannerType: json.data.bannerType || promoData.bannerType || 'template',
+                imageScale: json.data.imageScale ?? promoData.imageScale ?? 1.0,
+                imagePositionX: json.data.imagePositionX ?? promoData.imagePositionX ?? 50.0,
+                imagePositionY: json.data.imagePositionY ?? promoData.imagePositionY ?? 50.0,
+              }, ...state.promos],
+              toastMessage: 'Banner promo baru berhasil ditambahkan!',
             }));
             return;
           }
@@ -574,6 +581,11 @@ export const useAdminStore = create<AdminState>()(
               subtitle: updatedData.subtitle,
               imageUrl: updatedData.image,
               badgeText: updatedData.discountTag,
+              storeId: updatedData.storeId !== undefined ? updatedData.storeId : undefined,
+              bannerType: updatedData.bannerType,
+              imageScale: updatedData.imageScale,
+              imagePositionX: updatedData.imagePositionX,
+              imagePositionY: updatedData.imagePositionY,
             }),
           });
         } catch (err) {
@@ -795,11 +807,35 @@ export const useAdminStore = create<AdminState>()(
       },
 
       // Superadmin: User Management
+      fetchUsers: async () => {
+        try {
+          const token = localStorage.getItem('authToken');
+          const headers: Record<string, string> = {};
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+          }
+
+          const res = await fetch(`${API_BASE_URL}/users`, { headers });
+          const data = await res.json();
+          if (data.success && Array.isArray(data.data)) {
+            set({ users: data.data });
+          }
+        } catch (err) {
+          console.error('Failed to fetch users:', err);
+        }
+      },
+
       addUser: async (userData) => {
         try {
+          const token = localStorage.getItem('authToken');
+          const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+          }
+
           const res = await fetch(`${API_BASE_URL}/users`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify(userData),
           });
           const data = await res.json();
@@ -831,9 +867,15 @@ export const useAdminStore = create<AdminState>()(
 
       updateUser: async (id, userData) => {
         try {
+          const token = localStorage.getItem('authToken');
+          const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+          }
+
           await fetch(`${API_BASE_URL}/users/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify(userData),
           });
         } catch (err) {
@@ -858,8 +900,15 @@ export const useAdminStore = create<AdminState>()(
 
       deleteUser: async (id) => {
         try {
+          const token = localStorage.getItem('authToken');
+          const headers: Record<string, string> = {};
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+          }
+
           await fetch(`${API_BASE_URL}/users/${id}`, {
             method: 'DELETE',
+            headers,
           });
         } catch (err) {
           console.error('Failed to delete user in DB:', err);

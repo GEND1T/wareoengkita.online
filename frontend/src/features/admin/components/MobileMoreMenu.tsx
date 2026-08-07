@@ -56,6 +56,7 @@ export const MobileMoreMenu: React.FC<MobileMoreMenuProps> = ({
   ];
 
   const superadminMenuItems: MenuItem[] = [
+    { id: 'promos', label: 'Promo Global', icon: <Sparkles className="w-5 h-5" /> },
     { id: 'users_management', label: 'Kelola User', icon: <Users className="w-5 h-5" /> },
     { id: 'stores_management', label: 'Multi-Store', icon: <Building2 className="w-5 h-5" /> },
     { id: 'system_settings', label: 'Pengaturan', icon: <Settings className="w-5 h-5" /> },

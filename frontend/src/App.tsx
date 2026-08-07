@@ -38,7 +38,10 @@ import { SupportDrawer } from './features/support';
 import { CheckoutPage } from './features/checkout';
 import { ProfileDrawer, AuthModal, VerifyAccessPage, useUserStore } from './features/auth';
 import { PaymentInvoicePage } from './features/payment';
-import { AdminDashboard } from './features/admin';
+
+const AdminDashboard = React.lazy(() =>
+  import('./features/admin').then((m) => ({ default: m.AdminDashboard }))
+);
 
 
 const queryClient = new QueryClient();
@@ -201,8 +204,10 @@ export const App: React.FC = () => {
                 {/* Support CS & FAQ Drawer */}
                 <SupportDrawer open={isSupportOpen} onClose={() => setIsSupportOpen(false)} />
 
-                {/* Admin Dashboard */}
-                <AdminDashboard />
+                {/* Admin Dashboard (Lazy Loaded) */}
+                <React.Suspense fallback={null}>
+                  <AdminDashboard />
+                </React.Suspense>
 
                 {/* Toast Notification */}
                 <Snackbar

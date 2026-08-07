@@ -97,19 +97,36 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
 // GET /api/orders/my-orders (Customer Order History)
 export const getMyOrders = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = (req.query.userId as string) || req.user?.id;
-    const phone = req.query.phone as string;
+    const userParam = req.query.user as string;
+    const userIdParam = req.query.userId as string;
+    const phoneParam = req.query.phone as string;
 
-    const whereClause: any = {};
-    if (userId || phone) {
-      whereClause.OR = [
-        ...(userId ? [{ customerId: userId }] : []),
-        ...(phone ? [{ customerPhone: phone }] : []),
-      ];
+    let authUserId = req.user?.id;
+    let authUserPhone = (req.user as any)?.phone;
+
+    const targetUser = (userParam || userIdParam || authUserId || '').trim();
+    const targetPhone = (phoneParam || authUserPhone || '').trim();
+
+    // STRICT GUARD: If no user identifier or phone is provided, return empty array!
+    // Never return all database orders to unauthenticated or unidentified requests.
+    if (!targetUser && !targetPhone) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const orConditions: any[] = [];
+    if (targetUser) {
+      orConditions.push({ customerId: targetUser });
+      orConditions.push({ customerPhone: targetUser });
+    }
+    if (targetPhone && targetPhone !== targetUser) {
+      orConditions.push({ customerPhone: targetPhone });
+      orConditions.push({ customerId: targetPhone });
     }
 
     const orders = await prisma.order.findMany({
-      where: whereClause,
+      where: {
+        OR: orConditions,
+      },
       include: {
         store: {
           select: {
