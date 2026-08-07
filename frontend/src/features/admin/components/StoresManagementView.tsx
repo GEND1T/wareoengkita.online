@@ -261,7 +261,7 @@ export const StoresManagementView: React.FC = () => {
     <div className="space-y-6 animate-fade-in">
       {/* Title & Action */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
+        <div className="hidden md:block">
           <h1 className="text-2xl font-black text-gray-900">Manajemen Cabang Toko (Stores)</h1>
           <p className="text-xs text-gray-500">
             Kelola cabang-cabang lokasi toko fisik resmi, persetujuan pengajuan toko baru, dan penugasan admin.
@@ -271,27 +271,27 @@ export const StoresManagementView: React.FC = () => {
         <button
           type="button"
           onClick={handleOpenAdd}
-          className="bg-[#063104] hover:bg-[#084205] text-white font-extrabold px-4.5 py-3 rounded-2xl text-xs shadow-lg hover:shadow-emerald-900/20 transition-all duration-200 flex items-center gap-2.5 shrink-0 active:scale-95 border border-emerald-900/30 cursor-pointer self-start sm:self-auto"
+          className="bg-[#063104] hover:bg-[#084205] text-white font-extrabold px-4 py-2.5 md:px-4.5 md:py-3 rounded-2xl text-xs shadow-lg hover:shadow-emerald-900/20 transition-all duration-200 flex items-center gap-2 md:gap-2.5 shrink-0 active:scale-95 border border-emerald-900/30 cursor-pointer self-start sm:self-auto"
         >
           <div className="w-5 h-5 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
             <Plus className="w-3.5 h-3.5 stroke-[3]" />
           </div>
-          <span>Tambah Cabang Toko Baru</span>
+          <span>Tambah Toko</span>
         </button>
       </div>
 
       {/* Tabs Bar: Daftar Toko Aktif vs Pengajuan Pending */}
-      <div className="flex bg-gray-200/70 p-1.5 rounded-2xl w-fit gap-1">
+      <div className="flex bg-gray-200/70 p-1 md:p-1.5 rounded-2xl w-full md:w-fit gap-1 overflow-x-auto no-scrollbar">
         <button
           type="button"
           onClick={() => setActiveTab('stores')}
-          className={`px-4 py-2 text-xs font-extrabold rounded-xl transition flex items-center gap-2 ${activeTab === 'stores'
+          className={`px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-xs font-extrabold rounded-xl transition flex items-center gap-1.5 md:gap-2 whitespace-nowrap ${activeTab === 'stores'
             ? 'bg-[#063104] text-white shadow-sm'
             : 'text-gray-700 hover:text-gray-900'
             }`}
         >
-          <Building2 className="w-4 h-4" />
-          <span>Cabang Toko Aktif ({stores.length})</span>
+          <Building2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
+          <span>Toko Aktif ({stores.length})</span>
         </button>
 
         <button
@@ -300,13 +300,13 @@ export const StoresManagementView: React.FC = () => {
             setActiveTab('pending');
             fetchPendingApplications();
           }}
-          className={`px-4 py-2 text-xs font-extrabold rounded-xl transition flex items-center gap-2 relative ${activeTab === 'pending'
+          className={`px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-xs font-extrabold rounded-xl transition flex items-center gap-1.5 md:gap-2 relative whitespace-nowrap ${activeTab === 'pending'
             ? 'bg-[#063104] text-white shadow-sm'
             : 'text-gray-700 hover:text-gray-900'
             }`}
         >
-          <Clock3 className="w-4 h-4 text-amber-400" />
-          <span>Pengajuan Toko Baru</span>
+          <Clock3 className="w-3.5 h-3.5 md:w-4 md:h-4 text-amber-400" />
+          <span>Pengajuan Baru</span>
           {pendingApps.length > 0 && (
             <span className="bg-amber-500 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full animate-pulse">
               {pendingApps.length}
@@ -317,84 +317,77 @@ export const StoresManagementView: React.FC = () => {
 
       {/* TAB CONTENT A: DAFTAR CABANG TOKO AKTIF */}
       {activeTab === 'stores' && (
-        <div className="space-y-6">
-          {/* Search Bar */}
-          <div className="bg-white rounded-3xl p-4 border border-gray-100 shadow-sm flex items-center justify-between gap-4">
+        <div className="space-y-5 md:space-y-6">
+          <div className="bg-white rounded-2xl md:rounded-3xl p-3 md:p-4 border border-gray-100 shadow-sm flex items-center justify-between gap-3 md:gap-4">
             <div className="relative flex-1">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari cabang toko atau kota..."
+                placeholder="Cari cabang toko..."
                 className="w-full bg-gray-50 text-xs rounded-xl py-2.5 pl-9 pr-3 border border-gray-200 focus:outline-none focus:border-[#063104] focus:bg-white font-medium"
               />
               <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
             </div>
 
-            <span className="text-xs font-bold text-gray-500 shrink-0">
-              Total: <strong className="text-[#063104]">{filteredStores.length} Toko</strong>
+            <span className="text-[10px] md:text-xs font-bold text-gray-500 shrink-0">
+              <strong className="text-[#063104]">{filteredStores.length}</strong> Toko
             </span>
           </div>
 
-          {/* Stores Grid Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {filteredStores.map((st) => {
               const assignedAdmin = users.find((u) => u.assignedStoreId === st.id);
 
               return (
                 <div
                   key={st.id}
-                  className="bg-white rounded-3xl overflow-hidden border border-gray-200/80 hover:border-[#77a160] shadow-sm transition-all duration-200 flex flex-col justify-between"
+                  className="bg-white rounded-2xl md:rounded-3xl overflow-hidden border border-gray-200/80 hover:border-[#77a160] shadow-sm transition-all duration-200 flex flex-col justify-between"
                 >
                   <div>
-                    {/* Cover Image */}
-                    <div className="relative h-48 w-full bg-gray-100 overflow-hidden">
+                    <div className="relative h-36 md:h-48 w-full bg-gray-100 overflow-hidden">
                       <img src={st.image} alt={st.name} className="w-full h-full object-cover" />
 
-                      <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-sm text-white font-extrabold text-xs px-3 py-1 rounded-full flex items-center gap-1">
-                        <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                      <div className="absolute top-2.5 left-2.5 md:top-3 md:left-3 bg-black/70 backdrop-blur-sm text-white font-extrabold text-[10px] md:text-xs px-2.5 py-0.5 md:px-3 md:py-1 rounded-full flex items-center gap-1">
+                        <Star className="w-3 h-3 md:w-3.5 md:h-3.5 fill-yellow-400 text-yellow-400" />
                         <span>{st.rating}</span>
                       </div>
 
-                      <div className="absolute top-3 right-3 bg-[#063104] text-white font-extrabold text-[11px] px-3 py-1 rounded-full flex items-center gap-1 shadow-sm">
-                        <Building2 className="w-3.5 h-3.5 text-[#FACC15]" />
+                      <div className="absolute top-2.5 right-2.5 md:top-3 md:right-3 bg-[#063104] text-white font-extrabold text-[10px] md:text-[11px] px-2.5 py-0.5 md:px-3 md:py-1 rounded-full flex items-center gap-1 shadow-sm">
+                        <Building2 className="w-3 h-3 md:w-3.5 md:h-3.5 text-[#C8956A]" />
                         <span>{st.city}</span>
                       </div>
                     </div>
 
-                    {/* Details */}
-                    <div className="p-5 space-y-3">
+                    <div className="p-4 md:p-5 space-y-2.5 md:space-y-3">
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <h3 className="font-extrabold text-gray-900 text-base">{st.name}</h3>
-                          <p className="text-xs text-gray-500 font-bold flex items-center gap-1 mt-0.5">
-                            <Clock className="w-3.5 h-3.5 text-emerald-700" />
+                          <h3 className="font-extrabold text-gray-900 text-sm md:text-base">{st.name}</h3>
+                          <p className="text-[10px] md:text-xs text-gray-500 font-bold flex items-center gap-1 mt-0.5">
+                            <Clock className="w-3 h-3 md:w-3.5 md:h-3.5 text-emerald-700" />
                             <span>{st.openingHours}</span>
                           </p>
                         </div>
                       </div>
 
-                      <p className="text-xs text-gray-600 leading-relaxed">{st.description}</p>
+                      <p className="text-[10px] md:text-xs text-gray-600 leading-relaxed line-clamp-2">{st.description}</p>
 
-                      <div className="p-3 rounded-2xl bg-gray-50 border border-gray-100 text-xs text-gray-700 space-y-1">
+                      <div className="p-2.5 md:p-3 rounded-xl md:rounded-2xl bg-gray-50 border border-gray-100 text-[10px] md:text-xs text-gray-700 space-y-0.5 md:space-y-1">
                         <div className="flex items-center gap-1.5 font-bold text-gray-900">
-                          <MapPin className="w-4 h-4 text-emerald-700" />
-                          <span>{st.address}</span>
+                          <MapPin className="w-3.5 h-3.5 md:w-4 md:h-4 text-emerald-700 shrink-0" />
+                          <span className="line-clamp-1">{st.address}</span>
                         </div>
-                        <p className="text-[11px] font-mono text-gray-500 pl-5">
-                          Lat: {st.latitude.toFixed(4)}, Lon: {st.longitude.toFixed(4)}
+                        <p className="text-[9px] md:text-[11px] font-mono text-gray-500 pl-5">
+                          {st.latitude.toFixed(4)}, {st.longitude.toFixed(4)}
                         </p>
                       </div>
 
-                      {/* Assigned Admin Store Manager Info */}
-                      <div className="p-3 rounded-2xl bg-blue-50/80 border border-blue-200 text-xs flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <UserCheck className="w-4 h-4 text-blue-700" />
+                      <div className="p-2.5 md:p-3 rounded-xl md:rounded-2xl bg-blue-50/80 border border-blue-200 text-[10px] md:text-xs flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 md:gap-2">
+                          <UserCheck className="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-700" />
                           <div>
-                            <span className="text-[10px] text-blue-800 font-bold block">
-                              Admin Penanggung Jawab:
-                            </span>
-                            <span className="font-extrabold text-blue-950">
+                            <span className="text-[9px] md:text-[10px] text-blue-800 font-bold block">Admin:</span>
+                            <span className="font-extrabold text-blue-950 text-[10px] md:text-xs">
                               {assignedAdmin ? assignedAdmin.name : 'Belum Ditugaskan'}
                             </span>
                           </div>
@@ -558,10 +551,10 @@ export const StoresManagementView: React.FC = () => {
       {/* Add / Edit Store Modal */}
       {isModalOpen && (
         <div
-          className="fixed inset-0 z-[3000] bg-black/60 flex items-center justify-center p-4 overflow-y-auto animate-fade-in"
+          className="fixed inset-0 z-[3000] bg-black/60 flex items-end md:items-center justify-center md:p-4 overflow-y-auto animate-fade-in"
           style={{ backdropFilter: 'blur(4px)' }}
         >
-          <div className="bg-white rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl border border-gray-100 flex flex-col my-auto max-h-[90vh]">
+          <div className="bg-white rounded-t-3xl md:rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl border border-gray-100 flex flex-col md:my-auto max-h-[92vh] md:max-h-[90vh]">
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-[#F9F8F6] shrink-0">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-[#063104]" />

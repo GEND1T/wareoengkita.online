@@ -38,21 +38,21 @@ export const OverviewView: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-[#063104] to-[#77a160] rounded-3xl p-6 text-white shadow-xl flex items-center justify-between">
+      <div className="bg-gradient-to-r from-[#063104] to-[#77a160] rounded-3xl p-4 md:p-6 text-white shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="space-y-1">
           <span className="bg-white/20 text-white text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
             Dashboard Utama
           </span>
-          <h1 className="text-2xl font-black pt-1">Selamat Datang, Admin Store! 👋</h1>
-          <p className="text-xs text-emerald-100 max-w-lg leading-relaxed">
-            Pantau aktivitas toko segar secara real-time. Kelola pesanan masuk, ketersediaan stok sayur & buah organik hari ini.
+          <h1 className="text-lg md:text-2xl font-black pt-1">Selamat Datang, Admin! 👋</h1>
+          <p className="text-[11px] md:text-xs text-emerald-100 max-w-lg leading-relaxed">
+            Pantau aktivitas toko secara real-time. Kelola pesanan masuk & stok produk organik hari ini.
           </p>
         </div>
 
         <button
           type="button"
           onClick={addNewMockOrder}
-          className="bg-[#FACC15] hover:bg-yellow-400 text-[#063104] font-black px-4 py-3 rounded-2xl text-xs shadow-lg transition-all active:scale-95 flex items-center gap-2 shrink-0"
+          className="bg-[#C8956A] hover:bg-[#B8855A] text-white font-black px-4 py-2.5 md:py-3 rounded-2xl text-xs shadow-lg transition-all active:scale-95 flex items-center gap-2 shrink-0 w-full sm:w-auto justify-center"
         >
           <Bell className="w-4 h-4" />
           <span>Simulasi Pesanan Baru</span>
@@ -60,34 +60,34 @@ export const OverviewView: React.FC = () => {
       </div>
 
       {/* 4 Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {/* Stat 1 */}
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-2">
+        <div className="bg-white rounded-2xl p-3.5 md:p-5 border border-gray-100 shadow-sm space-y-1.5 md:space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-500">Total Penjualan</span>
-            <div className="p-2 rounded-xl bg-emerald-50 text-[#063104]">
-              <TrendingUp className="w-5 h-5" />
+            <span className="text-[10px] md:text-xs font-bold text-gray-500">Total Penjualan</span>
+            <div className="p-1.5 md:p-2 rounded-xl bg-emerald-50 text-[#063104]">
+              <TrendingUp className="w-4 h-4 md:w-5 md:h-5" />
             </div>
           </div>
-          <h2 className="text-xl font-extrabold text-gray-900">{formatCurrency(totalRevenue)}</h2>
-          <div className="flex items-center gap-1 text-[11px] text-emerald-600 font-bold">
-            <ArrowUpRight className="w-3.5 h-3.5" />
+          <h2 className="text-base md:text-xl font-extrabold text-gray-900">{formatCurrency(totalRevenue)}</h2>
+          <div className="flex items-center gap-1 text-[10px] md:text-[11px] text-emerald-600 font-bold">
+            <ArrowUpRight className="w-3 h-3 md:w-3.5 md:h-3.5" />
             <span>+18.4% dari kemarin</span>
           </div>
         </div>
 
         {/* Stat 2 */}
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-2">
+        <div className="bg-white rounded-2xl p-3.5 md:p-5 border border-gray-100 shadow-sm space-y-1.5 md:space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-500">Pesanan Masuk</span>
-            <div className="p-2 rounded-xl bg-amber-50 text-amber-700">
-              <ShoppingBag className="w-5 h-5" />
+            <span className="text-[10px] md:text-xs font-bold text-gray-500">Pesanan Masuk</span>
+            <div className="p-1.5 md:p-2 rounded-xl bg-amber-50 text-amber-700">
+              <ShoppingBag className="w-4 h-4 md:w-5 md:h-5" />
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-extrabold text-gray-900">{orders.length} Pesanan</h2>
+          <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
+            <h2 className="text-base md:text-xl font-extrabold text-gray-900">{orders.length}</h2>
             {newOrdersCount > 0 && (
-              <span className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse">
+              <span className="bg-red-500 text-white text-[9px] md:text-[10px] font-black px-1.5 md:px-2 py-0.5 rounded-full animate-pulse">
                 {newOrdersCount} Baru
               </span>
             )}
@@ -95,41 +95,41 @@ export const OverviewView: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveTab('orders')}
-            className="text-[11px] text-[#063104] font-bold hover:underline block"
+            className="text-[10px] md:text-[11px] text-[#063104] font-bold hover:underline block"
           >
             Kelola pesanan →
           </button>
         </div>
 
         {/* Stat 3 */}
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-2">
+        <div className="bg-white rounded-2xl p-3.5 md:p-5 border border-gray-100 shadow-sm space-y-1.5 md:space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-500">Katalog Produk</span>
-            <div className="p-2 rounded-xl bg-blue-50 text-blue-700">
-              <PackageCheck className="w-5 h-5" />
+            <span className="text-[10px] md:text-xs font-bold text-gray-500">Katalog Produk</span>
+            <div className="p-1.5 md:p-2 rounded-xl bg-blue-50 text-blue-700">
+              <PackageCheck className="w-4 h-4 md:w-5 md:h-5" />
             </div>
           </div>
-          <h2 className="text-xl font-extrabold text-gray-900">{products.length} Produk</h2>
+          <h2 className="text-base md:text-xl font-extrabold text-gray-900">{products.length} Produk</h2>
           <button
             type="button"
             onClick={() => setActiveTab('products')}
-            className="text-[11px] text-blue-700 font-bold hover:underline block"
+            className="text-[10px] md:text-[11px] text-blue-700 font-bold hover:underline block"
           >
-            {lowStockProducts.length > 0 ? `⚠️ ${lowStockProducts.length} stok tipis` : 'Lihat semua produk'}
+            {lowStockProducts.length > 0 ? `⚠️ ${lowStockProducts.length} stok tipis` : 'Lihat semua'}
           </button>
         </div>
 
         {/* Stat 4 */}
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-2">
+        <div className="bg-white rounded-2xl p-3.5 md:p-5 border border-gray-100 shadow-sm space-y-1.5 md:space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-500">Pelanggan Aktif</span>
-            <div className="p-2 rounded-xl bg-indigo-50 text-indigo-700">
-              <Users className="w-5 h-5" />
+            <span className="text-[10px] md:text-xs font-bold text-gray-500">Pelanggan Aktif</span>
+            <div className="p-1.5 md:p-2 rounded-xl bg-indigo-50 text-indigo-700">
+              <Users className="w-4 h-4 md:w-5 md:h-5" />
             </div>
           </div>
-          <h2 className="text-xl font-extrabold text-gray-900">142 User</h2>
-          <div className="flex items-center gap-1 text-[11px] text-emerald-600 font-bold">
-            <CheckCircle2 className="w-3.5 h-3.5" />
+          <h2 className="text-base md:text-xl font-extrabold text-gray-900">142 User</h2>
+          <div className="flex items-center gap-1 text-[10px] md:text-[11px] text-emerald-600 font-bold">
+            <CheckCircle2 className="w-3 h-3 md:w-3.5 md:h-3.5" />
             <span>98.2% Kepuasan</span>
           </div>
         </div>
@@ -150,7 +150,7 @@ export const OverviewView: React.FC = () => {
           </div>
 
           {/* Simple Visual Bar Chart */}
-          <div className="pt-6 pb-2 px-2 flex items-end justify-between gap-3 h-48 border-b border-gray-100">
+          <div className="pt-6 pb-2 px-1 md:px-2 flex items-end justify-between gap-1.5 md:gap-3 h-36 md:h-48 border-b border-gray-100">
             {[
               { day: 'Sen', amount: 120000, height: '40%' },
               { day: 'Sel', amount: 240000, height: '65%' },

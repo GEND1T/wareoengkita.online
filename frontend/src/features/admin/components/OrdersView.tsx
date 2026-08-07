@@ -309,7 +309,7 @@ export const OrdersView: React.FC = () => {
     <div className="space-y-5 animate-fade-in">
       {/* Title & Top Action */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
+        <div className="hidden md:block">
           <h1 className="text-2xl font-black text-gray-900">Manajemen Pesanan</h1>
           <p className="text-xs text-gray-500">
             Kelola alur status pesanan segar secara real-time dari masuk hingga terkirim.
@@ -324,19 +324,20 @@ export const OrdersView: React.FC = () => {
               setScannedOrder(null);
               setIsQrScannerOpen(true);
             }}
-            className="bg-[#063104] hover:bg-[#084205] text-white font-extrabold px-3.5 py-2.5 rounded-2xl text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-95 border border-emerald-900/30"
+            className="bg-[#063104] hover:bg-[#084205] text-white font-extrabold px-3 md:px-3.5 py-2 md:py-2.5 rounded-2xl text-xs shadow-md transition-all flex items-center gap-1.5 md:gap-2 cursor-pointer active:scale-95 border border-emerald-900/30"
           >
             <QrCode className="w-4 h-4 text-emerald-300" />
-            <span>Scan QR Pickup</span>
+            <span>Scan QR</span>
           </button>
 
           <button
             type="button"
             onClick={addNewMockOrder}
-            className="bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 font-extrabold px-3.5 py-2.5 rounded-2xl text-xs shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+            className="bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 font-extrabold px-3 md:px-3.5 py-2 md:py-2.5 rounded-2xl text-xs shadow-xs transition-all flex items-center gap-1.5 md:gap-2 cursor-pointer"
           >
             <Bell className="w-4 h-4 text-amber-500" />
-            <span>+ Masukkan Pesanan Simulasi</span>
+            <span className="hidden sm:inline">+ Pesanan Simulasi</span>
+            <span className="sm:hidden">+ Simulasi</span>
           </button>
         </div>
       </div>
@@ -423,8 +424,97 @@ export const OrdersView: React.FC = () => {
         })}
       </div>
 
-      {/* Orders Table */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+      {/* ═══ MOBILE: Card-Based Order List ═══ */}
+      <div className="md:hidden space-y-3">
+        {filteredOrders.length === 0 ? (
+          <div className="text-center py-12 text-gray-400 text-sm">
+            Tidak ada pesanan yang sesuai dengan filter.
+          </div>
+        ) : (
+          filteredOrders.map((ord) => (
+            <div
+              key={ord.id}
+              className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden active:scale-[0.98] transition-transform"
+            >
+              {/* Card Header: ID + Status */}
+              <div
+                className="flex items-center justify-between px-4 pt-3.5 pb-2 cursor-pointer"
+                onClick={() => setSelectedOrderForDetail(ord)}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="font-black text-[#063104] text-xs">{ord.id}</span>
+                  <span className="text-[10px] text-gray-400 font-medium">{ord.orderTime}</span>
+                </div>
+                {getStatusBadge(ord.status)}
+              </div>
+
+              {/* Card Body: Customer + Items + Price */}
+              <div
+                className="px-4 pb-2.5 space-y-1.5 cursor-pointer"
+                onClick={() => setSelectedOrderForDetail(ord)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-gray-900 text-xs truncate">{ord.customerName}</p>
+                    <p className="text-[10px] text-gray-500 truncate">
+                      {ord.items.length} item • {ord.itemsSummary}
+                    </p>
+                  </div>
+                  <span className="font-extrabold text-gray-900 text-sm shrink-0 ml-2">
+                    {formatCurrency(ord.totalPrice)}
+                  </span>
+                </div>
+
+                {/* Shipping Type Badge */}
+                <div className="flex items-center gap-1.5">
+                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
+                    ord.shippingType === 'pickup' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                    ord.shippingType === 'scheduled' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                    ord.shippingType === 'cod' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                    'bg-amber-50 text-amber-700 border-amber-200'
+                  }`}>
+                    {ord.shippingType === 'pickup' ? '📦 Pickup' :
+                     ord.shippingType === 'scheduled' ? '📅 Terjadwal' :
+                     ord.shippingType === 'cod' ? '💰 COD' : '⚡ Instant'}
+                  </span>
+                  <span className="text-[9px] text-gray-400">{ord.orderDate}</span>
+                </div>
+              </div>
+
+              {/* Card Footer: Quick Action */}
+              <div
+                className="px-4 py-2.5 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between gap-2"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center gap-1.5">
+                  {renderQuickActionButton(ord)}
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setOrderToPrint(ord)}
+                    className="p-2 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-[#063104] hover:text-white transition-colors"
+                    title="Cetak"
+                  >
+                    <Printer className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedOrderForDetail(ord)}
+                    className="p-2 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-[#063104] hover:text-white transition-colors"
+                    title="Detail"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* ═══ DESKTOP: Table Layout (unchanged) ═══ */}
+      <div className="hidden md:block bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -453,37 +543,24 @@ export const OrdersView: React.FC = () => {
                     className="hover:bg-emerald-50/40 transition-colors group cursor-pointer"
                     onClick={() => setSelectedOrderForDetail(ord)}
                   >
-                    {/* ID Pesanan */}
                     <td className="py-3.5 px-4 font-black text-[#063104]">
                       {ord.id}
                     </td>
-
-                    {/* Pelanggan */}
                     <td className="py-3.5 px-4">
                       <div className="font-bold text-gray-900">{ord.customerName}</div>
                       <div className="text-[11px] text-gray-500 font-mono">{ord.phone}</div>
                     </td>
-
-                    {/* Waktu Order */}
                     <td className="py-3.5 px-4 text-gray-600 whitespace-nowrap">
                       <div className="font-semibold">{ord.orderTime}</div>
                       <div className="text-[10px] text-gray-400">{ord.orderDate}</div>
                     </td>
-
-                    {/* Item Summary */}
                     <td className="py-3.5 px-4 font-medium text-gray-800 max-w-xs truncate">
                       {ord.itemsSummary}
                     </td>
-
-                    {/* Total Harga */}
                     <td className="py-3.5 px-4 font-extrabold text-gray-900">
                       {formatCurrency(ord.totalPrice)}
                     </td>
-
-                    {/* Status */}
                     <td className="py-3.5 px-4">{getStatusBadge(ord.status)}</td>
-
-                    {/* Quick Action Button */}
                     <td
                       className="py-3.5 px-4 text-center"
                       onClick={(e) => e.stopPropagation()}
@@ -519,10 +596,10 @@ export const OrdersView: React.FC = () => {
       {/* Detail Order Modal */}
       {selectedOrderForDetail && (
         <div
-          className="fixed inset-0 z-[3000] bg-black/60 flex items-center justify-center p-4 overflow-y-auto animate-fade-in"
+          className="fixed inset-0 z-[3000] bg-black/60 flex items-end md:items-center justify-center md:p-4 overflow-y-auto animate-fade-in"
           style={{ backdropFilter: 'blur(4px)' }}
         >
-          <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl border border-gray-100 flex flex-col my-auto">
+          <div className="bg-white rounded-t-3xl md:rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl border border-gray-100 flex flex-col md:my-auto max-h-[92vh] md:max-h-[85vh]">
             {/* Header Modal */}
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-[#F9F8F6]">
               <div>

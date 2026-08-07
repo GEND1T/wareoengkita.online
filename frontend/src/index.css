@@ -4,6 +4,8 @@
   --color-app-bg: #F9F8F6;
   --color-forest-green: #063104;
   --color-leaf-green: #77a160;
+  --color-accent-warm: #C8956A;
+  --color-accent-warm-light: #F0E0D0;
   --color-dark-gray: #1F2937;
   --color-light-gray: #9CA3AF;
 }
@@ -24,4 +26,36 @@ body {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Mobile Admin: safe-area handling for iPhone notch/home indicator */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Mobile Admin: slide-up animation for bottom sheets and menus */
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes slideDown {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(100%); opacity: 0; }
+}
+@keyframes fadeOverlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+.animate-slide-down {
+  animation: slideDown 0.25s ease-in forwards;
+}
+.animate-overlay-in {
+  animation: fadeOverlayIn 0.2s ease-out forwards;
 }

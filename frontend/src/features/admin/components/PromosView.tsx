@@ -139,23 +139,22 @@ export const PromosView: React.FC = () => {
     <div className="space-y-6 animate-fade-in">
       {/* Title & Top Action Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
+        <div className="hidden md:block">
           <h1 className="text-2xl font-black text-gray-900">Manajemen Promo & Banner</h1>
           <p className="text-xs text-gray-500">
             Kelola banner diskon (seperti banner 30% OFF) yang tampil pada aplikasi mobile pengguna.
           </p>
         </div>
 
-        {/* Polished Button styled identical to Tambah Produk Baru */}
         <button
           type="button"
           onClick={handleOpenAddModal}
-          className="bg-[#063104] hover:bg-[#084205] text-white font-extrabold px-4.5 py-3 rounded-2xl text-xs shadow-lg hover:shadow-emerald-900/20 transition-all duration-200 flex items-center gap-2.5 shrink-0 active:scale-95 border border-emerald-900/30 cursor-pointer self-start sm:self-auto"
+          className="bg-[#063104] hover:bg-[#084205] text-white font-extrabold px-4 py-2.5 md:px-4.5 md:py-3 rounded-2xl text-xs shadow-lg hover:shadow-emerald-900/20 transition-all duration-200 flex items-center gap-2 md:gap-2.5 shrink-0 active:scale-95 border border-emerald-900/30 cursor-pointer self-start sm:self-auto"
         >
           <div className="w-5 h-5 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
             <Plus className="w-3.5 h-3.5 stroke-[3]" />
           </div>
-          <span>Tambah Banner Promo</span>
+          <span>Tambah Banner</span>
         </button>
       </div>
 
@@ -178,7 +177,7 @@ export const PromosView: React.FC = () => {
                   alt={banner.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <span className="absolute top-3 left-3 bg-[#063104] text-[#FACC15] font-black text-xs px-3 py-1 rounded-full shadow-lg">
+                <span className="absolute top-3 left-3 bg-[#063104] text-[#C8956A] font-black text-xs px-3 py-1 rounded-full shadow-lg">
                   {banner.discountTag}
                 </span>
 
@@ -240,10 +239,10 @@ export const PromosView: React.FC = () => {
       {/* MODAL FORM TAMBAH / EDIT BANNER PROMO */}
       {isModalOpen && (
         <div
-          className="fixed inset-0 z-[3000] bg-black/60 flex items-center justify-center p-4 overflow-y-auto animate-fade-in"
+          className="fixed inset-0 z-[3000] bg-black/60 flex items-end md:items-center justify-center md:p-4 overflow-y-auto animate-fade-in"
           style={{ backdropFilter: 'blur(4px)' }}
         >
-          <div className="bg-white rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl border border-gray-100 flex flex-col my-auto max-h-[90vh]">
+          <div className="bg-white rounded-t-3xl md:rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl border border-gray-100 flex flex-col md:my-auto max-h-[92vh] md:max-h-[90vh]">
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-[#F9F8F6]">
               <div className="flex items-center gap-2">
