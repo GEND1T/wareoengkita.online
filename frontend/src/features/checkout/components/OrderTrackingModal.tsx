@@ -4,6 +4,8 @@ import {
   CheckCircle2,
   Route,
   MessageSquare,
+  Truck,
+  ExternalLink,
 } from 'lucide-react';
 import type { OrderStatus } from '../../auth/store/useUserStore';
 
@@ -12,63 +14,83 @@ interface OrderTrackingModalProps {
   onClose: () => void;
   orderNo: string;
   orderDate?: string;
-  courierName: string;
+  orderTime?: string;
+  courierName?: string;
   currentStatus: OrderStatus | string;
   driverName?: string;
   driverPhone?: string;
+  driverPlate?: string;
   trackingNumber?: string;
+  biteshipTrackingUrl?: string;
+  storeName?: string;
+  shippingAddress?: string;
 }
 
 export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
   open,
   onClose,
   orderNo,
-  orderDate: _orderDate,
-  courierName,
+  orderDate,
+  orderTime = '10:00 WIB',
+  courierName = 'OrganikStore Instant Delivery',
   currentStatus,
-  driverName = 'Pak Rahmat Express',
-  driverPhone = '081298765432',
-  trackingNumber = 'TK-99201827',
+  driverName,
+  driverPhone,
+  driverPlate,
+  trackingNumber,
+  biteshipTrackingUrl,
+  storeName = 'OrganikStore',
+  shippingAddress,
 }) => {
   if (!open) return null;
+
+  const resi = trackingNumber || `TRK-${orderNo}`;
+  const displayDriverName = driverName || (['dikemas', 'processing'].includes(currentStatus) ? `Tim QC & Packing (${storeName})` : 'Kurir OrganikStore');
+  const displayPlate = driverPlate ? `• Plat: ${driverPlate}` : '';
 
   // Timeline steps definitions
   const steps = [
     {
       id: 'diterima',
       title: 'Pesanan Diterima',
-      desc: 'Pembayaran dikonfirmasi & sistem meneruskan ke toko.',
-      time: '08:10 WIB',
+      desc: `Pembayaran dikonfirmasi & sistem meneruskan ke ${storeName}.`,
+      time: orderTime || '08:10 WIB',
       completed: true,
     },
     {
       id: 'dikemas',
       title: 'Sedang Dikemas Toko',
-      desc: 'Tim QC toko memilah sayuran & buah organik paling segar.',
-      time: '08:25 WIB',
-      completed: currentStatus !== 'belum_bayar',
+      desc: `Tim QC ${storeName} memilah sayuran & buah organik paling segar.`,
+      time: orderDate ? 'Diproses' : '08:25 WIB',
+      completed: currentStatus !== 'belum_bayar' && currentStatus !== 'new',
     },
     {
       id: 'kurir_menjemput',
-      title: 'Kurir Menjemput Barang',
-      desc: `Driver (${driverName}) mengambil paket dari lokasi toko.`,
-      time: '08:40 WIB',
-      completed: ['dikirim', 'selesai'].includes(currentStatus),
+      title: 'Siap Dikirim (Kurir Menjemput Barang)',
+      desc: driverName
+        ? `Driver (${driverName}) mengambil paket dari lokasi toko.`
+        : `Paket selesai dikemas & siap dijemput oleh kurir.`,
+      time: ['ready', 'dikirim', 'delivering', 'selesai', 'completed'].includes(currentStatus) ? 'Siap' : 'Menunggu',
+      completed: ['ready', 'dikirim', 'delivering', 'selesai', 'completed'].includes(currentStatus),
+      current: currentStatus === 'ready',
     },
     {
       id: 'dalam_pengiriman',
       title: 'Dalam Pengiriman Ke Alamat',
-      desc: 'Driver sedang mengendarai motor menuju lokasi Anda.',
-      time: '08:50 WIB',
-      completed: ['dikirim', 'selesai'].includes(currentStatus),
-      current: currentStatus === 'dikirim',
+      desc: driverName
+        ? `Driver (${driverName}) sedang mengantar paket ke ${shippingAddress || 'alamat Anda'}.`
+        : `Paket dalam perjalanan ke ${shippingAddress || 'alamat Anda'}.`,
+      time: ['delivering', 'dikirim', 'selesai', 'completed'].includes(currentStatus) ? 'Jalan' : 'Estimasi',
+      completed: ['delivering', 'dikirim', 'selesai', 'completed'].includes(currentStatus),
+      current: currentStatus === 'dikirim' || currentStatus === 'delivering',
     },
     {
       id: 'selesai',
       title: 'Sampai di Tujuan (Selesai)',
       desc: 'Paket berhasil diterima dengan kondisi segar.',
-      time: '09:15 WIB (Estimasi)',
-      completed: currentStatus === 'selesai',
+      time: currentStatus === 'selesai' || currentStatus === 'completed' ? 'Selesai' : 'Estimasi',
+      completed: currentStatus === 'selesai' || currentStatus === 'completed',
+      current: currentStatus === 'selesai' || currentStatus === 'completed',
     },
   ];
 
@@ -89,14 +111,14 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                 Lacak Status Pengiriman
               </h3>
               <span className="text-[10px] text-gray-500 font-medium block mt-0.5">
-                No. Resi: <strong className="text-gray-900">{trackingNumber}</strong>
+                No. Resi: <strong className="text-gray-900 font-mono">{resi}</strong>
               </span>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-xl hover:bg-gray-200 text-gray-600 transition-colors"
+            className="p-1.5 rounded-xl hover:bg-gray-200 text-gray-600 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -107,34 +129,52 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
           {/* Driver Card Info */}
           <div className="bg-emerald-50/80 rounded-2xl p-4 border border-emerald-200/80 flex items-center justify-between shadow-xs">
             <div className="flex items-center gap-3">
-              <img
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"
-                alt="Driver Kurir"
-                className="w-12 h-12 rounded-full object-cover border-2 border-emerald-500 shadow-xs shrink-0"
-              />
+              <div className="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold shadow-xs shrink-0 border-2 border-emerald-500">
+                <Truck className="w-6 h-6 text-yellow-300" />
+              </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="font-extrabold text-gray-900 text-sm">{driverName}</span>
+                  <span className="font-extrabold text-gray-900 text-sm">{displayDriverName}</span>
                   <span className="bg-[#063104] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full">
-                    Kurir Instant
+                    {courierName}
                   </span>
                 </div>
                 <p className="text-[11px] text-gray-600 font-medium mt-0.5">
-                  Layanan: <strong className="text-gray-900">{courierName}</strong> • Plat: B 4891 TKO
+                  Toko: <strong className="text-gray-900">{storeName}</strong> {displayPlate}
                 </p>
               </div>
             </div>
 
+            {driverPhone ? (
+              <a
+                href={`https://wa.me/${driverPhone.replace(/[^0-9]/g, '')}`}
+                target="_blank"
+                rel="noreferrer"
+                className="bg-[#063104] hover:bg-[#084205] text-white font-extrabold p-3 rounded-2xl text-xs flex items-center justify-center shrink-0 shadow-md transition-all active:scale-95 cursor-pointer"
+                title="Hubungi Driver"
+              >
+                <MessageSquare className="w-4 h-4" />
+              </a>
+            ) : (
+              <div className="bg-emerald-100 text-emerald-900 font-bold p-2.5 rounded-xl text-[10px] shrink-0">
+                Kurir Disiapkan
+              </div>
+            )}
+          </div>
+
+          {/* Biteship Live Tracking Link Button if available */}
+          {biteshipTrackingUrl && (
             <a
-              href={`https://wa.me/${driverPhone.replace(/[^0-9]/g, '')}`}
+              href={biteshipTrackingUrl}
               target="_blank"
               rel="noreferrer"
-              className="bg-[#063104] hover:bg-[#084205] text-white font-extrabold p-3 rounded-2xl text-xs flex items-center justify-center shrink-0 shadow-md transition-all active:scale-95"
-              title="Hubungi Driver"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-4 py-2.5 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all"
             >
-              <MessageSquare className="w-4 h-4" />
+              <Truck className="w-4 h-4" />
+              <span>Buka Live Tracking Biteship</span>
+              <ExternalLink className="w-3.5 h-3.5" />
             </a>
-          </div>
+          )}
 
           {/* Timeline Visual Stepper */}
           <div className="bg-white rounded-3xl p-5 border border-gray-100 space-y-4 shadow-xs">
@@ -147,12 +187,13 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                 <div key={step.id} className="relative flex items-start justify-between gap-3">
                   {/* Circle Indicator Icon */}
                   <div
-                    className={`absolute -left-6 top-0 w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all ${step.current
-                      ? 'bg-[#063104] border-[#063104] text-white ring-4 ring-emerald-100 animate-pulse'
-                      : step.completed
+                    className={`absolute -left-6 top-0 w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all ${
+                      step.current
+                        ? 'bg-[#063104] border-[#063104] text-white ring-4 ring-emerald-100 animate-pulse'
+                        : step.completed
                         ? 'bg-emerald-600 border-emerald-600 text-white'
                         : 'bg-white border-gray-300 text-gray-400'
-                      }`}
+                    }`}
                   >
                     {step.completed ? (
                       <CheckCircle2 className="w-4 h-4 stroke-[3]" />
@@ -164,8 +205,9 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                   {/* Step Description Content */}
                   <div>
                     <h5
-                      className={`font-extrabold text-xs ${step.completed || step.current ? 'text-gray-900' : 'text-gray-400'
-                        }`}
+                      className={`font-extrabold text-xs ${
+                        step.completed || step.current ? 'text-gray-900' : 'text-gray-400'
+                      }`}
                     >
                       {step.title}
                     </h5>
@@ -188,7 +230,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="bg-[#063104] hover:bg-[#084205] text-white font-extrabold px-6 py-2.5 rounded-2xl text-xs shadow-md transition-all active:scale-95"
+            className="bg-[#063104] hover:bg-[#084205] text-white font-extrabold px-6 py-2.5 rounded-2xl text-xs shadow-md transition-all active:scale-95 cursor-pointer"
           >
             Tutup
           </button>

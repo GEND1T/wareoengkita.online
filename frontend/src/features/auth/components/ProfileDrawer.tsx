@@ -24,6 +24,7 @@ import {
   LogOut,
   Store,
   Download,
+  CornerDownRight,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -33,6 +34,7 @@ import { useLocationStore } from '../../store-location/store/useLocationStore';
 import { useAdminStore } from '../../admin/store/useAdminStore';
 import { StoreRegistrationModal } from './StoreRegistrationModal';
 import { OrderTrackingModal } from '../../checkout/components/OrderTrackingModal';
+import { OrderDetailModal } from '../../checkout/components/OrderDetailModal';
 import { usePembayaranStore } from '../../payment/store/usePembayaranStore';
 import { PaymentConfirmPage } from '../../payment/pages/PaymentConfirmPage';
 import { PaymentSuccessPage } from '../../payment/pages/PaymentSuccessPage';
@@ -65,16 +67,26 @@ const STATUS_FILTERS: { key: OrderStatus | 'semua'; label: string; icon: React.R
   { key: 'dibatalkan', label: 'Dibatalkan', icon: <XCircle className="w-3.5 h-3.5" /> },
 ];
 
-const OrderCountdownTimer: React.FC<{ createdAt?: string; onExpired?: () => void }> = ({
-  createdAt,
-  onExpired,
-}) => {
+const OrderCountdownTimer: React.FC<{
+  createdAt?: string;
+  linkExpiry?: string;
+  expiryPeriod?: number;
+  onExpired?: () => void;
+}> = ({ createdAt, linkExpiry, expiryPeriod, onExpired }) => {
   const [secondsLeft, setSecondsLeft] = useState<number>(() => {
-    if (!createdAt) return 24 * 3600;
-    const createdTime = new Date(createdAt).getTime();
-    const expiryTime = createdTime + 24 * 3600 * 1000;
-    const diff = Math.floor((expiryTime - Date.now()) / 1000);
-    return diff > 0 ? diff : 0;
+    if (linkExpiry) {
+      const expiryTime = new Date(linkExpiry).getTime();
+      const diff = Math.floor((expiryTime - Date.now()) / 1000);
+      return diff > 0 ? diff : 0;
+    }
+    if (createdAt) {
+      const createdTime = new Date(createdAt).getTime();
+      const mins = expiryPeriod || 1440;
+      const expiryTime = createdTime + mins * 60 * 1000;
+      const diff = Math.floor((expiryTime - Date.now()) / 1000);
+      return diff > 0 ? diff : 0;
+    }
+    return 24 * 3600;
   });
 
   useEffect(() => {
@@ -137,6 +149,7 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
   const [activeSubView, setActiveSubView] = useState<'editProfile' | 'orders' | null>(null);
   const [isStoreRegistrationOpen, setIsStoreRegistrationOpen] = useState(false);
   const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
+  const [selectedDetailOrder, setSelectedDetailOrder] = useState<Order | null>(null);
 
   const { setActivePayment } = usePembayaranStore();
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -161,6 +174,8 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
         customerPhone: profile.phone,
         productDetails: `Pesanan ${order.orderNo}`,
         createdAt: paymentObj.createdAt || new Date().toISOString(),
+        expiryPeriod: paymentObj.expiryPeriod || 1440,
+        linkExpiry: paymentObj.linkExpiry || undefined,
       });
     } else {
       setActivePayment({
@@ -876,110 +891,155 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
                 </p>
               </div>
             ) : (
-              filteredOrders.map((order) => (
-                <div
-                  key={order.id}
-                  className="bg-white rounded-2xl p-4 border border-gray-200/70 shadow-xs space-y-3"
-                >
-                  {/* Order Header */}
-                  <div className="flex items-center justify-between pb-2 border-b border-gray-100 gap-2">
-                    <div>
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="font-extrabold text-[#063104] text-xs">
-                          #{order.orderNo}
-                        </span>
-                        {order.storeName && (
-                          <span className="bg-emerald-50 text-[#063104] text-[10px] font-extrabold px-2 py-0.5 rounded-md border border-emerald-200/80">
-                            {order.storeName}
+              filteredOrders.map((order) => {
+                const hasMultipleItems = order.items && order.items.length > 1;
+                const firstItem = order.items?.[0];
+                const secondItem = hasMultipleItems ? order.items?.[1] : null;
+
+                return (
+                  <div
+                    key={order.id}
+                    onClick={() => setSelectedDetailOrder(order)}
+                    className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-2xs hover:border-emerald-300 hover:shadow-md transition-all duration-200 space-y-3 cursor-pointer group relative overflow-hidden"
+                  >
+                    {/* Order Header */}
+                    <div className="flex items-center justify-between pb-2 border-b border-gray-100 gap-2">
+                      <div>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-extrabold text-[#063104] text-xs">
+                            #{order.orderNo}
                           </span>
+                          {order.storeName && (
+                            <span className="bg-emerald-50 text-[#063104] text-[10px] font-extrabold px-2 py-0.5 rounded-md border border-emerald-200/80">
+                              {order.storeName}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[11px] text-gray-400 block mt-0.5">
+                          {order.date}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        {getStatusBadge(order.status)}
+                        {order.status === 'belum_bayar' && (
+                          <OrderCountdownTimer
+                            createdAt={order.createdAt}
+                            linkExpiry={order.payments?.[0]?.linkExpiry}
+                            expiryPeriod={order.payments?.[0]?.expiryPeriod}
+                            onExpired={() => handleOrderExpired(order.id)}
+                          />
                         )}
                       </div>
-                      <span className="text-[11px] text-gray-400 block mt-0.5">
-                        {order.date}
-                      </span>
                     </div>
-                    <div className="flex flex-col items-end gap-1">
-                      {getStatusBadge(order.status)}
-                      {order.status === 'belum_bayar' && (
-                        <OrderCountdownTimer
-                          createdAt={order.createdAt}
-                          onExpired={() => handleOrderExpired(order.id)}
-                        />
+
+                    {/* Order Items Preview (Fixed Size Layout) */}
+                    <div className="space-y-2">
+                      {/* Main Product */}
+                      {firstItem && (
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={firstItem.image}
+                            alt={firstItem.name}
+                            className="w-12 h-12 object-contain rounded-xl bg-gray-50 p-1 border border-gray-100 shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-extrabold text-gray-900 text-xs truncate">
+                              {firstItem.name}
+                            </h4>
+                            <p className="text-[11px] text-gray-500 mt-0.5 font-medium">
+                              {firstItem.quantity} x {formatCurrency(firstItem.price)} ({firstItem.unit})
+                            </p>
+                          </div>
+                          <span className="font-extrabold text-gray-900 text-xs shrink-0">
+                            {formatCurrency(firstItem.price * firstItem.quantity)}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Second Faded Stacked Product if > 1 Item */}
+                      {hasMultipleItems && secondItem && (
+                        <div className="flex items-center gap-3 opacity-60 group-hover:opacity-85 transition-opacity pt-1">
+                          <img
+                            src={secondItem.image}
+                            alt={secondItem.name}
+                            className="w-10 h-10 object-contain rounded-xl bg-gray-50 p-1 border border-gray-100 shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-gray-700 text-xs truncate">
+                              {secondItem.name}
+                            </h4>
+                            <p className="text-[10px] text-gray-400">
+                              {secondItem.quantity} x {formatCurrency(secondItem.price)}
+                            </p>
+                          </div>
+                          <span className="font-semibold text-gray-500 text-xs shrink-0">
+                            {formatCurrency(secondItem.price * secondItem.quantity)}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Visual "Lihat Semua (N Produk)" Button with Curve Arrow */}
+                      {hasMultipleItems && (
+                        <div className="pt-1">
+                          <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-[#063104] bg-emerald-50/90 group-hover:bg-emerald-100 px-2.5 py-1 rounded-xl border border-emerald-200/80 w-fit shadow-2xs transition-colors">
+                            <span>Lihat semua ({order.items.length} produk)</span>
+                            <CornerDownRight className="w-3.5 h-3.5 text-[#063104] stroke-[2.5]" />
+                          </div>
+                        </div>
                       )}
                     </div>
-                  </div>
 
-                  {/* Order Items Summary */}
-                  <div className="space-y-2">
-                    {order.items.map((item) => (
-                      <div key={item.id} className="flex items-center gap-3">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-12 h-12 object-contain rounded-xl bg-gray-50 p-1 border border-gray-100 shrink-0"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-gray-900 text-xs truncate">
-                            {item.name}
-                          </h4>
-                          <p className="text-[11px] text-gray-500 mt-0.5">
-                            {item.quantity} x {formatCurrency(item.price)} ({item.unit})
-                          </p>
-                        </div>
-                        <span className="font-bold text-gray-900 text-xs shrink-0">
-                          {formatCurrency(item.price * item.quantity)}
+                    <Divider className="my-1 border-gray-100" />
+
+                    {/* Order Footer & Actions */}
+                    <div className="flex items-center justify-between pt-0.5">
+                      <div>
+                        <span className="text-[10px] text-gray-400 block uppercase font-bold tracking-wider">
+                          Total Pesanan
+                        </span>
+                        <span className="font-black text-[#063104] text-sm">
+                          {formatCurrency(order.totalAmount)}
                         </span>
                       </div>
-                    ))}
-                  </div>
 
-                  <Divider className="my-1 border-gray-100" />
-
-                  {/* Order Footer & Actions */}
-                  <div className="flex items-center justify-between pt-1">
-                    <div>
-                      <span className="text-[10px] text-gray-400 block uppercase font-bold tracking-wider">
-                        Total Pesanan
-                      </span>
-                      <span className="font-extrabold text-[#063104] text-sm">
-                        {formatCurrency(order.totalAmount)}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {order.status === 'belum_bayar' && (
-                        <button
-                          type="button"
-                          onClick={() => handlePayNow(order)}
-                          className="bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer transition-all"
-                        >
-                          <CreditCard className="w-3.5 h-3.5" />
-                          <span>Bayar Sekarang</span>
-                        </button>
-                      )}
-                      {(order.status === 'dikirim' || order.status === 'dikemas') && (
-                        <button
-                          type="button"
-                          onClick={() => setTrackingOrder(order)}
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1 shadow-xs active:scale-95 transition-all cursor-pointer"
-                        >
-                          <Truck className="w-3.5 h-3.5" />
-                          <span>Lacak Kurir</span>
-                        </button>
-                      )}
-                      {order.status === 'selesai' && (
-                        <button
-                          type="button"
-                          className="bg-[#063104] hover:bg-[#084205] text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1 shadow-xs cursor-pointer"
-                        >
-                          <ShoppingBag className="w-3.5 h-3.5" />
-                          <span>Beli Lagi</span>
-                        </button>
-                      )}
+                      <div
+                        className="flex items-center gap-2"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {order.status === 'belum_bayar' && (
+                          <button
+                            type="button"
+                            onClick={() => handlePayNow(order)}
+                            className="bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-extrabold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer transition-all"
+                          >
+                            <CreditCard className="w-3.5 h-3.5" />
+                            <span>Bayar</span>
+                          </button>
+                        )}
+                        {(order.status === 'dikirim' || order.status === 'dikemas') && (
+                          <button
+                            type="button"
+                            onClick={() => setTrackingOrder(order)}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1 shadow-xs active:scale-95 transition-all cursor-pointer"
+                          >
+                            <Truck className="w-3.5 h-3.5" />
+                            <span>Lacak Kurir</span>
+                          </button>
+                        )}
+                        {order.status === 'selesai' && (
+                          <button
+                            type="button"
+                            className="bg-[#063104] hover:bg-[#084205] text-white font-extrabold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1 shadow-xs cursor-pointer"
+                          >
+                            <ShoppingBag className="w-3.5 h-3.5" />
+                            <span>Beli Lagi</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
@@ -998,14 +1058,37 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
           open={!!trackingOrder}
           onClose={() => setTrackingOrder(null)}
           orderNo={trackingOrder.orderNo}
-          orderDate={trackingOrder.date}
+          orderDate={trackingOrder.orderDate || trackingOrder.date}
+          orderTime={trackingOrder.orderTime}
           courierName={trackingOrder.shippingCourier || 'OrganikStore Instant Courier'}
-          currentStatus={trackingOrder.status}
-          driverName="Pak Rahmat Express"
-          driverPhone="081298765432"
-          trackingNumber={`TRK-${trackingOrder.orderNo}`}
+          currentStatus={trackingOrder.rawStatus || trackingOrder.status}
+          driverName={trackingOrder.driverName}
+          driverPhone={trackingOrder.driverPhone}
+          driverPlate={trackingOrder.driverPlate}
+          trackingNumber={trackingOrder.trackingNumber || `TRK-${trackingOrder.orderNo}`}
+          biteshipTrackingUrl={trackingOrder.biteshipTrackingUrl}
+          storeName={trackingOrder.storeName}
+          shippingAddress={trackingOrder.shippingAddress}
         />
       )}
+
+      {/* ORDER DETAIL MODAL */}
+      <OrderDetailModal
+        open={!!selectedDetailOrder}
+        onClose={() => setSelectedDetailOrder(null)}
+        order={selectedDetailOrder}
+        onPayNow={(ord) => {
+          setSelectedDetailOrder(null);
+          handlePayNow(ord);
+        }}
+        onOpenTracking={(ord) => {
+          setSelectedDetailOrder(null);
+          setTrackingOrder(ord);
+        }}
+        onOrderUpdated={() => {
+          fetchUserOrders(profile.id || profile.phone);
+        }}
+      />
 
       {/* PAYMENT CONFIRMATION MODAL */}
       <PaymentConfirmPage

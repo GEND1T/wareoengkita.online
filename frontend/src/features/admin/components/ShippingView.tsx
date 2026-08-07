@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Truck, Plus, Pencil, Trash2, X, MapPin, Clock, Banknote, Package, Zap, CalendarDays, HandCoins, ToggleLeft, ToggleRight, Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { Truck, Plus, Pencil, Trash2, X, MapPin, Clock, Banknote, Package, Zap, CalendarDays, HandCoins, ToggleLeft, ToggleRight, Info, ChevronDown, ChevronUp, Phone } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { useUserStore } from '../../auth/store/useUserStore';
 import type { ShippingOptionAdmin, ShippingType, PickupLocation, ScheduleSlot, BiteshipCourierConfig } from '../../../types';
 import { TableSkeleton } from '../../../components/common/AdminSkeletons';
+import MapLocationPicker, { type MapLocationResult } from '../../store-location/components/MapLocationPicker';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5050/api';
 
@@ -46,9 +47,10 @@ export const ShippingView: React.FC = () => {
   const [pickupToEdit, setPickupToEdit] = useState<PickupLocation | null>(null);
   const [plName, setPlName] = useState('');
   const [plAddress, setPlAddress] = useState('');
-  const [plLat, setPlLat] = useState<number | ''>(0);
-  const [plLon, setPlLon] = useState<number | ''>(0);
+  const [plLat, setPlLat] = useState<number | ''>(-6.2088);
+  const [plLon, setPlLon] = useState<number | ''>(106.8456);
   const [plHours, setPlHours] = useState('');
+  const [plPhone, setPlPhone] = useState('');
   const [plFee, setPlFee] = useState<number | ''>(0);
 
   // Schedule slots state  
@@ -205,9 +207,10 @@ export const ShippingView: React.FC = () => {
     setPickupToEdit(null);
     setPlName('');
     setPlAddress('');
-    setPlLat(0);
-    setPlLon(0);
+    setPlLat(-6.2088);
+    setPlLon(106.8456);
     setPlHours('08:00-21:00');
+    setPlPhone('');
     setPlFee(0);
     setIsPickupModalOpen(true);
   };
@@ -219,6 +222,7 @@ export const ShippingView: React.FC = () => {
     setPlLat(pl.latitude);
     setPlLon(pl.longitude);
     setPlHours(pl.operatingHours || '');
+    setPlPhone(pl.phone || '');
     setPlFee(pl.pickupFee || 0);
     setIsPickupModalOpen(true);
   };
@@ -226,7 +230,16 @@ export const ShippingView: React.FC = () => {
   const handleSubmitPickup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!plName.trim() || !plAddress.trim()) return;
-    const body = { storeId, name: plName.trim(), address: plAddress.trim(), latitude: plLat, longitude: plLon, operatingHours: plHours.trim(), pickupFee: plFee };
+    const body = {
+      storeId,
+      name: plName.trim(),
+      address: plAddress.trim(),
+      latitude: typeof plLat === 'number' ? plLat : -6.2088,
+      longitude: typeof plLon === 'number' ? plLon : 106.8456,
+      operatingHours: plHours.trim() || null,
+      phone: plPhone.trim() || null,
+      pickupFee: plFee || 0,
+    };
     try {
       if (pickupToEdit) {
         await fetch(`${API_BASE_URL}/shipping/pickup-locations/${pickupToEdit.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -410,8 +423,9 @@ export const ShippingView: React.FC = () => {
                 </div>
               </div>
               <p className="text-xs text-gray-600 mb-1">{pl.address}</p>
-              <div className="flex items-center gap-3 text-[10px] text-gray-400">
+              <div className="flex flex-wrap items-center gap-3 text-[10px] text-gray-400 mt-2">
                 {pl.operatingHours && <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{pl.operatingHours}</span>}
+                {pl.phone && <span className="flex items-center gap-1 text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200"><Phone className="w-3 h-3 text-emerald-600" />{pl.phone}</span>}
                 <span className="flex items-center gap-1"><Banknote className="w-3 h-3" />Biaya: {formatCurrency(pl.pickupFee || 0)}</span>
               </div>
             </div>
@@ -851,42 +865,46 @@ export const ShippingView: React.FC = () => {
                 <label className="block text-xs font-bold text-gray-700 mb-1">Nama Lokasi</label>
                 <input type="text" value={plName} onChange={e => setPlName(e.target.value)} placeholder="Toko Utama - Senopati" className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm" required />
               </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">Alamat Lengkap</label>
-                <input type="text" value={plAddress} onChange={e => setPlAddress(e.target.value)} placeholder="Jl. Senopati No. 10" className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm" required />
-              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">Latitude</label>
-                  <input type="number" step="any" value={plLat} onChange={e => setPlLat(e.target.value === '' ? '' : Number(e.target.value))} className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm" required />
+                  <label className="block text-xs font-bold text-gray-700 mb-1">No. WhatsApp / Kontak</label>
+                  <input type="tel" value={plPhone} onChange={e => setPlPhone(e.target.value)} placeholder="081234567890" className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm" />
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">Longitude</label>
-                  <input type="number" step="any" value={plLon} onChange={e => setPlLon(e.target.value === '' ? '' : Number(e.target.value))} className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm" required />
-                </div>
-              </div>
-              {/* Map Picker */}
-              <div className="rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
-                <iframe
-                  title="Pick Location"
-                  width="100%"
-                  height="200"
-                  style={{ border: 0 }}
-                  src={`https://maps.google.com/maps?q=${plLat || -6.2088},${plLon || 106.8456}&z=15&output=embed`}
-                  allowFullScreen
-                />
-                <p className="text-[10px] text-gray-400 p-2 text-center">Masukkan koordinat di atas atau klik peta di Google Maps untuk mendapatkan lat/lon.</p>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1">Jam Operasional</label>
                   <input type="text" value={plHours} onChange={e => setPlHours(e.target.value)} placeholder="08:00-21:00" className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm" />
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">Biaya (Rp)</label>
-                  <input type="number" value={plFee} onChange={e => setPlFee(e.target.value === '' ? '' : Number(e.target.value))} className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm" />
-                </div>
               </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Alamat Lengkap</label>
+                <textarea rows={2} value={plAddress} onChange={e => setPlAddress(e.target.value)} placeholder="Jl. Senopati No. 10, Jakarta Selatan" className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm resize-none" required />
+              </div>
+
+              {/* Map Location Picker */}
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-gray-700">Lokasi Peta &amp; Koordinat</label>
+                <MapLocationPicker
+                  initialLat={typeof plLat === 'number' && plLat !== 0 ? plLat : undefined}
+                  initialLon={typeof plLon === 'number' && plLon !== 0 ? plLon : undefined}
+                  initialAddress={plAddress}
+                  onLocationSelect={(res: MapLocationResult) => {
+                    setPlLat(res.lat);
+                    setPlLon(res.lon);
+                    if (!plAddress.trim() || res.displayName) {
+                      setPlAddress(res.displayName);
+                    }
+                  }}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Biaya Pengambilan (Rp)</label>
+                <input type="number" value={plFee} onChange={e => setPlFee(e.target.value === '' ? '' : Number(e.target.value))} className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm" />
+                <p className="text-[10px] text-gray-400 mt-1">Biarkan 0 jika pengambilan gratis.</p>
+              </div>
+
               <button type="submit" className="w-full py-3 bg-[#063104] hover:bg-[#084205] text-white font-extrabold text-sm rounded-2xl transition-all duration-200 active:scale-[0.98] cursor-pointer">
                 {pickupToEdit ? 'Simpan Perubahan' : 'Tambahkan'}
               </button>

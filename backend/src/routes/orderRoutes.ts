@@ -6,6 +6,7 @@ import {
   getAdminOrders,
   updateOrderStatus,
   confirmOrderReceipt,
+  cancelOrder,
 } from '../controllers/orderController';
 
 const router = Router();
@@ -16,5 +17,6 @@ router.get('/track/:orderNo', trackOrder);
 router.get('/admin', getAdminOrders);
 router.put('/admin/:id/status', updateOrderStatus);
 router.put('/:id/confirm-receipt', confirmOrderReceipt);
+router.post('/:id/cancel', cancelOrder);
 
 export default router;

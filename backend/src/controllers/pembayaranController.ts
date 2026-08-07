@@ -6,8 +6,10 @@ import {
   createTransaction as duitkuCreateTx,
   checkTransactionStatus as duitkuCheckTx,
   verifyCallbackSignature,
+  getDuitkuExpiryMinutes,
 } from '../services/duitkuService';
 import crypto from 'crypto';
+import { notifyOrderPaid, notifyOrderStatusChanged } from '../services/wahaNotificationHelper';
 
 // ============================================================
 // Pembayaran Controller — Duitku Payment Gateway Integration
@@ -20,18 +22,34 @@ import crypto from 'crypto';
 export const getPaymentMethodsDuitku = async (req: Request, res: Response) => {
   try {
     const amount = parseInt(req.query.amount as string) || 10000;
+    const storeIdStr = req.query.storeId as string | undefined;
+
     const result = await duitkuGetMethods(amount);
 
-    if (result && result.responseCode === '00') {
-      return res.json({
-        success: true,
-        data: result.paymentFee || [],
-      });
+    let rawFee = (result && result.paymentFee) ? result.paymentFee : [];
+
+    // 1. Supported Duitku channels whitelist (11 channels)
+    const allowedCodes = new Set(['A1', 'I1', 'OV', 'SP', 'LA', 'SA', 'LQ', 'DA', 'BC', 'BR', 'BV']);
+    rawFee = rawFee.filter((m: any) => allowedCodes.has((m.paymentMethod || '').toUpperCase()));
+
+    // 2. Filter out disabled Duitku options (isActive === false) from DB
+    const whereClause: any = { type: 'duitku', isActive: false };
+    if (storeIdStr) {
+      whereClause.OR = [{ storeId: String(storeIdStr) }, { storeId: null }];
+    }
+    const disabledOptions = await prisma.paymentOption.findMany({
+      where: whereClause,
+      select: { code: true },
+    });
+
+    const disabledCodes = new Set(disabledOptions.map((d) => (d.code || '').toUpperCase()));
+    if (disabledCodes.size > 0) {
+      rawFee = rawFee.filter((m: any) => !disabledCodes.has((m.paymentMethod || '').toUpperCase()));
     }
 
-    return res.status(400).json({
-      success: false,
-      message: result?.responseMessage || 'Gagal mengambil metode pembayaran dari Duitku API',
+    return res.json({
+      success: true,
+      data: rawFee,
     });
   } catch (error: any) {
     console.error('[Pembayaran] getPaymentMethods error:', error.message);
@@ -65,6 +83,9 @@ export const createPayment = async (req: AuthRequest, res: Response) => {
         message: 'paymentMethod dan paymentAmount wajib diisi.',
       });
     }
+
+    const expiryMinutes = expiryPeriod || getDuitkuExpiryMinutes(paymentMethod);
+    const linkExpiry = new Date(Date.now() + expiryMinutes * 60 * 1000);
 
     // Generate unique merchantOrderId
     const merchantOrderId = `ORG-${Date.now()}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
@@ -109,7 +130,7 @@ export const createPayment = async (req: AuthRequest, res: Response) => {
         email: customerEmail || 'customer@waroengkita.online',
         phoneNumber: customerPhone || '081234567890',
         customerVaName: (customerName || 'Pembeli').substring(0, 20),
-        expiryPeriod: expiryPeriod || 1440,
+        expiryPeriod: expiryMinutes,
         itemDetails,
         customerDetail: addressObj
           ? {
@@ -151,7 +172,8 @@ export const createPayment = async (req: AuthRequest, res: Response) => {
           customerPhone: customerPhone || null,
           productDetails: productDetails || null,
           storeId: storeId || null,
-          expiryPeriod: expiryPeriod || 1440,
+          expiryPeriod: expiryMinutes,
+          linkExpiry,
           itemsJson: items ? JSON.stringify(items) : null,
         },
       });
@@ -175,7 +197,8 @@ export const createPayment = async (req: AuthRequest, res: Response) => {
         paymentUrl: duitkuResult.paymentUrl || null,
         statusCode: '01',
         statusMessage: 'PENDING',
-        expiryPeriod: expiryPeriod || 1440,
+        expiryPeriod: expiryMinutes,
+        linkExpiry,
         createdAt,
       },
     });
@@ -264,6 +287,10 @@ export const handleCallback = async (req: Request, res: Response) => {
           paymentMethod: `duitku_${paymentCode || updatedPayment.paymentMethod}`,
         },
       });
+
+      // Send WAHA WhatsApp notifications
+      notifyOrderPaid(updatedPayment.orderId).catch(err => console.error('[WAHA Notify Error]:', err));
+      notifyOrderStatusChanged(updatedPayment.orderId, 'processing').catch(err => console.error('[WAHA Notify Error]:', err));
     }
 
     console.log('[Duitku Callback] Processed successfully:', merchantOrderId);
@@ -294,6 +321,34 @@ export const checkPaymentStatus = async (req: Request, res: Response) => {
       return res.status(404).json({
         success: false,
         message: 'Pembayaran tidak ditemukan.',
+      });
+    }
+
+    // Check if payment is expired
+    const expiryMinutes = payment.expiryPeriod || 1440;
+    const expiryTime = payment.linkExpiry
+      ? new Date(payment.linkExpiry).getTime()
+      : new Date(payment.createdAt).getTime() + expiryMinutes * 60 * 1000;
+
+    if (Date.now() > expiryTime && payment.statusCode === '01') {
+      await prisma.payment.update({
+        where: { merchantOrderId },
+        data: { statusCode: '02', statusMessage: 'EXPIRED' },
+      });
+      if (payment.orderId) {
+        await prisma.order.update({
+          where: { id: payment.orderId },
+          data: { paymentStatus: 'expired', orderStatus: 'cancelled' },
+        });
+      }
+      return res.json({
+        success: true,
+        data: {
+          ...payment,
+          statusCode: '02',
+          statusMessage: 'EXPIRED',
+          fromCache: true,
+        },
       });
     }
 
@@ -333,6 +388,10 @@ export const checkPaymentStatus = async (req: Request, res: Response) => {
               orderStatus: 'processing',
             },
           });
+
+          // Send WAHA WhatsApp notifications
+          notifyOrderPaid(payment.orderId).catch(err => console.error('[WAHA Notify Error]:', err));
+          notifyOrderStatusChanged(payment.orderId, 'processing').catch(err => console.error('[WAHA Notify Error]:', err));
         }
       }
 

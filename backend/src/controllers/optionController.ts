@@ -101,6 +101,23 @@ export const deleteShippingOption = async (req: Request, res: Response) => {
   }
 };
 
+// Exact Supported Duitku Channels List (11 Methods)
+export const DEFAULT_DUITKU_PAYMENT_OPTIONS = [
+  { code: 'A1', name: 'ATM BERSAMA VA', category: 'Virtual Account', type: 'duitku', iconUrl: 'https://images.duitku.com/hotlink-ok/A1.PNG' },
+  { code: 'I1', name: 'BNI VA', category: 'Virtual Account', type: 'duitku', iconUrl: 'https://images.duitku.com/hotlink-ok/I1.PNG' },
+  { code: 'BC', name: 'BCA VA', category: 'Virtual Account', type: 'duitku', iconUrl: 'https://images.duitku.com/hotlink-ok/BC.PNG' },
+  { code: 'BR', name: 'BRI VA', category: 'Virtual Account', type: 'duitku', iconUrl: 'https://images.duitku.com/hotlink-ok/BR.PNG' },
+  { code: 'BV', name: 'BSI VA', category: 'Virtual Account', type: 'duitku', iconUrl: 'https://images.duitku.com/hotlink-ok/BV.PNG' },
+  { code: 'OV', name: 'OVO', category: 'E-Wallet', type: 'duitku', iconUrl: 'https://images.duitku.com/hotlink-ok/OV.PNG' },
+  { code: 'DA', name: 'DANA', category: 'E-Wallet', type: 'duitku', iconUrl: 'https://images.duitku.com/hotlink-ok/DA.PNG' },
+  { code: 'LA', name: 'LINKAJA APP PCT', category: 'E-Wallet', type: 'duitku', iconUrl: 'https://images.duitku.com/hotlink-ok/LA.PNG' },
+  { code: 'SA', name: 'SHOPEEPAY APP', category: 'E-Wallet', type: 'duitku', iconUrl: 'https://images.duitku.com/hotlink-ok/SA.PNG' },
+  { code: 'SP', name: 'SHOPEEPAY QRIS', category: 'QRIS', type: 'duitku', iconUrl: 'https://images.duitku.com/hotlink-ok/SP.PNG' },
+  { code: 'LQ', name: 'LINKAJA QRIS', category: 'QRIS', type: 'duitku', iconUrl: 'https://images.duitku.com/hotlink-ok/LQ.PNG' },
+];
+
+const SUPPORTED_DUITKU_CODES = new Set(DEFAULT_DUITKU_PAYMENT_OPTIONS.map((d) => d.code));
+
 // Payment Options Controllers
 export const getPaymentOptions = async (req: Request, res: Response) => {
   try {
@@ -111,6 +128,51 @@ export const getPaymentOptions = async (req: Request, res: Response) => {
         { storeId: String(storeId) },
         { storeId: null },
       ];
+    }
+
+    const targetStoreId = storeId ? String(storeId) : null;
+
+    // Clean up any old un-supported Duitku options
+    await prisma.paymentOption.deleteMany({
+      where: {
+        type: 'duitku',
+        code: { notIn: Array.from(SUPPORTED_DUITKU_CODES) },
+      },
+    });
+
+    // Auto-seed missing supported Duitku options
+    for (const dOpt of DEFAULT_DUITKU_PAYMENT_OPTIONS) {
+      const existing = await prisma.paymentOption.findFirst({
+        where: {
+          type: 'duitku',
+          code: dOpt.code,
+          OR: [{ storeId: targetStoreId }, { storeId: null }],
+        },
+      });
+
+      if (!existing) {
+        await prisma.paymentOption.create({
+          data: {
+            id: `duitku-${dOpt.code}-${targetStoreId || 'global'}`,
+            code: dOpt.code,
+            name: dOpt.name,
+            category: dOpt.category,
+            type: 'duitku',
+            iconUrl: dOpt.iconUrl,
+            isActive: true,
+            storeId: targetStoreId,
+          },
+        });
+      } else if (!existing.iconUrl || existing.category !== dOpt.category) {
+        await prisma.paymentOption.update({
+          where: { id: existing.id },
+          data: {
+            iconUrl: dOpt.iconUrl,
+            category: dOpt.category,
+            name: dOpt.name,
+          },
+        });
+      }
     }
 
     const options = await prisma.paymentOption.findMany({
@@ -171,6 +233,29 @@ export const updatePaymentOption = async (req: Request, res: Response) => {
     });
 
     return res.json({ success: true, message: 'Metode pembayaran diperbarui!', data: option });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const togglePaymentOption = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const option = await prisma.paymentOption.findUnique({ where: { id } });
+    if (!option) {
+      return res.status(404).json({ success: false, message: 'Metode pembayaran tidak ditemukan.' });
+    }
+
+    const updated = await prisma.paymentOption.update({
+      where: { id },
+      data: { isActive: !option.isActive },
+    });
+
+    return res.json({
+      success: true,
+      message: `Metode pembayaran ${updated.name} berhasil ${updated.isActive ? 'diaktifkan' : 'dinonaktifkan'}.`,
+      data: updated,
+    });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
   }

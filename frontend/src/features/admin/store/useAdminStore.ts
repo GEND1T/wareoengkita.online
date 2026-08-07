@@ -183,6 +183,7 @@ export const useAdminStore = create<AdminState>()(
                 pickupCode: o.pickupCode,
                 pickupQrData: o.pickupQrData,
                 pickupLocationId: o.pickupLocationId,
+                pickupLocation: o.pickupLocation,
                 pickupStatus: o.pickupStatus,
                 scheduledDate: o.scheduledDate,
                 scheduledSlot: o.scheduledSlot,
@@ -194,6 +195,9 @@ export const useAdminStore = create<AdminState>()(
                 driverName: o.driverName,
                 driverPhone: o.driverPhone,
                 driverPlate: o.driverPlate,
+                customerLat: o.customerLat,
+                customerLon: o.customerLon,
+                store: o.store,
               };
             });
             const newCount = mappedOrders.filter((o) => o.status === 'new').length;

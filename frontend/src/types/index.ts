@@ -99,17 +99,29 @@ export interface AdminOrder {
   pickupCode?: string;
   pickupQrData?: string;
   pickupLocationId?: string;
+  pickupLocation?: PickupLocation | any;
   pickupStatus?: string;
   scheduledDate?: string;
   scheduledSlot?: string;
   biteshipOrderId?: string;
   biteshipTrackingUrl?: string;
   biteshipWaybillId?: string;
+  trackingNumber?: string;
   codVerified?: boolean;
   codCashCollected?: boolean;
   driverName?: string;
   driverPhone?: string;
   driverPlate?: string;
+  customerLat?: number;
+  customerLon?: number;
+  store?: {
+    id: string;
+    name: string;
+    address: string;
+    phone: string;
+    latitude?: number;
+    longitude?: number;
+  };
 }
 
 export interface PromoBanner {
@@ -145,6 +157,7 @@ export interface PickupLocation {
   latitude: number;
   longitude: number;
   operatingHours?: string;
+  phone?: string;
   pickupFee?: number;
   isActive: boolean;
 }
@@ -226,9 +239,15 @@ export interface BiteshipCourierConfig {
 
 export interface PaymentOptionAdmin {
   id: string;
+  code?: string;
   name: string;
   category: string;
-  iconType: 'qris' | 'bca' | 'mandiri' | 'cod' | 'cc';
+  type?: string;
+  iconType?: string;
+  iconUrl?: string;
+  accountNo?: string;
+  accountName?: string;
+  instructions?: string;
   isActive: boolean;
 }
 

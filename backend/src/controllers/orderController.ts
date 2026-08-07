@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { prisma } from '../prisma/client';
 import { AuthRequest } from '../middlewares/authMiddleware';
 import { generatePickupCode } from '../services/shippingService';
+import { notifyOrderStatusChanged, notifyOrderPaid } from '../services/wahaNotificationHelper';
 
 // POST /api/orders (Create Order from Checkout)
 export const createOrder = async (req: AuthRequest, res: Response) => {
@@ -23,6 +24,8 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
       pickupLocationId,
       scheduledDate,
       scheduledSlot,
+      customerLat,
+      customerLon,
     } = req.body;
 
     if (!paymentMethod) {
@@ -76,6 +79,8 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
         pickupStatus: shippingType === 'pickup' ? 'preparing' : null,
         scheduledDate: scheduledDate || null,
         scheduledSlot: scheduledSlot || null,
+        customerLat: customerLat ? parseFloat(customerLat) : null,
+        customerLon: customerLon ? parseFloat(customerLon) : null,
       },
     });
 
@@ -112,8 +117,11 @@ export const getMyOrders = async (req: AuthRequest, res: Response) => {
             name: true,
             address: true,
             phone: true,
+            latitude: true,
+            longitude: true,
           },
         },
+        pickupLocation: true,
         payments: {
           orderBy: { createdAt: 'desc' },
           take: 1,
@@ -121,6 +129,33 @@ export const getMyOrders = async (req: AuthRequest, res: Response) => {
       },
       orderBy: { createdAt: 'desc' },
     });
+
+    // Auto-cancel expired pending orders
+    const now = new Date();
+    for (const order of orders) {
+      if ((order.paymentStatus === 'pending' || order.orderStatus === 'new') && order.payments && order.payments.length > 0) {
+        const p = order.payments[0];
+        const expiryMinutes = p.expiryPeriod || 1440;
+        const expiryTime = p.linkExpiry
+          ? new Date(p.linkExpiry).getTime()
+          : new Date(p.createdAt).getTime() + expiryMinutes * 60 * 1000;
+
+        if (now.getTime() > expiryTime) {
+          order.orderStatus = 'cancelled';
+          order.paymentStatus = 'expired';
+          
+          prisma.order.update({
+            where: { id: order.id },
+            data: { orderStatus: 'cancelled', paymentStatus: 'expired' },
+          }).catch(err => console.error('[getMyOrders] Auto-cancel order err:', err.message));
+
+          prisma.payment.update({
+            where: { id: p.id },
+            data: { statusCode: '02', statusMessage: 'EXPIRED' },
+          }).catch(err => console.error('[getMyOrders] Auto-cancel payment err:', err.message));
+        }
+      }
+    }
 
     return res.json({ success: true, data: orders });
   } catch (error: any) {
@@ -174,6 +209,19 @@ export const getAdminOrders = async (req: AuthRequest, res: Response) => {
 
     const orders = await prisma.order.findMany({
       where: whereClause,
+      include: {
+        store: {
+          select: {
+            id: true,
+            name: true,
+            address: true,
+            phone: true,
+            latitude: true,
+            longitude: true,
+          },
+        },
+        pickupLocation: true,
+      },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -192,7 +240,22 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
     const updatedOrder = await prisma.order.update({
       where: { id },
       data: { orderStatus: status },
+      include: {
+        store: {
+          select: {
+            id: true,
+            name: true,
+            address: true,
+            phone: true,
+            latitude: true,
+            longitude: true,
+          },
+        },
+      },
     });
+
+    // Trigger WAHA WhatsApp status notification asynchronously
+    notifyOrderStatusChanged(updatedOrder.id, status).catch(err => console.error('[WAHA Notify Error]:', err));
 
     return res.json({
       success: true,
@@ -274,9 +337,45 @@ export const confirmOrderReceipt = async (req: AuthRequest, res: Response) => {
       });
     });
 
+    // Trigger WAHA WhatsApp completion notification
+    notifyOrderStatusChanged(id, 'completed').catch(err => console.error('[WAHA Notify Error]:', err));
+
     return res.json({
       success: true,
       message: `Pesanan #${order.orderNo} telah dikonfirmasi selesai! Saldo Rp ${netSellerEarning.toLocaleString('id-ID')} telah diteruskan ke toko.`,
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// POST /api/orders/:id/cancel (Customer cancels order)
+export const cancelOrder = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    const order = await prisma.order.findUnique({ where: { id } });
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Pesanan tidak ditemukan.' });
+    }
+
+    if (['completed', 'cancelled'].includes(order.orderStatus)) {
+      return res.status(400).json({ success: false, message: 'Pesanan tidak dapat dibatalkan.' });
+    }
+
+    const updated = await prisma.order.update({
+      where: { id },
+      data: {
+        orderStatus: 'cancelled',
+        cancelReason: reason || 'Dibatalkan oleh pembeli',
+      },
+    });
+
+    return res.json({
+      success: true,
+      message: `Pesanan #${order.orderNo} berhasil dibatalkan.`,
+      data: updated,
     });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
