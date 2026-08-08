@@ -232,91 +232,98 @@ export const CartDrawer: React.FC = () => {
                     )}
                   </label>
 
-                  {/* Store Products Scroll Container (Max ~3 products visible, max-height 260px) */}
-                  <div className="p-2.5 max-h-[260px] overflow-y-auto space-y-2">
-                    {storeItems.map(({ product, quantity }) => {
-                      const validation = isStoreActiveForCheckout ? itemValidationMap[product.id] : undefined;
-                      const isInvalid = !!validation;
+                  {/* Store Products Scroll Container (Max ~2 products height visible before scroll fade overlay) */}
+                  <div className="relative">
+                    <div className="p-2.5 max-h-[220px] overflow-y-auto space-y-2 pb-5">
+                      {storeItems.map(({ product, quantity }) => {
+                        const validation = isStoreActiveForCheckout ? itemValidationMap[product.id] : undefined;
+                        const isInvalid = !!validation;
 
-                      return (
-                        <div
-                          key={product.id}
-                          className={`rounded-2xl p-3 border transition-all duration-200 flex items-center gap-3 relative overflow-hidden ${isInvalid
-                            ? 'bg-rose-50/90 border-rose-300 ring-1 ring-rose-300'
-                            : 'bg-white border-gray-100 shadow-xs'
-                            }`}
-                        >
-                          <img
-                            src={product.image}
-                            alt={product.name}
-                            className="w-14 h-14 object-contain rounded-xl bg-white p-1 border border-gray-100 shrink-0"
-                          />
-
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-bold text-gray-900 text-sm truncate">
-                              {product.name}
-                            </h4>
-                            <p className="text-xs text-[#063104] font-semibold mt-0.5">
-                              Rp {product.price.toLocaleString('id-ID')}
-                              <span className="text-gray-400 font-normal text-[11px] ml-1">
-                                {product.unit}
-                              </span>
-                            </p>
-
-                            {/* Dynamic Validation Alerts */}
-                            {validation && (
-                              <div className="mt-1">
-                                {validation.isInactive && (
-                                  <span className="bg-rose-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md inline-block">
-                                    🚫 Produk Nonaktif / Tidak Tersedia
-                                  </span>
-                                )}
-                                {validation.isOutOfStock && !validation.isInactive && (
-                                  <span className="bg-rose-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md inline-block">
-                                    ❌ Stok Habis di Toko
-                                  </span>
-                                )}
-                                {validation.isOverStock && !validation.isOutOfStock && !validation.isInactive && (
-                                  <span className="bg-amber-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md inline-block">
-                                    ⚠️ Stok tersisa {validation.availableStock} unit
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Quantity Controls */}
-                          <div className="flex items-center gap-1.5 bg-gray-100/80 rounded-xl p-1 shrink-0">
-                            <button
-                              type="button"
-                              onClick={() => updateQuantity(product.id, quantity - 1)}
-                              className="w-6 h-6 rounded-lg bg-white text-gray-700 hover:text-black flex items-center justify-center shadow-xs focus:outline-none"
-                            >
-                              <Minus className="w-3.5 h-3.5" />
-                            </button>
-                            <span className={`text-xs font-bold w-4 text-center ${isInvalid ? 'text-rose-700 font-black' : ''}`}>
-                              {quantity}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => updateQuantity(product.id, quantity + 1)}
-                              className="w-6 h-6 rounded-lg bg-[#063104] text-white flex items-center justify-center shadow-xs focus:outline-none"
-                            >
-                              <Plus className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => removeItem(product.id)}
-                            className="text-gray-400 hover:text-red-500 p-1 focus:outline-none transition-colors"
-                            title="Hapus Produk"
+                        return (
+                          <div
+                            key={product.id}
+                            className={`rounded-2xl p-3 border transition-all duration-200 flex items-center gap-3 relative overflow-hidden ${isInvalid
+                              ? 'bg-rose-50/90 border-rose-300 ring-1 ring-rose-300'
+                              : 'bg-white border-gray-100 shadow-xs'
+                              }`}
                           >
-                            <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-600" />
-                          </button>
-                        </div>
-                      );
-                    })}
+                            <img
+                              src={product.image}
+                              alt={product.name}
+                              className="w-14 h-14 object-cover rounded-xl bg-white border border-gray-200/90 shrink-0 overflow-hidden shadow-2xs transition-transform duration-200 hover:scale-105"
+                            />
+
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-bold text-gray-900 text-sm truncate">
+                                {product.name}
+                              </h4>
+                              <p className="text-xs text-[#063104] font-semibold mt-0.5">
+                                Rp {product.price.toLocaleString('id-ID')}
+                                <span className="text-gray-400 font-normal text-[11px] ml-1">
+                                  {product.unit}
+                                </span>
+                              </p>
+
+                              {/* Dynamic Validation Alerts */}
+                              {validation && (
+                                <div className="mt-1">
+                                  {validation.isInactive && (
+                                    <span className="bg-rose-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md inline-block">
+                                      🚫 Produk Nonaktif / Tidak Tersedia
+                                    </span>
+                                  )}
+                                  {validation.isOutOfStock && !validation.isInactive && (
+                                    <span className="bg-rose-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md inline-block">
+                                      ❌ Stok Habis di Toko
+                                    </span>
+                                  )}
+                                  {validation.isOverStock && !validation.isOutOfStock && !validation.isInactive && (
+                                    <span className="bg-amber-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md inline-block">
+                                      ⚠️ Stok tersisa {validation.availableStock} unit
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Quantity Controls */}
+                            <div className="flex items-center gap-1.5 bg-gray-100/80 rounded-xl p-1 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => updateQuantity(product.id, quantity - 1)}
+                                className="w-6 h-6 rounded-lg bg-white text-gray-700 hover:text-black flex items-center justify-center shadow-xs focus:outline-none"
+                              >
+                                <Minus className="w-3.5 h-3.5" />
+                              </button>
+                              <span className={`text-xs font-bold w-4 text-center ${isInvalid ? 'text-rose-700 font-black' : ''}`}>
+                                {quantity}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => updateQuantity(product.id, quantity + 1)}
+                                className="w-6 h-6 rounded-lg bg-[#063104] text-white flex items-center justify-center shadow-xs focus:outline-none"
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => removeItem(product.id)}
+                              className="text-gray-400 hover:text-red-500 p-1 focus:outline-none transition-colors"
+                              title="Hapus Produk"
+                            >
+                              <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-600" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Bottom White Gradient/Blur Overlay if > 2 products */}
+                    {storeItems.length > 2 && (
+                      <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none rounded-b-xl" />
+                    )}
                   </div>
 
                   {/* Store Subtotal Footer Bar */}
