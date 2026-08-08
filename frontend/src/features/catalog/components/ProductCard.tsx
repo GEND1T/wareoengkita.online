@@ -117,11 +117,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <div className="w-full flex items-start justify-between gap-2">
             {/* Solid main price & unit with top padding so it doesn't stick too tightly to strikethrough price */}
             <div className="min-w-0 flex-1 pt-1">
-              <div className="flex items-baseline flex-wrap gap-x-1">
+              <div className="flex items-baseline flex-wrap gap-x-1 gap-y-0.5">
                 <span className="font-black text-gray-900 text-sm sm:text-base leading-none">
                   {formattedPrice}
                 </span>
-                <span className="text-gray-500 font-medium text-[11px] leading-none">
+                <span className="text-gray-500 font-medium text-[11px] leading-none pt-1 sm:pt-0">
                   /{product.unit.replace(/^\//, '').replace(/^per\s+/i, '')}
                 </span>
               </div>
