@@ -624,33 +624,39 @@ export const CheckoutPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
-              {checkoutItems.map(({ product, quantity }) => (
-                <div
-                  key={product.id}
-                  className="flex items-center justify-between text-xs py-1 border-b border-gray-50 last:border-0"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-11 h-11 object-contain rounded-lg border border-gray-100 bg-gray-50 p-1 shrink-0"
-                    />
-                    <div className="min-w-0">
-                      <h4 className="font-bold text-gray-900 truncate">
-                        {product.name}
-                      </h4>
-                      <p className="text-[11px] text-gray-500">
-                        {formatCurrency(product.price)}{' '}
-                        <span className="font-bold text-gray-700">x{quantity}</span>
-                      </p>
+            <div className="relative">
+              <div className="space-y-2.5 max-h-40 overflow-y-auto pr-1 pb-4">
+                {checkoutItems.map(({ product, quantity }) => (
+                  <div
+                    key={product.id}
+                    className="flex items-center justify-between text-xs py-1 border-b border-gray-50 last:border-0"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-11 h-11 object-cover rounded-lg border border-gray-200/90 bg-white shrink-0 overflow-hidden shadow-2xs transition-transform duration-200 hover:scale-105"
+                      />
+                      <div className="min-w-0">
+                        <h4 className="font-bold text-gray-900 truncate">
+                          {product.name}
+                        </h4>
+                        <p className="text-[11px] text-gray-500">
+                          {formatCurrency(product.price)}{' '}
+                          <span className="font-bold text-gray-700">x{quantity}</span>
+                        </p>
+                      </div>
                     </div>
+                    <span className="font-bold text-gray-900 shrink-0">
+                      {formatCurrency(product.price * quantity)}
+                    </span>
                   </div>
-                  <span className="font-bold text-gray-900 shrink-0">
-                    {formatCurrency(product.price * quantity)}
-                  </span>
-                </div>
-              ))}
+                ))}
+              </div>
+
+              {checkoutItems.length > 2 && (
+                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none" />
+              )}
             </div>
           </div>
 
