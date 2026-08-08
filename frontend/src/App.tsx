@@ -124,37 +124,46 @@ export const App: React.FC = () => {
                 </main>
 
                 {/* Floating Cart Sticky Bar for Mobile & Desktop when items in current store */}
-                {storeItems > 0 ? (
-                  <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 w-full max-w-6xl px-4 pointer-events-none">
-                    <button
-                      type="button"
-                      onClick={openCartDrawer}
-                      className="pointer-events-auto w-full max-w-xl mx-auto bg-[#063104] hover:bg-[#084205] text-white p-3.5 sm:p-4 rounded-2xl shadow-2xl flex items-center justify-between transition-all duration-300 active:scale-[0.98] focus:outline-none border border-emerald-900/40"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="relative bg-white/15 p-2.5 rounded-xl flex items-center justify-center">
-                          <ShoppingBag className="w-5 h-5 text-white" />
-                          <span className="absolute -top-1 -right-1 bg-[#FACC15] text-[#063104] text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
-                            {storeItems}
-                          </span>
-                        </div>
-                        <div className="text-left">
-                          <p className="text-[10px] text-emerald-200 uppercase font-extrabold tracking-wider leading-none">
-                            {selectedStore?.name || 'Toko Terpilih'} • {storeItems} Produk
-                          </p>
-                          <p className="text-base font-extrabold text-white mt-1 leading-none">
-                            {formattedTotalPrice}
-                          </p>
-                        </div>
-                      </div>
+                {storeItems > 0 ? (() => {
+                  const storeNameRaw = (selectedStore?.name || 'WaroengKita')
+                    .replace('WaroengKita ', '')
+                    .replace('OrganikStore ', '');
+                  const formattedStoreName = storeNameRaw.length > 15
+                    ? `${storeNameRaw.substring(0, 15)}...`
+                    : storeNameRaw;
 
-                      <div className="flex items-center gap-2 bg-white/15 hover:bg-white/25 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-white transition-colors">
-                        <span>Lihat Keranjang</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </div>
-                    </button>
-                  </div>
-                ) : totalItems > 0 && (
+                  return (
+                    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-full max-w-6xl px-4 pointer-events-none">
+                      <button
+                        type="button"
+                        onClick={openCartDrawer}
+                        className="pointer-events-auto w-full max-w-lg mx-auto bg-[#063104] hover:bg-[#084205] text-white p-3 sm:p-3.5 rounded-2xl shadow-2xl flex items-center justify-between transition-all duration-300 active:scale-[0.98] focus:outline-none border border-emerald-900/40 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3 text-left">
+                          <div className="relative bg-white/15 p-2 rounded-xl flex items-center justify-center shrink-0">
+                            <ShoppingBag className="w-5 h-5 text-white" />
+                            <span className="absolute -top-1 -right-1 bg-[#FACC15] text-[#063104] text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                              {storeItems}
+                            </span>
+                          </div>
+                          <div className="text-left leading-tight">
+                            <p className="text-[10px] sm:text-xs text-emerald-200/90 uppercase font-extrabold tracking-wider truncate">
+                              {formattedStoreName}
+                            </p>
+                            <p className="text-sm sm:text-base font-black text-white mt-0.5">
+                              {formattedTotalPrice}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-xl text-xs font-bold text-white transition-colors shrink-0">
+                          <span>Lihat Keranjang</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </div>
+                      </button>
+                    </div>
+                  );
+                })() : totalItems > 0 && (
                   <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 w-full max-w-6xl px-4 pointer-events-none">
                     <button
                       type="button"

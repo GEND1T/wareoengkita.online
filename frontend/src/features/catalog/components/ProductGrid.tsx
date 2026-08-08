@@ -88,7 +88,7 @@ export const ProductGrid: React.FC = () => {
   const col4Desktop = filteredProducts.filter((_, idx) => idx % 4 === 3);
 
   return (
-    <section className="max-w-6xl mx-auto px-4 pt-2 pb-16 md:pb-20">
+    <section className="max-w-6xl mx-auto px-4 pt-2 pb-32 sm:pb-36 md:pb-28">
       {isLoading ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
           {Array.from({ length: 8 }).map((_, i) => (

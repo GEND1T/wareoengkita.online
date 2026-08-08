@@ -57,7 +57,18 @@ export const HeroBanner: React.FC = () => {
         }
       } catch (err) {
         console.error('Failed to fetch promos:', err);
-        setSlides([]);
+        setSlides([
+          {
+            subtitle: 'Promo Spesial WaroengKita',
+            title: 'Diskon Belanja Hemat s.d 30%',
+            badgeText: '30% OFF',
+            image: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=600&q=80',
+            bannerType: 'template',
+            imageScale: 1.0,
+            imagePositionX: 0,
+            imagePositionY: 0,
+          },
+        ]);
       } finally {
         setIsLoading(false);
       }
@@ -213,17 +224,19 @@ export const HeroBanner: React.FC = () => {
           );
         })}
 
-        {/* Carousel Navigation Dots */}
+        {/* Carousel Navigation Dots (Mini & Centered) */}
         {slides.length > 1 && (
-          <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex items-center gap-1.5 z-20 bg-black/30 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 z-20 bg-black/20 backdrop-blur-xs px-2.5 py-1 rounded-full border border-white/10">
             {slides.map((_, idx) => (
               <button
                 key={idx}
+                type="button"
                 onClick={() => setActiveSlide(idx)}
-                className={`transition-all duration-300 rounded-full ${activeSlide === idx
-                  ? 'w-6 h-2 bg-[#FACC15]'
-                  : 'w-2 h-2 bg-white/50 hover:bg-white'
-                  }`}
+                className={`transition-all duration-300 rounded-full cursor-pointer ${
+                  activeSlide === idx
+                    ? 'w-4 h-1.5 bg-[#FACC15]'
+                    : 'w-1.5 h-1.5 bg-white/60 hover:bg-white'
+                }`}
                 aria-label={`Go to slide ${idx + 1}`}
               />
             ))}
