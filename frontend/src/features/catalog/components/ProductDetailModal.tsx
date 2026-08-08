@@ -512,37 +512,46 @@ export const ProductDetailModal: React.FC = () => {
         </div>
 
         {/* 4. FIXED FLOATING BOTTOM CART BAR INSIDE DETAIL MODAL */}
-        {storeItems > 0 && (
-          <div className="shrink-0 p-3.5 sm:p-4 bg-[#063104] text-white border-t border-emerald-900/40 shadow-2xl flex items-center justify-between z-20 animate-in slide-in-from-bottom duration-300">
-            <div className="flex items-center gap-3">
-              <div className="relative bg-white/15 p-2 rounded-xl flex items-center justify-center">
-                <ShoppingBag className="w-5 h-5 text-white" />
-                <span className="absolute -top-1 -right-1 bg-[#FACC15] text-[#063104] text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
-                  {storeItems}
-                </span>
-              </div>
-              <div className="text-left">
-                <p className="text-[10px] text-emerald-200 uppercase font-extrabold tracking-wider leading-none">
-                  {activeStore?.name || 'Toko Terpilih'} • {storeItems} Produk
-                </p>
-                <p className="text-base font-extrabold text-white mt-1 leading-none">
-                  {formattedStorePrice}
-                </p>
-              </div>
-            </div>
+        {storeItems > 0 && (() => {
+          const storeNameRaw = (activeStore?.name || 'WaroengKita')
+            .replace('WaroengKita ', '')
+            .replace('OrganikStore ', '');
+          const formattedModalStoreName = storeNameRaw.length > 15
+            ? `${storeNameRaw.substring(0, 15)}...`
+            : storeNameRaw;
 
-            <button
-              type="button"
-              onClick={() => {
-                openCartDrawer();
-              }}
-              className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-white transition-colors cursor-pointer active:scale-95"
-            >
-              <span>Lihat Keranjang</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        )}
+          return (
+            <div className="shrink-0 p-3 sm:p-3.5 bg-[#063104] text-white border-t border-emerald-900/40 shadow-2xl flex items-center justify-between z-20 animate-in slide-in-from-bottom duration-300">
+              <div className="flex items-center gap-3 text-left">
+                <div className="relative bg-white/15 p-2 rounded-xl flex items-center justify-center shrink-0">
+                  <ShoppingBag className="w-5 h-5 text-white" />
+                  <span className="absolute -top-1 -right-1 bg-[#FACC15] text-[#063104] text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                    {storeItems}
+                  </span>
+                </div>
+                <div className="text-left leading-tight">
+                  <p className="text-[10px] sm:text-xs text-emerald-200/90 uppercase font-extrabold tracking-wider truncate">
+                    {formattedModalStoreName}
+                  </p>
+                  <p className="text-sm sm:text-base font-black text-white mt-0.5">
+                    {formattedStorePrice}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  openCartDrawer();
+                }}
+                className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-xl text-xs font-bold text-white transition-colors cursor-pointer active:scale-95 shrink-0"
+              >
+                <span>Lihat Keranjang</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
