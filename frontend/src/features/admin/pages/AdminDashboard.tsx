@@ -222,7 +222,7 @@ export const AdminDashboard: React.FC = () => {
             {!isSidebarCollapsed && (
               <div className="animate-fade-in min-w-0">
                 <h2 className="font-black text-gray-900 text-base leading-none truncate">
-                  Organik<span className="text-[#77a160]">Store</span>
+                  Waroeng<span className="text-[#77a160]">Kita</span>
                 </h2>
                 <span className="text-[10px] font-extrabold text-purple-900 bg-purple-100 px-2 py-0.5 rounded-full block mt-1 w-fit truncate">
                   {isSuperAdmin ? 'Superadmin Suite' : `Admin: ${profile.assignedStoreName || 'Cabang'}`}
@@ -354,7 +354,7 @@ export const AdminDashboard: React.FC = () => {
             <h2 className="font-extrabold text-gray-900 text-base capitalize">
               {activeTab === 'overview' && 'Ringkasan Dashboard'}
               {activeTab === 'orders' && 'Manajemen Pesanan'}
-              {activeTab === 'products' && 'Katalog Produk Organik'}
+              {activeTab === 'products' && 'Katalog Produk'}
               {activeTab === 'categories' && 'Pengaturan Kategori'}
               {activeTab === 'promos' && 'Manajemen Promo & Banner'}
               {activeTab === 'store_profile' && 'Profil Toko & Lokasi Map'}

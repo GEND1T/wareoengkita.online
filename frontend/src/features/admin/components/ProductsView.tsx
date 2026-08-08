@@ -116,7 +116,7 @@ export const ProductsView: React.FC = () => {
         <div className="hidden md:block">
           <h1 className="text-2xl font-black text-gray-900">Manajemen Produk (Katalog)</h1>
           <p className="text-xs text-gray-500">
-            Atur stok harian, harga, status aktif, dan penambahan sayuran/buah segar.
+            Atur stok harian, harga, status aktif, dan penambahan produk toko.
           </p>
         </div>
 
@@ -265,7 +265,7 @@ export const ProductsView: React.FC = () => {
                       <span className="bg-emerald-50 text-[#063104] font-bold text-[9px] px-2 py-0.5 rounded-md capitalize">
                         {typeof prod.category === 'object' && (prod.category as any)?.name
                           ? (prod.category as any).name
-                          : (categories.find(c => c.id === prod.categoryId || c.slug === prod.categorySlug || c.slug === prod.category)?.name || (typeof prod.category === 'string' ? prod.category : 'Sayur Segar'))}
+                          : (categories.find(c => c.id === prod.categoryId || c.slug === prod.categorySlug || c.slug === prod.category)?.name || (typeof prod.category === 'string' ? prod.category : 'Produk Umum'))}
                       </span>
                       <span className="bg-gray-100 text-gray-600 font-medium text-[9px] px-2 py-0.5 rounded-md flex items-center gap-0.5">
                         <Store className="w-2.5 h-2.5" />
@@ -363,7 +363,7 @@ export const ProductsView: React.FC = () => {
                         <span className="bg-emerald-50 text-[#063104] font-bold text-[11px] px-2.5 py-1 rounded-lg capitalize">
                           {typeof prod.category === 'object' && (prod.category as any)?.name
                             ? (prod.category as any).name
-                            : (categories.find(c => c.id === prod.categoryId || c.slug === prod.categorySlug || c.slug === prod.category)?.name || (typeof prod.category === 'string' ? prod.category : 'Sayur Segar'))}
+                            : (categories.find(c => c.id === prod.categoryId || c.slug === prod.categorySlug || c.slug === prod.category)?.name || (typeof prod.category === 'string' ? prod.category : 'Produk Umum'))}
                         </span>
                       </td>
                       <td className="py-3 px-4 font-black text-gray-900">

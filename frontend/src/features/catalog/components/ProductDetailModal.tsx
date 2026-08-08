@@ -76,14 +76,14 @@ export const ProductDetailModal: React.FC = () => {
             unit: p.unit || '/pak',
             image: p.image,
             imagesJson: p.imagesJson,
-            category: p.categorySlug || 'sayur-segar',
+            category: p.categorySlug || 'umum',
             storeId: p.storeId || selectedStoreId,
             isActive: p.isActive !== undefined ? p.isActive : true,
             description: p.description,
             rating: p.rating !== undefined ? p.rating : 4.9,
             reviewCount: p.reviewCount !== undefined ? p.reviewCount : 0,
-            isFreshDaily: p.isFreshDaily !== undefined ? p.isFreshDaily : false,
-            isOrganicCertified: p.isOrganicCertified !== undefined ? p.isOrganicCertified : false,
+            isBundle: p.isBundle !== undefined ? p.isBundle : (p.isFreshDaily !== undefined ? p.isFreshDaily : false),
+            isLimitedStock: p.isLimitedStock !== undefined ? p.isLimitedStock : (p.isOrganicCertified !== undefined ? p.isOrganicCertified : false),
             stock: p.stock !== undefined ? p.stock : 50,
           }));
           setStoreProducts(mapped);
@@ -271,10 +271,16 @@ export const ProductDetailModal: React.FC = () => {
 
             {/* Dynamic Badges Overlay (Top Left & Top Right) */}
             <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start">
-              {activeProduct.isOrganicCertified && (
+              {activeProduct.isLimitedStock && (
                 <div className="bg-[#063104]/90 backdrop-blur-md text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-md flex items-center gap-1">
                   <Sparkles className="w-3 h-3 text-emerald-400" />
-                  <span>100% Organik Segar</span>
+                  <span>Stok Terbatas</span>
+                </div>
+              )}
+              {activeProduct.isBundle && (
+                <div className="bg-amber-600/90 backdrop-blur-md text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-md flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-amber-300" />
+                  <span>Paket Hemat</span>
                 </div>
               )}
               {activeProduct.discountTag && (
@@ -412,16 +418,16 @@ export const ProductDetailModal: React.FC = () => {
             <div className="flex items-center gap-2 flex-wrap text-[11px] font-semibold text-gray-600 pt-1">
               <span className="bg-emerald-50 text-[#063104] border border-emerald-200/80 px-2.5 py-1 rounded-lg flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-[#063104]" />
-                Stok Tersedia ({activeProduct.stock ?? 50} pak)
+                Stok Tersedia ({activeProduct.stock ?? 50} unit)
               </span>
-              {activeProduct.isOrganicCertified && (
+              {activeProduct.isLimitedStock && (
                 <span className="bg-blue-50 text-blue-900 border border-blue-200/80 px-2.5 py-1 rounded-lg">
-                  Bebas Pestisida
+                  Stok Terbatas
                 </span>
               )}
-              {activeProduct.isFreshDaily && (
+              {activeProduct.isBundle && (
                 <span className="bg-amber-50 text-amber-900 border border-amber-200/80 px-2.5 py-1 rounded-lg">
-                  Petik Hari Ini
+                  Paket Hemat
                 </span>
               )}
             </div>

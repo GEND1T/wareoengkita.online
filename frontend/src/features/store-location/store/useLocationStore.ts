@@ -157,7 +157,7 @@ export const useLocationStore = create<LocationState>()(
       },
     }),
     {
-      name: 'organic-ecommerce-location',
+      name: 'waroengkita-location',
       storage: createJSONStorage(() => sessionStorage),
     }
   )

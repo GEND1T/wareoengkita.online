@@ -126,7 +126,7 @@ export const createPayment = async (req: AuthRequest, res: Response) => {
         merchantOrderId,
         paymentAmount: Math.round(paymentAmount),
         paymentMethod,
-        productDetails: (productDetails || 'Pembayaran OrganikStore').substring(0, 255),
+        productDetails: (productDetails || 'Pembayaran WaroengKita').substring(0, 255),
         email: customerEmail || 'customer@waroengkita.online',
         phoneNumber: customerPhone || '081234567890',
         customerVaName: (customerName || 'Pembeli').substring(0, 20),

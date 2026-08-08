@@ -12,7 +12,7 @@ export interface AuthRequest extends Request {
   user?: AuthenticatedUser;
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'organikstore_super_secret_jwt_key_2026';
+const JWT_SECRET = process.env.JWT_SECRET || 'waroengkita_super_secret_jwt_key_2026';
 
 export const authenticateToken = (
   req: AuthRequest,

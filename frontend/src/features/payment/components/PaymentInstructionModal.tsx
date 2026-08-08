@@ -152,7 +152,7 @@ export const PaymentInstructionModal: React.FC<PaymentInstructionModalProps> = (
               {/* QR Canvas Container */}
               <div className="w-48 h-48 mx-auto bg-white p-3 border-2 border-gray-900 rounded-2xl shadow-sm flex flex-col items-center justify-center relative">
                 <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=ORGANIKSTORE-${orderNo}-${totalAmount}`}
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=WAROENGKITA-${orderNo}-${totalAmount}`}
                   alt="QRIS Code Pembayaran"
                   className="w-full h-full object-contain"
                 />
@@ -236,7 +236,7 @@ export const PaymentInstructionModal: React.FC<PaymentInstructionModalProps> = (
                   <li>Buka aplikasi Mobile Banking pilihan Anda (BCA mobile, Livin by Mandiri, GoPay, dll).</li>
                   <li>Pilih menu <strong>Transfer ➔ Virtual Account / QRIS</strong>.</li>
                   <li>Masukkan nomor Virtual Account <strong className="text-gray-900">{vaNumber}</strong> atau scan QRIS.</li>
-                  <li>Periksa detail nama akun <strong>OrganikStore</strong> dan nominal Rp {totalAmount.toLocaleString('id-ID')}.</li>
+                  <li>Periksa detail nama akun <strong>WaroengKita</strong> dan nominal Rp {totalAmount.toLocaleString('id-ID')}.</li>
                   <li>Masukkan PIN M-Banking Anda dan konfirmasi pembayaran.</li>
                 </>
               )}

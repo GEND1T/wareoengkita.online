@@ -1060,7 +1060,7 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ onOpenSupport }) =
           orderNo={trackingOrder.orderNo}
           orderDate={trackingOrder.orderDate || trackingOrder.date}
           orderTime={trackingOrder.orderTime}
-          courierName={trackingOrder.shippingCourier || 'OrganikStore Instant Courier'}
+          courierName={trackingOrder.shippingCourier || 'WaroengKita Instant Courier'}
           currentStatus={trackingOrder.rawStatus || trackingOrder.status}
           driverName={trackingOrder.driverName}
           driverPhone={trackingOrder.driverPhone}

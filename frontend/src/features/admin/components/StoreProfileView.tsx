@@ -207,7 +207,7 @@ export const StoreProfileView: React.FC = () => {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Toko Organik Market Utama"
+                placeholder="e.g. WaroengKita Market Utama"
                 className="w-full bg-gray-50 text-sm rounded-xl px-3.5 py-2.5 border border-gray-200 focus:outline-none focus:border-[#063104] focus:bg-white font-bold text-gray-900"
               />
             </div>
@@ -239,7 +239,7 @@ export const StoreProfileView: React.FC = () => {
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Penjelasan singkat mengenai keunggulan toko organik Anda..."
+                placeholder="Penjelasan singkat mengenai keunggulan dan produk toko Anda..."
                 className="w-full bg-gray-50 text-sm rounded-xl px-3.5 py-2 border border-gray-200 focus:outline-none focus:border-[#063104] focus:bg-white leading-relaxed"
               />
             </div>

@@ -52,7 +52,7 @@ export const exportOrdersCsv = async (req: Request, res: Response) => {
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename="Laporan_Penjualan_OrganikStore_${new Date().toISOString().split('T')[0]}.csv"`
+      `attachment; filename="Laporan_Penjualan_WaroengKita_${new Date().toISOString().split('T')[0]}.csv"`
     );
     return res.send(csvString);
   } catch (error: any) {

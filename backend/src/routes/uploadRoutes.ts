@@ -31,7 +31,7 @@ router.post('/', upload.single('image'), async (req: Request, res: Response) => 
       });
 
       const uploadOptions: any = {
-        folder: 'organikstore_assets',
+        folder: 'waroengkita_assets',
         resource_type: 'auto',
       };
 

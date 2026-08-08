@@ -31,7 +31,7 @@ export const Header: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari produk organik..."
+            placeholder="Cari produk..."
             className="w-full bg-white text-gray-800 text-sm md:text-base rounded-full py-2.5 pl-5 pr-11 shadow-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#063104]/30 focus:border-[#063104] transition-all placeholder:text-gray-400"
           />
           <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-700 hover:text-[#063104] transition-colors pointer-events-none">
@@ -51,7 +51,7 @@ export const Header: React.FC = () => {
           >
             <Store className="w-6 h-6 stroke-[1.8] text-gray-800 group-hover:text-forest-green" />
             <span className="hidden md:inline-block text-xs font-bold text-[#063104] max-w-[110px] truncate">
-              {(activeStore?.name || 'Cabang Toko').replace('OrganikStore ', '')}
+              {(activeStore?.name || 'Cabang Toko').replace('WaroengKita ', '').replace('OrganikStore ', '')}
             </span>
           </button>
 

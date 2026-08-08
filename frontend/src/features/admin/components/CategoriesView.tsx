@@ -49,7 +49,7 @@ export const CategoriesView: React.FC = () => {
         <div className="hidden md:block">
           <h1 className="text-2xl font-black text-gray-900">Manajemen Kategori Produk</h1>
           <p className="text-xs text-gray-500">
-            Atur chip filter kategori sayur, buah, daging, bumbu, dan kelompok produk segar lainnya.
+            Atur chip filter dan kelompok kategori produk pada katalog marketplace.
           </p>
         </div>
 

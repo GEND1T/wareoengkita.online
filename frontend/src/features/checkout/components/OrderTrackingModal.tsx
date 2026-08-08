@@ -32,20 +32,20 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
   orderNo,
   orderDate,
   orderTime = '10:00 WIB',
-  courierName = 'OrganikStore Instant Delivery',
+  courierName = 'WaroengKita Instant Delivery',
   currentStatus,
   driverName,
   driverPhone,
   driverPlate,
   trackingNumber,
   biteshipTrackingUrl,
-  storeName = 'OrganikStore',
+  storeName = 'WaroengKita',
   shippingAddress,
 }) => {
   if (!open) return null;
 
   const resi = trackingNumber || `TRK-${orderNo}`;
-  const displayDriverName = driverName || (['dikemas', 'processing'].includes(currentStatus) ? `Tim QC & Packing (${storeName})` : 'Kurir OrganikStore');
+  const displayDriverName = driverName || (['dikemas', 'processing'].includes(currentStatus) ? `Tim QC & Packing (${storeName})` : 'Kurir WaroengKita');
   const displayPlate = driverPlate ? `• Plat: ${driverPlate}` : '';
 
   // Timeline steps definitions
@@ -60,7 +60,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
     {
       id: 'dikemas',
       title: 'Sedang Dikemas Toko',
-      desc: `Tim QC ${storeName} memilah sayuran & buah organik paling segar.`,
+      desc: `Tim QC ${storeName} memeriksa & mengemas barang pesanan Anda.`,
       time: orderDate ? 'Diproses' : '08:25 WIB',
       completed: currentStatus !== 'belum_bayar' && currentStatus !== 'new',
     },
@@ -87,7 +87,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
     {
       id: 'selesai',
       title: 'Sampai di Tujuan (Selesai)',
-      desc: 'Paket berhasil diterima dengan kondisi segar.',
+      desc: 'Paket berhasil diterima dengan kondisi baik.',
       time: currentStatus === 'selesai' || currentStatus === 'completed' ? 'Selesai' : 'Estimasi',
       completed: currentStatus === 'selesai' || currentStatus === 'completed',
       current: currentStatus === 'selesai' || currentStatus === 'completed',

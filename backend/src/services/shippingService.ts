@@ -89,7 +89,7 @@ export async function generateCodOtp(orderId: string, phone: string): Promise<st
     `Kode OTP Anda: *${otpCode}*\n\n` +
     `Kode ini berlaku selama 10 menit.\n` +
     `Jangan bagikan kode ini kepada siapapun.\n\n` +
-    `— OrganikStore`;
+    `— WaroengKita`;
 
   try {
     await sendWahaNotification({ phone, message });
@@ -191,7 +191,7 @@ export async function sendShippingNotification(
         `📍 Lokasi: ${data.locationName}\n` +
         `📋 Kode Pengambilan: *${data.pickupCode}*\n\n` +
         `Tunjukkan kode ini saat mengambil pesanan.\n` +
-        `— OrganikStore`;
+        `— WaroengKita`;
       break;
 
     case 'scheduled_reminder':
@@ -201,7 +201,7 @@ export async function sendShippingNotification(
         `📅 ${data.scheduledDate}\n` +
         `🕐 ${data.scheduledSlot}\n\n` +
         `Pastikan ada yang menerima di alamat pengiriman.\n` +
-        `— OrganikStore`;
+        `— WaroengKita`;
       break;
 
     case 'delivering':
@@ -211,15 +211,15 @@ export async function sendShippingNotification(
         (data.driverName ? `👤 Kurir: ${data.driverName}\n` : '') +
         (data.driverPhone ? `📞 ${data.driverPhone}\n` : '') +
         (data.trackingUrl ? `📍 Lacak: ${data.trackingUrl}\n` : '') +
-        `\n— OrganikStore`;
+        `\n— WaroengKita`;
       break;
 
     case 'delivered':
       message =
         `🎉 *Pesanan Telah Diterima!*\n\n` +
         `Pesanan #${data.orderNo} telah selesai.\n` +
-        `Terima kasih telah berbelanja di OrganikStore! 🌿\n` +
-        `— OrganikStore`;
+        `Terima kasih telah berbelanja di WaroengKita! 🛒\n` +
+        `— WaroengKita`;
       break;
   }
 

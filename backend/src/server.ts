@@ -83,7 +83,7 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
-    app: 'OrganikStore Multi-Store E-Commerce REST API',
+    app: 'WaroengKita Multi-Store E-Commerce REST API',
     timestamp: new Date().toISOString(),
   });
 });
@@ -115,7 +115,7 @@ app.use(errorHandler);
 // Start Server
 app.listen(PORT, () => {
   console.log(`=================================================`);
-  console.log(`🚀 OrganikStore API Server is running on port ${PORT}`);
+  console.log(`🚀 WaroengKita API Server is running on port ${PORT}`);
   console.log(`📡 Base URL: http://localhost:${PORT}/api`);
   console.log(`=================================================`);
 });

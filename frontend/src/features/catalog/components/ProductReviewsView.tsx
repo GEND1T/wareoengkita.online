@@ -19,7 +19,7 @@ const MOCK_REVIEWS: ProductReviewItem[] = [
     userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
     rating: 5,
     date: '28 Juli 2026',
-    comment: 'Sayuran sangat segar sekali! Daun bayam hijau pekat, bersih tanpa tanah, dan pengiriman super cepat sampai dalam 45 menit!',
+    comment: 'Barang sangat bagus dan sesuai deskripsi! Kualitas terjamin dan pengiriman super cepat sampai dalam 45 menit!',
     photoUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=400&q=80',
     helpfulCount: 14,
   },
@@ -29,7 +29,7 @@ const MOCK_REVIEWS: ProductReviewItem[] = [
     userAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80',
     rating: 5,
     date: '25 Juli 2026',
-    comment: 'Buah rasanya manis alaminya dapet banget, krispi dan ukurannya besar. Langsung langganan beli di OrganikStore!',
+    comment: 'Produk asli berkualitas tinggi, packing sangat rapi. Langsung langganan beli di WaroengKita!',
     helpfulCount: 8,
   },
   {
@@ -38,7 +38,7 @@ const MOCK_REVIEWS: ProductReviewItem[] = [
     userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80',
     rating: 4,
     date: '20 Juli 2026',
-    comment: 'Packaging rapi dan aman, produk segar ramah lingkungan.',
+    comment: 'Packaging rapi dan aman, pelayanan penjual sangat memuaskan.',
     helpfulCount: 3,
   },
 ];
@@ -110,7 +110,7 @@ export const ProductReviewsView: React.FC<ProductReviewsViewProps> = ({ productI
           <div className="border-l border-gray-200 pl-3 text-xs text-gray-600 space-y-0.5">
             <div className="flex items-center gap-1 font-bold text-gray-800 text-[11px]">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 stroke-[3]" />
-              <span>100% Produk Segar Terverifikasi</span>
+              <span>100% Produk Terverifikasi</span>
             </div>
             <p className="text-[10px] text-gray-500">
               Ulasan asli dari pembeli yang telah menerima barang di rumah.
@@ -136,7 +136,7 @@ export const ProductReviewsView: React.FC<ProductReviewsViewProps> = ({ productI
         >
           <div className="flex items-center gap-1.5 text-[#063104] font-extrabold">
             <Sparkles className="w-4 h-4" />
-            <span>Tulis Ulasan Kesegaran Produk</span>
+            <span>Tulis Ulasan Produk</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -172,7 +172,7 @@ export const ProductReviewsView: React.FC<ProductReviewsViewProps> = ({ productI
             required
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            placeholder="Tulis ulasan Anda mengenai kualitas & kesegaran barang..."
+            placeholder="Tulis ulasan Anda mengenai kualitas barang..."
             className="w-full bg-white text-xs rounded-xl px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#063104]"
           />
 

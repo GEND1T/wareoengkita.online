@@ -425,7 +425,7 @@ export const UsersManagementView: React.FC = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="ahmad@organikstore.id"
+                  placeholder="ahmad@waroengkita.id"
                   className="w-full bg-white text-sm rounded-xl px-3.5 py-2.5 border border-gray-200 focus:outline-none focus:border-[#063104]"
                 />
               </div>

@@ -59,10 +59,10 @@ export async function sendWhatsAppAccessLink(
   const formattedPhone = formatWhatsAppNumber(phone);
   
   const message = `Halo ${name}! 👋\n\n` +
-    `Berikut adalah Link Akses resmi untuk masuk ke akun OrganikStore Anda:\n\n` +
+    `Berikut adalah Link Akses resmi untuk masuk ke akun WaroengKita Anda:\n\n` +
     `🔗 ${magicLinkUrl}\n\n` +
     `⚠️ *Penting:* Link ini hanya berlaku selama 15 menit dan hanya dapat digunakan 1 kali. Jangan bagikan link ini kepada siapapun demi keamanan akun Anda.\n\n` +
-    `Terima kasih telah berbelanja di OrganikStore! 🌿`;
+    `Terima kasih telah berbelanja di WaroengKita! 🛒`;
 
   // Fallback wa.me URL for browser testing
   const waMeUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;

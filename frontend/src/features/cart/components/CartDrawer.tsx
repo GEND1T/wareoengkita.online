@@ -29,7 +29,7 @@ export const CartDrawer: React.FC = () => {
 
   // Helper to get store name by storeId
   const getStoreName = (storeId?: string) => {
-    if (!storeId) return 'OrganikStore Utama';
+    if (!storeId) return 'WaroengKita Utama';
     const found = stores.find((s) => s.id === storeId);
     return found ? found.name : `Toko Cabang (${storeId})`;
   };
@@ -143,7 +143,7 @@ export const CartDrawer: React.FC = () => {
           </div>
           <h3 className="text-base font-bold text-gray-800">Keranjang Masih Kosong</h3>
           <p className="text-xs text-gray-500 max-w-xs leading-relaxed">
-            Jelajahi pilihan produk segar organik favorit Anda dan tambahkan ke keranjang.
+            Jelajahi berbagai pilihan produk favorit Anda dan tambahkan ke keranjang.
           </p>
         </div>
       ) : (

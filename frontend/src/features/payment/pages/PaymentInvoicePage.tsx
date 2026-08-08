@@ -86,7 +86,7 @@ export const PaymentInvoicePage: React.FC = () => {
   };
 
   const handleShareWa = () => {
-    const text = `Halo, berikut link tagihan pembayaran OrganikStore sebesar ${formattedTotal}: ${window.location.href}`;
+    const text = `Halo, berikut link tagihan pembayaran WaroengKita sebesar ${formattedTotal}: ${window.location.href}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -97,10 +97,10 @@ export const PaymentInvoicePage: React.FC = () => {
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-[#063104] text-white flex items-center justify-center font-black text-xl shadow-md">
-              🌱
+              🛒
             </div>
             <div>
-              <h1 className="text-base font-black text-slate-900">{invoice.store?.name || 'OrganikStore Indonesia'}</h1>
+              <h1 className="text-base font-black text-slate-900">{invoice.store?.name || 'WaroengKita Indonesia'}</h1>
               <p className="text-xs text-slate-500">{invoice.store?.address || 'Invoice Pembayaran Resmi'}</p>
             </div>
           </div>
@@ -175,7 +175,7 @@ export const PaymentInvoicePage: React.FC = () => {
                 </div>
               ) : (
                 <div className="p-4 bg-slate-50 rounded-2xl text-xs text-slate-600 font-medium">
-                  {invoice.productDetails || 'Pembayaran Produk OrganikStore'}
+                  {invoice.productDetails || 'Pembayaran Produk WaroengKita'}
                 </div>
               )}
             </div>

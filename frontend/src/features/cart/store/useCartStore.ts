@@ -95,7 +95,7 @@ export const useCartStore = create<CartState>()(
       },
     }),
     {
-      name: 'organic-ecommerce-cart',
+      name: 'waroengkita-cart',
       storage: createJSONStorage(() => sessionStorage),
     }
   )

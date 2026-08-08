@@ -332,9 +332,9 @@ export const bookCourier = async (req: AuthRequest, res: Response) => {
 
     if (biteshipItems.length === 0) {
       biteshipItems.push({
-        name: 'Paket Belanja Organik',
-        description: 'Kebutuhan Sehari-hari OrganikStore',
-        category: 'groceries',
+        name: 'Paket Belanja',
+        description: 'Kebutuhan Sehari-hari WaroengKita',
+        category: 'general',
         value: 50000,
         quantity: 1,
         height: 10,
@@ -357,11 +357,11 @@ export const bookCourier = async (req: AuthRequest, res: Response) => {
     const destLon = originLon - 0.02;
 
     const result = await createCourierOrder({
-      shipper_contact_name: order.store?.name || 'OrganikStore Admin',
+      shipper_contact_name: order.store?.name || 'WaroengKita Admin',
       shipper_contact_phone: order.store?.phone || '088888888888',
       shipper_contact_email: 'biteship@test.com',
-      shipper_organization: 'OrganikStore Indonesia',
-      origin_contact_name: order.store?.name || 'Admin Toko Organik',
+      shipper_organization: 'WaroengKita Indonesia',
+      origin_contact_name: order.store?.name || 'Admin Toko',
       origin_contact_phone: order.store?.phone || '088888888888',
       origin_address: order.store?.address || 'Plaza Senayan, Jalan Asia Afrika No. 8, Jakarta Selatan',
       origin_note: 'Deket pintu utama toko',

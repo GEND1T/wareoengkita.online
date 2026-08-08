@@ -107,7 +107,7 @@ export const PaymentPage: React.FC<PaymentPageProps> = ({
       customerName: orderData.customerName,
       customerEmail: orderData.customerEmail,
       customerPhone: orderData.customerPhone,
-      productDetails: orderData.productDetails || 'Pembayaran OrganikStore',
+      productDetails: orderData.productDetails || 'Pembayaran WaroengKita',
       storeId: orderData.storeId,
       items: orderData.items,
       shippingAddress: orderData.shippingAddress,

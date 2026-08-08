@@ -226,7 +226,7 @@ export const useUserStore = create<UserState>()(
                 orderTime: o.orderTime,
                 status: statusMapped,
                 rawStatus: o.orderStatus,
-                shippingCourier: o.courierCompany ? o.courierCompany.toUpperCase() : (o.driverName ? 'Kurir Instant Toko' : 'OrganikStore Instant Delivery'),
+                shippingCourier: o.courierCompany ? o.courierCompany.toUpperCase() : (o.driverName ? 'Kurir Instant Toko' : 'WaroengKita Instant Delivery'),
                 paymentMethod: o.paymentMethod || 'QRIS',
                 totalAmount: o.totalPrice,
                 storeName: o.store?.name,

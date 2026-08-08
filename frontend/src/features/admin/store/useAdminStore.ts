@@ -96,8 +96,8 @@ interface AdminState {
 
 
 const DEFAULT_STORE_PROFILE: StoreProfile = {
-  name: 'OrganikStore Market Utama',
-  description: 'Pusat belanja produk sayuran, buah, daging, dan bahan pangan organik segar berkualitas tinggi.',
+  name: 'WaroengKita Market Utama',
+  description: 'Pusat belanja berbagai produk pilihan berkualitas tinggi.',
   phone: '0812-3456-7890',
   address: 'Jl. Senopati No. 45, Kebayoran Baru, Jakarta Selatan',
   latitude: -6.2250,
@@ -172,7 +172,7 @@ export const useAdminStore = create<AdminState>()(
                 phone: o.customerPhone,
                 orderTime: o.orderTime || '10:00 WIB',
                 orderDate: o.orderDate || '2026-07-31',
-                itemsSummary: itemsParsed.map((i: any) => i.productName || i.name).join(', ') || 'Item Organik',
+                itemsSummary: itemsParsed.map((i: any) => i.productName || i.name).join(', ') || 'Item Pesanan',
                 items: itemsParsed,
                 totalPrice: o.totalPrice,
                 status: o.orderStatus,
@@ -213,8 +213,8 @@ export const useAdminStore = create<AdminState>()(
             const mappedProds: AdminProduct[] = prodData.data.map((p: any) => ({
               ...p,
               category: typeof p.category === 'object' && p.category !== null
-                ? p.category.name || p.category.slug || 'Sayur Segar'
-                : (p.category || p.categorySlug || 'Sayur Segar'),
+                ? p.category.name || p.category.slug || 'Produk Umum'
+                : (p.category || p.categorySlug || 'Produk Umum'),
               categorySlug: p.categorySlug || (typeof p.category === 'object' ? p.category.slug : p.category),
               categoryId: p.categoryId || (typeof p.category === 'object' ? p.category.id : undefined),
               subtitle: p.subtitle || p.description || p.name,
@@ -358,8 +358,8 @@ export const useAdminStore = create<AdminState>()(
             imagesJson: newProdData.imagesJson ?? null,
             description: newProdData.description || newProdData.longDescription || newProdData.subtitle || newProdData.name,
             isActive: newProdData.isActive !== undefined ? newProdData.isActive : true,
-            isFreshDaily: newProdData.isFreshDaily ?? false,
-            isOrganicCertified: newProdData.isOrganicCertified ?? false,
+            isBundle: newProdData.isBundle ?? false,
+            isLimitedStock: newProdData.isLimitedStock ?? false,
             rating: newProdData.rating ?? 0,
             reviewCount: newProdData.reviewCount ?? 0,
           };
@@ -374,7 +374,7 @@ export const useAdminStore = create<AdminState>()(
             const addedProduct: AdminProduct = {
               ...data.data,
               subtitle: data.data.subtitle || data.data.description,
-              category: data.data.categorySlug || (typeof data.data.category === 'object' ? data.data.category?.name : data.data.category) || 'Sayur Segar',
+              category: data.data.categorySlug || (typeof data.data.category === 'object' ? data.data.category?.name : data.data.category) || 'Produk Umum',
               storeId: data.data.storeId,
               isActive: data.data.isActive !== undefined ? data.data.isActive : true,
               longDescription: data.data.description,
@@ -395,8 +395,8 @@ export const useAdminStore = create<AdminState>()(
           subtitle: newProdData.subtitle || newProdData.name,
           rating: 0,
           reviewCount: 0,
-          isFreshDaily: false,
-          isOrganicCertified: false,
+          isBundle: newProdData.isBundle ?? false,
+          isLimitedStock: newProdData.isLimitedStock ?? false,
           isActive: true,
         };
         set((state) => ({
@@ -487,7 +487,7 @@ export const useAdminStore = create<AdminState>()(
           phone: '081299998888',
           orderTime: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB',
           orderDate: new Date().toISOString().split('T')[0],
-          itemsSummary: 'Produk Organik Segar',
+          itemsSummary: 'Produk Pilihan',
           items: [],
           totalPrice: 35000,
           status: 'new',

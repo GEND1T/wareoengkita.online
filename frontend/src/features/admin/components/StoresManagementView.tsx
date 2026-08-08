@@ -110,7 +110,7 @@ export const StoresManagementView: React.FC = () => {
           name: ns.name,
           city: ns.city,
           address: ns.address,
-          description: ns.description || 'Cabang resmi OrganikStore.',
+          description: ns.description || 'Cabang resmi WaroengKita.',
           phone: ns.phone,
           image: ns.coverImage,
           openingHours: ns.operatingHours,
@@ -158,7 +158,7 @@ export const StoresManagementView: React.FC = () => {
     setName('');
     setCity('Jakarta Selatan');
     setAddress('');
-    setDescription('Pusat belanja produk sayuran, buah, dan bahan pangan organik segar.');
+    setDescription('Pusat belanja berbagai produk pilihan berkualitas tinggi.');
     setPhone('0812-3456-7890');
     setImage('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80');
     setOpeningHours('Buka • 08.00 - 21.00 WIB');
@@ -582,7 +582,7 @@ export const StoresManagementView: React.FC = () => {
                       required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="e.g. OrganikStore BSD City"
+                      placeholder="e.g. WaroengKita BSD City"
                       className="w-full bg-gray-50 text-sm rounded-xl px-3.5 py-2.5 border border-gray-200 focus:outline-none focus:border-[#063104] font-extrabold text-gray-900"
                     />
                   </div>
