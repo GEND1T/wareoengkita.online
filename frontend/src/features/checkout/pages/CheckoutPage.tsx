@@ -566,7 +566,7 @@ export const CheckoutPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 text-[#063104] font-extrabold text-xs uppercase tracking-wider">
                 <MapPin className="w-4 h-4 fill-[#063104]/20" />
-                <span>Alamat Pengiriman Saat Ini</span>
+                <span>Alamat Pengiriman</span>
               </div>
               <button
                 type="button"
