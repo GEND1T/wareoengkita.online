@@ -27,11 +27,16 @@ export const CartDrawer: React.FC = () => {
   const { isLoggedIn, openAuthModal } = useUserStore();
   const { showToast } = useLocationStore();
 
-  // Helper to get store name by storeId
+  // Helper to get formatted store name (max 15 chars)
   const getStoreName = (storeId?: string) => {
     if (!storeId) return 'WaroengKita Utama';
     const found = stores.find((s) => s.id === storeId);
     return found ? found.name : `Toko Cabang (${storeId})`;
+  };
+
+  const getFormattedStoreName = (storeId?: string) => {
+    const raw = getStoreName(storeId).replace('WaroengKita ', '').replace('OrganikStore ', '');
+    return raw.length > 15 ? `${raw.substring(0, 15)}...` : raw;
   };
 
   // Group items by storeId
@@ -48,6 +53,17 @@ export const CartDrawer: React.FC = () => {
   const [activeCheckoutStoreId, setActiveCheckoutStoreId] = useState<string>(
     selectedStoreId || (storeKeys[0] || 'store-1')
   );
+
+  // Sync activeCheckoutStoreId to currently visited store (selectedStoreId) when CartDrawer opens
+  useEffect(() => {
+    if (isCartDrawerOpen) {
+      if (selectedStoreId && groupedByStore[selectedStoreId]) {
+        setActiveCheckoutStoreId(selectedStoreId);
+      } else if (storeKeys.length > 0 && (!activeCheckoutStoreId || !groupedByStore[activeCheckoutStoreId])) {
+        setActiveCheckoutStoreId(storeKeys[0]);
+      }
+    }
+  }, [isCartDrawerOpen, selectedStoreId, storeKeys, activeCheckoutStoreId, groupedByStore]);
 
   useEffect(() => {
     if (storeKeys.length > 0 && !groupedByStore[activeCheckoutStoreId]) {
@@ -155,7 +171,7 @@ export const CartDrawer: React.FC = () => {
               <div className="min-w-0">
                 <span className="font-bold block text-rose-900">Perhatian Stok & Produk</span>
                 <span className="text-[11px] leading-relaxed text-rose-700 block mt-0.5">
-                  Terdapat produk pada {getStoreName(activeCheckoutStoreId)} yang stoknya habis, melebihi stok, atau dinonaktifkan. Hapus atau sesuaikan jumlah produk untuk checkout.
+                  Terdapat produk pada {getFormattedStoreName(activeCheckoutStoreId)} yang stoknya habis, melebihi stok, atau dinonaktifkan. Hapus atau sesuaikan jumlah produk untuk checkout.
                 </span>
               </div>
             </div>
@@ -187,7 +203,7 @@ export const CartDrawer: React.FC = () => {
                       : 'bg-gray-100/70 border-gray-200 text-gray-700 hover:bg-gray-100'
                       }`}
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
                       <input
                         type="radio"
                         name="activeStoreChoice"
@@ -196,11 +212,11 @@ export const CartDrawer: React.FC = () => {
                           setActiveCheckoutStoreId(storeId);
                           setSelectedStoreId(storeId);
                         }}
-                        className="accent-[#063104] w-4 h-4 shrink-0"
+                        className="accent-[#063104] w-4 h-4 shrink-0 cursor-pointer"
                       />
                       <Store className="w-4 h-4 text-[#063104] shrink-0" />
                       <span className="font-extrabold text-xs text-gray-900 truncate">
-                        {getStoreName(storeId)}
+                        {getFormattedStoreName(storeId)}
                       </span>
                     </div>
 
@@ -324,8 +340,8 @@ export const CartDrawer: React.FC = () => {
             <div className="flex items-center justify-between text-base">
               <div>
                 <span className="font-medium text-gray-600 block text-xs">Total Belanja Siap Checkout</span>
-                <span className="text-[11px] font-bold text-emerald-800 truncate block">
-                  {getStoreName(activeCheckoutStoreId)}
+                <span className="text-xs font-extrabold text-[#063104] truncate block">
+                  {getFormattedStoreName(activeCheckoutStoreId)}
                 </span>
               </div>
               <span className="font-extrabold text-[#063104] text-lg">
@@ -337,7 +353,7 @@ export const CartDrawer: React.FC = () => {
               type="button"
               onClick={handleCheckoutClick}
               disabled={hasInvalidItems}
-              className={`w-full font-bold py-3.5 rounded-2xl shadow-md active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-sm focus:outline-none ${hasInvalidItems
+              className={`w-full font-bold py-3.5 rounded-2xl shadow-md active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-sm focus:outline-none cursor-pointer ${hasInvalidItems
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none'
                 : 'bg-[#063104] hover:bg-[#084205] text-white'
                 }`}
@@ -349,8 +365,8 @@ export const CartDrawer: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <span>Checkout ({getStoreName(activeCheckoutStoreId)})</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <span>Lanjut ke Checkout</span>
+                  <ArrowRight className="w-4 h-4 stroke-[2.5]" />
                 </>
               )}
             </button>
