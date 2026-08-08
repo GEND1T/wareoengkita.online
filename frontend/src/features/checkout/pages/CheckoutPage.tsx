@@ -296,9 +296,9 @@ export const CheckoutPage: React.FC = () => {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos((uLat * Math.PI) / 180) *
-        Math.cos((plLat * Math.PI) / 180) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      Math.cos((plLat * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const dist = R * c;
     return parseFloat(dist.toFixed(1));
@@ -306,7 +306,13 @@ export const CheckoutPage: React.FC = () => {
 
   const calculateDynamicShippingFee = (option: any): number => {
     if (!option) return 0;
-    if (option.type === 'pickup') return option.pickupFee || 0;
+    if (option.type === 'pickup') {
+      const selectedPl = pickupLocations.find((p: any) => p.id === selectedPickupLocationId);
+      if (selectedPl && selectedPl.pickupFee !== undefined) {
+        return selectedPl.pickupFee;
+      }
+      return option.pickupFee || 0;
+    }
 
     // Check if user selected a specific Biteship courier rate
     if (selectedBiteshipServiceCode && option.type === 'instant' && option.biteshipRates?.length > 0) {
@@ -613,7 +619,7 @@ export const CheckoutPage: React.FC = () => {
           <div className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs space-y-3">
             <div className="flex items-center justify-between pb-1 border-b border-gray-100">
               <div className="flex items-center gap-1.5 text-[#063104] font-extrabold text-xs uppercase tracking-wider">
-                <ShoppingBag className="w-4 h-4" />
+                <ShoppingBag className="w-4 h-4 fill-[#063104]/20" />
                 <span>Daftar Belanjaan ({checkoutItems.length} Barang)</span>
               </div>
             </div>
@@ -652,7 +658,7 @@ export const CheckoutPage: React.FC = () => {
           <div className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs space-y-2.5">
             <div className="flex items-center justify-between pb-1 border-b border-gray-100">
               <div className="flex items-center gap-1.5 text-[#063104] font-extrabold text-xs uppercase tracking-wider">
-                <Bike className="w-4 h-4" />
+                <Bike className="w-4 h-4 fill-[#063104]/20" />
                 <span>Jarak Pengiriman</span>
               </div>
 
@@ -663,7 +669,7 @@ export const CheckoutPage: React.FC = () => {
               {/* Sisi Kiri: Icon Toko/Market */}
               <div className="flex flex-col items-center gap-1 min-w-[64px]">
                 <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center shadow-xs">
-                  <Store className="w-5 h-5 text-[#063104]" />
+                  <Store className="w-5 h-5 text-[#063104] fill-[#063104]/20" />
                 </div>
                 <span className="text-[10px] font-bold text-gray-800">Toko</span>
               </div>
@@ -671,7 +677,7 @@ export const CheckoutPage: React.FC = () => {
               {/* Di Tengah: Icon Kurir/Driver + Garis Penghubung + Jumlah Jarak */}
               <div className="flex-1 flex flex-col items-center px-1">
                 <div className="flex items-center gap-1.5 bg-[#063104] text-white text-[11px] font-extrabold px-3 py-1 rounded-full shadow-xs mb-1.5">
-                  <Bike className="w-3.5 h-3.5" />
+                  <Bike className="w-3.5 h-3.5 fill-[#063104]/20" />
                   <span>{deliveryDistance}</span>
                 </div>
                 <div className="w-full flex items-center gap-1">
@@ -684,7 +690,7 @@ export const CheckoutPage: React.FC = () => {
               {/* Sisi Kanan: Icon Pin/Lokasi */}
               <div className="flex flex-col items-center gap-1 min-w-[64px]">
                 <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center shadow-xs">
-                  <MapPin className="w-5 h-5 text-emerald-700" />
+                  <MapPin className="w-5 h-5 text-emerald-700 fill-[#063104]/20" />
                 </div>
                 <span className="text-[10px] font-bold text-gray-800 truncate max-w-[70px]">
                   {activeAddress ? activeAddress.label : 'Lokasi User'}
@@ -696,7 +702,7 @@ export const CheckoutPage: React.FC = () => {
           {/* SECTION 3: SHIPPING OPTIONS (Pilihan Pengiriman Pesanan) */}
           <div className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs space-y-3">
             <div className="flex items-center gap-1.5 text-[#063104] font-extrabold text-xs uppercase tracking-wider pb-1 border-b border-gray-100">
-              <Truck className="w-4 h-4" />
+              <Truck className="w-4 h-4 fill-[#063104]/20" />
               <span>Opsi Pengiriman Pesanan</span>
             </div>
 
@@ -721,7 +727,10 @@ export const CheckoutPage: React.FC = () => {
                   return (
                     <div key={option.id}>
                       {option.type === 'instant' ? (
-                        <div className="border border-emerald-200 rounded-xl overflow-hidden transition-all shadow-2xs">
+                        <div className={`border rounded-xl overflow-hidden transition-all duration-200 shadow-2xs ${isSelected
+                          ? 'border-[#063104] ring-2 ring-[#063104]/20 bg-emerald-50/40'
+                          : 'border-gray-200 bg-white hover:border-emerald-300'
+                          }`}>
                           {/* Header Category Accordion Button (Buka/Tutup) */}
                           <button
                             type="button"
@@ -729,47 +738,47 @@ export const CheckoutPage: React.FC = () => {
                               setSelectedShippingId(option.id);
                               setOpenShippingAccordion(openShippingAccordion === option.id ? null : option.id);
                             }}
-                            className={`w-full p-3 flex items-center justify-between text-left transition-colors cursor-pointer ${
-                              isSelected && openShippingAccordion === option.id
-                                ? 'bg-emerald-50/90 border-b border-emerald-200'
-                                : isSelected
-                                ? 'bg-emerald-50/60 hover:bg-emerald-50/80'
+                            className={`w-full p-3.5 flex items-center justify-between text-left transition-colors cursor-pointer ${isSelected && openShippingAccordion === option.id
+                              ? 'bg-emerald-50/90 border-b border-emerald-200'
+                              : isSelected
+                                ? 'bg-emerald-50/50 hover:bg-emerald-50/70'
                                 : 'bg-slate-50 hover:bg-slate-100'
-                            }`}
+                              }`}
                           >
-                            <div className="flex items-center gap-2.5">
-                              <Zap className="w-4 h-4 text-emerald-700 shrink-0 fill-emerald-500" />
-                              <div>
+                            <div className="flex items-center gap-3 min-w-0 pr-2">
+                              <div className="w-8 h-8 rounded-xl bg-emerald-100/90 flex items-center justify-center shrink-0">
+                                <Zap className="w-4.5 h-4.5 text-[#063104] fill-[#063104]/20" />
+                              </div>
+                              <div className="min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="font-bold text-gray-900 text-xs">{option.name}</span>
-                                  <span className="bg-emerald-100/80 text-[#063104] text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
-                                    <Zap className="w-3 h-3 text-[#063104]" />
-                                    <span>{typeInfo.label}</span>
+                                  <span className="font-extrabold text-gray-900 text-xs">
+                                    {option.name === 'Langsung kirim' ? 'Langsung Kirim (Instant)' : option.name}
+                                  </span>
+                                  <span className="bg-emerald-100/80 text-[#063104] text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+
+                                    <span>Instant</span>
                                   </span>
                                   {selectedBiteshipServiceCode ? (
-                                    <span className="bg-amber-100 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-300">
+                                    <span className="bg-[#063104] text-white text-[9px] font-black px-2 py-0.5 rounded-full tracking-wider">
                                       {option.biteshipRates?.find((b: any) => `${b.courierCode}-${b.serviceCode}` === selectedBiteshipServiceCode)?.courierName || 'Biteship'}
                                     </span>
                                   ) : (
-                                    <span className="bg-[#063104] text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                                      kurir toko
+                                    <span className="bg-[#063104] text-white text-[9px] font-black px-2 py-0.5 rounded-full tracking-wider">
+                                      Kurir Toko
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-[11px] text-gray-500 mt-0.5">
-                                  Klik untuk memilih Kurir Toko atau Kurir Instan Biteship
-                                </p>
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 shrink-0 ml-auto">
                               <span className={`font-extrabold text-xs shrink-0 ${fee === 0 ? 'text-emerald-600' : 'text-[#063104]'}`}>
                                 {fee === 0 ? 'GRATIS' : formatCurrency(fee)}
                               </span>
                               {openShippingAccordion === option.id ? (
-                                <ChevronUp className="w-4 h-4 text-emerald-700 shrink-0" />
+                                <ChevronUp className="w-4 h-4 text-[#063104] shrink-0 ml-1" />
                               ) : (
-                                <ChevronDown className="w-4 h-4 text-gray-500 shrink-0" />
+                                <ChevronDown className="w-4 h-4 text-gray-500 shrink-0 ml-1" />
                               )}
                             </div>
                           </button>
@@ -779,14 +788,14 @@ export const CheckoutPage: React.FC = () => {
                             <div className="p-3 bg-white space-y-2 border-t border-emerald-100">
                               <div className="flex items-center justify-between px-1 pb-1">
                                 <p className="text-[11px] font-extrabold text-[#063104] flex items-center gap-1.5">
-                                  <Zap className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
+                                  <Truck className="w-3.5 h-3.5 text-emerald-700 " />
                                   <span>Pilih Penyedia Kurir Instan:</span>
                                 </p>
                                 {isLoadingRates && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#063104]" />}
                               </div>
 
                               <div className="space-y-2">
-                                {/* 1. Internal Store Courier (FIRST) with 'kurir toko' badge */}
+                                {/* 1. Internal Store Courier (FIRST) */}
                                 {(() => {
                                   const isInternalSelected = isSelected && !selectedBiteshipServiceCode;
                                   const internalFeeVal = calculateDynamicShippingFee({ ...option, biteshipRates: [] });
@@ -797,29 +806,22 @@ export const CheckoutPage: React.FC = () => {
                                         setSelectedShippingId(option.id);
                                         setSelectedBiteshipServiceCode('');
                                       }}
-                                      className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer ${
-                                        isInternalSelected
-                                          ? 'bg-emerald-50/90 border-[#063104] ring-2 ring-[#063104] font-bold text-[#063104] shadow-xs'
-                                          : 'bg-white border-gray-200 hover:border-[#77a160] text-gray-800'
-                                      }`}
+                                      className={`w-full text-left p-3 rounded-xl border text-xs transition-all cursor-pointer ${isInternalSelected
+                                        ? 'bg-emerald-50/90 border-[#063104] ring-2 ring-[#063104] font-bold text-[#063104] shadow-xs'
+                                        : 'bg-white border-gray-200 hover:border-emerald-300 text-gray-800'
+                                        }`}
                                     >
                                       <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2 flex-wrap">
-                                          <span className="font-extrabold text-gray-900 text-xs">{option.name}</span>
-                                          <span className="bg-[#063104] text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                                            kurir toko
-                                          </span>
+                                          <span className="font-extrabold text-gray-900 text-xs">Kurir Toko (Lokal)</span>
                                           <span className="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded">
-                                            {option.estimated || '30-60 menit'}
+                                            {option.estimated || 'Hari ini (30-60m)'}
                                           </span>
                                         </div>
                                         <span className="font-extrabold text-xs text-[#063104]">
                                           {internalFeeVal === 0 ? 'GRATIS' : formatCurrency(internalFeeVal)}
                                         </span>
                                       </div>
-                                      <p className="text-[10px] text-gray-500 mt-1">
-                                        Pengiriman langsung oleh tim/kurir toko (lokal).
-                                      </p>
                                     </button>
                                   );
                                 })()}
@@ -837,19 +839,15 @@ export const CheckoutPage: React.FC = () => {
                                           setSelectedShippingId(option.id);
                                           setSelectedBiteshipServiceCode(codeKey);
                                         }}
-                                        className={`w-full text-left p-3 rounded-xl border text-xs transition-all cursor-pointer ${
-                                          isRateSelected
-                                            ? 'bg-emerald-50/90 border-[#063104] ring-2 ring-[#063104] font-bold text-[#063104] shadow-xs'
-                                            : 'bg-white border-gray-200 hover:border-emerald-300 text-gray-800'
-                                        }`}
+                                        className={`w-full text-left p-3 rounded-xl border text-xs transition-all cursor-pointer ${isRateSelected
+                                          ? 'bg-emerald-50/90 border-[#063104] ring-2 ring-[#063104] font-bold text-[#063104] shadow-xs'
+                                          : 'bg-white border-gray-200 hover:border-emerald-300 text-gray-800'
+                                          }`}
                                       >
                                         <div className="flex items-center justify-between">
                                           <div className="flex items-center gap-2 flex-wrap">
                                             <span className="font-extrabold text-gray-900 text-xs">
                                               {bRate.courierName} {bRate.serviceName}
-                                            </span>
-                                            <span className="bg-amber-100 text-amber-900 text-[9px] font-black px-2 py-0.5 rounded-full border border-amber-300 uppercase">
-                                              {bRate.courierCode}
                                             </span>
                                             <span className="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded">
                                               {bRate.duration}
@@ -859,11 +857,6 @@ export const CheckoutPage: React.FC = () => {
                                             {formatCurrency(bRate.price)}
                                           </span>
                                         </div>
-                                        {bRate.description && (
-                                          <p className="text-[10px] text-gray-500 mt-1">
-                                            {bRate.description}
-                                          </p>
-                                        )}
                                       </button>
                                     );
                                   })
@@ -873,7 +866,10 @@ export const CheckoutPage: React.FC = () => {
                           )}
                         </div>
                       ) : option.type === 'pickup' ? (
-                        <div className="border border-emerald-200/80 rounded-xl overflow-hidden transition-all shadow-2xs">
+                        <div className={`border rounded-xl overflow-hidden transition-all duration-200 shadow-2xs ${isSelected
+                          ? 'border-[#063104] ring-2 ring-[#063104]/20 bg-emerald-50/40'
+                          : 'border-gray-200 bg-white hover:border-emerald-300'
+                          }`}>
                           {/* Header Category Accordion Button (Buka/Tutup) */}
                           <button
                             type="button"
@@ -881,46 +877,49 @@ export const CheckoutPage: React.FC = () => {
                               setSelectedShippingId(option.id);
                               setOpenShippingAccordion(openShippingAccordion === option.id ? null : option.id);
                             }}
-                            className={`w-full p-3 flex items-center justify-between text-left transition-colors cursor-pointer ${
-                              isSelected && openShippingAccordion === option.id
-                                ? 'bg-emerald-50/90 border-b border-emerald-200'
-                                : isSelected
-                                ? 'bg-emerald-50/60 hover:bg-emerald-50/80'
+                            className={`w-full p-3.5 flex items-center justify-between text-left transition-colors cursor-pointer ${isSelected && openShippingAccordion === option.id
+                              ? 'bg-emerald-50/90 border-b border-emerald-200'
+                              : isSelected
+                                ? 'bg-emerald-50/50 hover:bg-emerald-50/70'
                                 : 'bg-slate-50 hover:bg-slate-100'
-                            }`}
+                              }`}
                           >
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-7 h-7 rounded-lg bg-emerald-100/80 flex items-center justify-center shrink-0">
-                                <Package className="w-4 h-4 text-[#063104]" />
+                            <div className="flex items-center gap-3 min-w-0 pr-2">
+                              <div className="w-8 h-8 rounded-xl bg-emerald-100/90 flex items-center justify-center shrink-0">
+                                <Package className="w-4.5 h-4.5 text-[#063104] fill-[#063104]/20" />
                               </div>
-                              <div>
+                              <div className="min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="font-bold text-gray-900 text-xs">{option.name}</span>
+                                  <span className="font-extrabold text-gray-900 text-xs">
+                                    {option.name.toLowerCase() === 'ambil sendiri' ? 'Ambil Sendiri di Toko' : option.name}
+                                  </span>
                                   <span className="bg-emerald-100/80 text-[#063104] text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
-                                    <Package className="w-3 h-3 text-[#063104]" />
-                                    <span>Self-Pickup</span>
+
+                                    <span>Ambil Sendiri</span>
                                   </span>
                                   {selectedPickupLocationId && (
                                     <span className="bg-[#063104] text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                                       <MapPin className="w-2.5 h-2.5 text-emerald-300" />
-                                      <span>{pickupLocations.find((p: any) => p.id === selectedPickupLocationId)?.name || 'Toko Terpilih'}</span>
+                                      <span>
+                                        {(() => {
+                                          const plName = pickupLocations.find((p: any) => p.id === selectedPickupLocationId)?.name || 'Toko Terpilih';
+                                          return plName.charAt(0).toUpperCase() + plName.slice(1);
+                                        })()}
+                                      </span>
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-[11px] text-gray-500 mt-0.5">
-                                  Ambil pesanan Anda langsung di lokasi toko
-                                </p>
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 shrink-0 ml-auto">
                               <span className={`font-extrabold text-xs shrink-0 ${fee === 0 ? 'text-emerald-600' : 'text-[#063104]'}`}>
                                 {fee === 0 ? 'GRATIS' : formatCurrency(fee)}
                               </span>
                               {openShippingAccordion === option.id ? (
-                                <ChevronUp className="w-4 h-4 text-[#063104] shrink-0" />
+                                <ChevronUp className="w-4 h-4 text-[#063104] shrink-0 ml-1" />
                               ) : (
-                                <ChevronDown className="w-4 h-4 text-gray-500 shrink-0" />
+                                <ChevronDown className="w-4 h-4 text-gray-500 shrink-0 ml-1" />
                               )}
                             </div>
                           </button>
@@ -961,11 +960,10 @@ export const CheckoutPage: React.FC = () => {
                                           setSelectedShippingId(option.id);
                                           setSelectedPickupLocationId(pl.id);
                                         }}
-                                        className={`w-full text-left p-3 rounded-xl border text-xs transition-all cursor-pointer ${
-                                          isPlSelected
-                                            ? 'bg-emerald-50/90 border-[#063104] ring-2 ring-[#063104] font-medium shadow-xs'
-                                            : 'bg-white border-gray-200 hover:border-emerald-300 text-gray-800'
-                                        }`}
+                                        className={`w-full text-left p-3 rounded-xl border text-xs transition-all cursor-pointer ${isPlSelected
+                                          ? 'bg-emerald-50/90 border-[#063104] ring-2 ring-[#063104] font-medium shadow-xs'
+                                          : 'bg-white border-gray-200 hover:border-emerald-300 text-gray-800'
+                                          }`}
                                       >
                                         <div className="flex items-start justify-between gap-2">
                                           <div className="space-y-1">
@@ -1013,11 +1011,10 @@ export const CheckoutPage: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => setSelectedShippingId(option.id)}
-                            className={`w-full text-left p-3 rounded-xl border transition-all ${
-                              isSelected
-                                ? 'bg-emerald-50/60 border-[#063104] ring-1 ring-[#063104]'
-                                : 'bg-white border-gray-200 hover:border-[#77a160]'
-                            }`}
+                            className={`w-full text-left p-3 rounded-xl border transition-all ${isSelected
+                              ? 'bg-emerald-50/60 border-[#063104] ring-1 ring-[#063104]'
+                              : 'bg-white border-gray-200 hover:border-[#77a160]'
+                              }`}
                           >
                             <div className="flex items-center justify-between">
                               <div>
@@ -1108,7 +1105,7 @@ export const CheckoutPage: React.FC = () => {
           <div className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs space-y-3">
             <div className="flex items-center justify-between pb-2 border-b border-gray-100">
               <div className="flex items-center gap-1.5 text-[#063104] font-extrabold text-xs uppercase tracking-wider">
-                <CreditCard className="w-4 h-4" />
+                <CreditCard className="w-4 h-4 fill-[#063104]/20" />
                 <span>Pilih Metode Pembayaran</span>
               </div>
               <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
@@ -1138,11 +1135,10 @@ export const CheckoutPage: React.FC = () => {
 
                   return (
                     <div
-                      className={`border rounded-xl overflow-hidden transition-all duration-200 ${
-                        hasActiveVA
-                          ? 'border-[#063104] ring-2 ring-emerald-600/30 bg-emerald-50/40 shadow-xs'
-                          : 'border-slate-200 bg-white hover:border-emerald-300'
-                      }`}
+                      className={`border rounded-xl overflow-hidden transition-all duration-200 shadow-2xs ${hasActiveVA
+                        ? 'border-[#063104] ring-2 ring-[#063104]/20 bg-emerald-50/40'
+                        : 'border-gray-200 bg-white hover:border-emerald-300'
+                        }`}
                     >
                       <button
                         type="button"
@@ -1150,13 +1146,12 @@ export const CheckoutPage: React.FC = () => {
                           setSelectedPaymentMode('duitku');
                           setOpenCategoryAccordion(isCategoryOpen ? null : 'va');
                         }}
-                        className={`w-full p-3 flex items-center justify-between text-left transition-colors cursor-pointer ${
-                          hasActiveVA
-                            ? 'bg-emerald-100/80 border-b border-emerald-200 text-[#063104]'
-                            : isCategoryOpen
-                            ? 'bg-emerald-50/60 border-b border-emerald-100'
-                            : 'bg-slate-50 hover:bg-emerald-50/40'
-                        }`}
+                        className={`w-full p-3 flex items-center justify-between text-left transition-colors cursor-pointer ${hasActiveVA && isCategoryOpen
+                          ? 'bg-emerald-50/90 border-b border-emerald-200 text-[#063104]'
+                          : hasActiveVA
+                            ? 'bg-emerald-50/50 hover:bg-emerald-50/70 text-gray-900'
+                            : 'bg-slate-50 hover:bg-slate-100 text-gray-900'
+                          }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           <Building2 className="w-4.5 h-4.5 text-[#063104] shrink-0" />
@@ -1167,7 +1162,7 @@ export const CheckoutPage: React.FC = () => {
                               </p>
                               {hasActiveVA && selectedVAMethod && (
                                 <span className="bg-[#063104] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full shrink-0 shadow-xs">
-                                  Terpilih: {selectedVAMethod.paymentName}
+                                  {selectedVAMethod.paymentName}
                                 </span>
                               )}
                             </div>
@@ -1177,7 +1172,7 @@ export const CheckoutPage: React.FC = () => {
                           </div>
                         </div>
                         {isCategoryOpen ? (
-                          <ChevronUp className="w-4 h-4 text-emerald-800 shrink-0 ml-2" />
+                          <ChevronUp className="w-4 h-4 text-[#063104] shrink-0 ml-2" />
                         ) : (
                           <ChevronDown className="w-4 h-4 text-slate-500 shrink-0 ml-2" />
                         )}
@@ -1199,11 +1194,10 @@ export const CheckoutPage: React.FC = () => {
                                   setSelectedPaymentMode('duitku');
                                   setSelectedDuitkuCode(m.paymentMethod);
                                 }}
-                                className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
-                                  isSelected
-                                    ? 'bg-emerald-50 border-[#063104] ring-1 ring-[#063104] shadow-xs'
-                                    : 'bg-white border-slate-200 hover:border-emerald-300'
-                                }`}
+                                className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${isSelected
+                                  ? 'bg-emerald-50/90 border-[#063104] ring-2 ring-[#063104] font-bold text-[#063104] shadow-xs'
+                                  : 'bg-white border-gray-200 hover:border-emerald-300 text-gray-800'
+                                  }`}
                               >
                                 <div className="flex items-center gap-2 min-w-0">
                                   {m.paymentImage ? (
@@ -1247,11 +1241,10 @@ export const CheckoutPage: React.FC = () => {
 
                   return (
                     <div
-                      className={`border rounded-xl overflow-hidden transition-all duration-200 ${
-                        hasActiveEW
-                          ? 'border-[#063104] ring-2 ring-emerald-600/30 bg-emerald-50/40 shadow-xs'
-                          : 'border-slate-200 bg-white hover:border-emerald-300'
-                      }`}
+                      className={`border rounded-xl overflow-hidden transition-all duration-200 shadow-2xs ${hasActiveEW
+                        ? 'border-[#063104] ring-2 ring-[#063104]/20 bg-emerald-50/40'
+                        : 'border-gray-200 bg-white hover:border-emerald-300'
+                        }`}
                     >
                       <button
                         type="button"
@@ -1259,13 +1252,12 @@ export const CheckoutPage: React.FC = () => {
                           setSelectedPaymentMode('duitku');
                           setOpenCategoryAccordion(isCategoryOpen ? null : 'ewallet');
                         }}
-                        className={`w-full p-3 flex items-center justify-between text-left transition-colors cursor-pointer ${
-                          hasActiveEW
-                            ? 'bg-emerald-100/80 border-b border-emerald-200 text-[#063104]'
-                            : isCategoryOpen
-                            ? 'bg-emerald-50/60 border-b border-emerald-100'
-                            : 'bg-slate-50 hover:bg-emerald-50/40'
-                        }`}
+                        className={`w-full p-3 flex items-center justify-between text-left transition-colors cursor-pointer ${hasActiveEW && isCategoryOpen
+                          ? 'bg-emerald-50/90 border-b border-emerald-200 text-[#063104]'
+                          : hasActiveEW
+                            ? 'bg-emerald-50/50 hover:bg-emerald-50/70 text-gray-900'
+                            : 'bg-slate-50 hover:bg-slate-100 text-gray-900'
+                          }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           <Wallet className="w-4.5 h-4.5 text-[#063104] shrink-0" />
@@ -1276,7 +1268,7 @@ export const CheckoutPage: React.FC = () => {
                               </p>
                               {hasActiveEW && selectedEWMethod && (
                                 <span className="bg-[#063104] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full shrink-0 shadow-xs">
-                                  Terpilih: {selectedEWMethod.paymentName}
+                                  {selectedEWMethod.paymentName}
                                 </span>
                               )}
                             </div>
@@ -1286,7 +1278,7 @@ export const CheckoutPage: React.FC = () => {
                           </div>
                         </div>
                         {isCategoryOpen ? (
-                          <ChevronUp className="w-4 h-4 text-emerald-800 shrink-0 ml-2" />
+                          <ChevronUp className="w-4 h-4 text-[#063104] shrink-0 ml-2" />
                         ) : (
                           <ChevronDown className="w-4 h-4 text-slate-500 shrink-0 ml-2" />
                         )}
@@ -1308,11 +1300,10 @@ export const CheckoutPage: React.FC = () => {
                                   setSelectedPaymentMode('duitku');
                                   setSelectedDuitkuCode(m.paymentMethod);
                                 }}
-                                className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
-                                  isSelected
-                                    ? 'bg-emerald-50 border-[#063104] ring-1 ring-[#063104] shadow-xs'
-                                    : 'bg-white border-slate-200 hover:border-emerald-300'
-                                }`}
+                                className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${isSelected
+                                  ? 'bg-emerald-50/90 border-[#063104] ring-2 ring-[#063104] font-bold text-[#063104] shadow-xs'
+                                  : 'bg-white border-gray-200 hover:border-emerald-300 text-gray-800'
+                                  }`}
                               >
                                 <div className="flex items-center gap-2 min-w-0">
                                   {m.paymentImage ? (
@@ -1356,11 +1347,10 @@ export const CheckoutPage: React.FC = () => {
 
                   return (
                     <div
-                      className={`border rounded-xl overflow-hidden transition-all duration-200 ${
-                        hasActiveQR
-                          ? 'border-[#063104] ring-2 ring-emerald-600/30 bg-emerald-50/40 shadow-xs'
-                          : 'border-slate-200 bg-white hover:border-emerald-300'
-                      }`}
+                      className={`border rounded-xl overflow-hidden transition-all duration-200 shadow-2xs ${hasActiveQR
+                        ? 'border-[#063104] ring-2 ring-[#063104]/20 bg-emerald-50/40'
+                        : 'border-gray-200 bg-white hover:border-emerald-300'
+                        }`}
                     >
                       <button
                         type="button"
@@ -1368,13 +1358,12 @@ export const CheckoutPage: React.FC = () => {
                           setSelectedPaymentMode('duitku');
                           setOpenCategoryAccordion(isCategoryOpen ? null : 'qris');
                         }}
-                        className={`w-full p-3 flex items-center justify-between text-left transition-colors cursor-pointer ${
-                          hasActiveQR
-                            ? 'bg-emerald-100/80 border-b border-emerald-200 text-[#063104]'
-                            : isCategoryOpen
-                            ? 'bg-emerald-50/60 border-b border-emerald-100'
-                            : 'bg-slate-50 hover:bg-emerald-50/40'
-                        }`}
+                        className={`w-full p-3 flex items-center justify-between text-left transition-colors cursor-pointer ${hasActiveQR && isCategoryOpen
+                          ? 'bg-emerald-50/90 border-b border-emerald-200 text-[#063104]'
+                          : hasActiveQR
+                            ? 'bg-emerald-50/50 hover:bg-emerald-50/70 text-gray-900'
+                            : 'bg-slate-50 hover:bg-slate-100 text-gray-900'
+                          }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           <QrCode className="w-4.5 h-4.5 text-[#063104] shrink-0" />
@@ -1385,7 +1374,7 @@ export const CheckoutPage: React.FC = () => {
                               </p>
                               {hasActiveQR && selectedQRMethod && (
                                 <span className="bg-[#063104] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full shrink-0 shadow-xs">
-                                  Terpilih: {selectedQRMethod.paymentName}
+                                  {selectedQRMethod.paymentName}
                                 </span>
                               )}
                             </div>
@@ -1395,7 +1384,7 @@ export const CheckoutPage: React.FC = () => {
                           </div>
                         </div>
                         {isCategoryOpen ? (
-                          <ChevronUp className="w-4 h-4 text-emerald-800 shrink-0 ml-2" />
+                          <ChevronUp className="w-4 h-4 text-[#063104] shrink-0 ml-2" />
                         ) : (
                           <ChevronDown className="w-4 h-4 text-slate-500 shrink-0 ml-2" />
                         )}
@@ -1417,11 +1406,10 @@ export const CheckoutPage: React.FC = () => {
                                   setSelectedPaymentMode('duitku');
                                   setSelectedDuitkuCode(m.paymentMethod);
                                 }}
-                                className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
-                                  isSelected
-                                    ? 'bg-emerald-50 border-[#063104] ring-1 ring-[#063104] shadow-xs'
-                                    : 'bg-white border-slate-200 hover:border-emerald-300'
-                                }`}
+                                className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${isSelected
+                                  ? 'bg-emerald-50/90 border-[#063104] ring-2 ring-[#063104] font-bold text-[#063104] shadow-xs'
+                                  : 'bg-white border-gray-200 hover:border-emerald-300 text-gray-800'
+                                  }`}
                               >
                                 <div className="flex items-center gap-2 min-w-0">
                                   {m.paymentImage ? (
@@ -1465,11 +1453,10 @@ export const CheckoutPage: React.FC = () => {
 
                   return (
                     <div
-                      className={`border rounded-xl overflow-hidden transition-all duration-200 ${
-                        hasActiveManual
-                          ? 'border-[#063104] ring-2 ring-emerald-600/30 bg-emerald-50/40 shadow-xs'
-                          : 'border-slate-200 bg-white hover:border-emerald-300'
-                      }`}
+                      className={`border rounded-xl overflow-hidden transition-all duration-200 shadow-2xs ${hasActiveManual
+                        ? 'border-[#063104] ring-2 ring-[#063104]/20 bg-emerald-50/40'
+                        : 'border-gray-200 bg-white hover:border-emerald-300'
+                        }`}
                     >
                       <button
                         type="button"
@@ -1477,13 +1464,12 @@ export const CheckoutPage: React.FC = () => {
                           setSelectedPaymentMode('manual');
                           setOpenCategoryAccordion(isCategoryOpen ? null : 'manual');
                         }}
-                        className={`w-full p-3 flex items-center justify-between text-left transition-colors cursor-pointer ${
-                          hasActiveManual
-                            ? 'bg-emerald-100/80 border-b border-emerald-200 text-[#063104]'
-                            : isCategoryOpen
-                            ? 'bg-emerald-50/60 border-b border-emerald-100'
-                            : 'bg-slate-50 hover:bg-emerald-50/40'
-                        }`}
+                        className={`w-full p-3 flex items-center justify-between text-left transition-colors cursor-pointer ${hasActiveManual && isCategoryOpen
+                          ? 'bg-emerald-50/90 border-b border-emerald-200 text-[#063104]'
+                          : hasActiveManual
+                            ? 'bg-emerald-50/50 hover:bg-emerald-50/70 text-gray-900'
+                            : 'bg-slate-50 hover:bg-slate-100 text-gray-900'
+                          }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           <Banknote className="w-4.5 h-4.5 text-[#063104] shrink-0" />
@@ -1494,7 +1480,7 @@ export const CheckoutPage: React.FC = () => {
                               </p>
                               {hasActiveManual && activeManualMethod && (
                                 <span className="bg-[#063104] text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full shrink-0 shadow-xs">
-                                  Terpilih: {activeManualMethod.name}
+                                  {activeManualMethod.name}
                                 </span>
                               )}
                             </div>
@@ -1504,7 +1490,7 @@ export const CheckoutPage: React.FC = () => {
                           </div>
                         </div>
                         {isCategoryOpen ? (
-                          <ChevronUp className="w-4 h-4 text-emerald-800 shrink-0 ml-2" />
+                          <ChevronUp className="w-4 h-4 text-[#063104] shrink-0 ml-2" />
                         ) : (
                           <ChevronDown className="w-4 h-4 text-slate-500 shrink-0 ml-2" />
                         )}
@@ -1524,11 +1510,10 @@ export const CheckoutPage: React.FC = () => {
                                   setSelectedPaymentMode('manual');
                                   setSelectedManualPaymentId(m.id);
                                 }}
-                                className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
-                                  isSelected
-                                    ? 'bg-emerald-50 border-[#063104] ring-1 ring-[#063104] shadow-xs'
-                                    : 'bg-white border-slate-200 hover:border-emerald-300'
-                                }`}
+                                className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${isSelected
+                                  ? 'bg-emerald-50/90 border-[#063104] ring-2 ring-[#063104] font-bold text-[#063104] shadow-xs'
+                                  : 'bg-white border-gray-200 hover:border-emerald-300 text-gray-800'
+                                  }`}
                               >
                                 <div className="flex items-center gap-2 min-w-0">
                                   <Banknote className="w-4 h-4 text-emerald-800 shrink-0" />
@@ -1551,9 +1536,9 @@ export const CheckoutPage: React.FC = () => {
           </div>
 
           {/* SECTION 5: PAYMENT SUMMARY BREAKDOWN (Rincian Pembayaran) */}
-          <div className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs space-y-2.5 text-xs">
+          <div id="payment-summary-section" className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs space-y-2.5 text-xs">
             <div className="flex items-center gap-1.5 text-[#063104] font-extrabold uppercase tracking-wider pb-1 border-b border-gray-100">
-              <Receipt className="w-4 h-4" />
+              <Receipt className="w-4 h-4 fill-[#063104]/20" />
               <span>Rincian Pembayaran</span>
             </div>
 
@@ -1613,11 +1598,17 @@ export const CheckoutPage: React.FC = () => {
       {/* SECTION 6: STICKY BOTTOM ACTION BAR (Tombol Buat Pesanan) */}
       {!orderSuccess && (
         <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200/80 p-3.5 shadow-2xl z-40 flex items-center justify-between gap-3">
-          <div>
-            <span className="text-[11px] font-medium text-gray-500 block">
+          <div
+            onClick={() => {
+              document.getElementById('payment-summary-section')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="cursor-pointer group select-none"
+            title="Klik untuk melihat rincian pembayaran"
+          >
+            <span className="text-[11px] font-medium text-gray-500 block group-hover:text-[#063104] transition-colors">
               Total Pembayaran
             </span>
-            <span className="text-base font-extrabold text-[#063104]">
+            <span className="text-base font-extrabold text-[#063104] group-hover:underline">
               {formatCurrency(grandTotal)}
             </span>
           </div>
