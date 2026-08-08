@@ -105,7 +105,7 @@ export const StoreSelectorDrawer: React.FC = () => {
               Pilih Toko Terdekat
             </h2>
             <span className="text-[10px] text-gray-500 font-medium block mt-0.5">
-              Daftar toko resmi terdaftar dengan stok segar
+              Daftar toko resmi terdaftar dengan stok tersedia
             </span>
           </div>
         </div>

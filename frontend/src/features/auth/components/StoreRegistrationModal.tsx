@@ -3,9 +3,6 @@ import { Dialog, DialogContent, IconButton } from '@mui/material';
 import {
   X,
   Store,
-  MapPin,
-  Phone,
-  Clock,
   Building2,
   AlertCircle,
   Clock3,
@@ -24,6 +21,7 @@ interface StoreRegistrationModalProps {
 export interface StoreApplicationData {
   id: string;
   storeName: string;
+  ownerName?: string;
   address: string;
   city: string;
   phone: string;
@@ -41,6 +39,7 @@ export const StoreRegistrationModal: React.FC<StoreRegistrationModalProps> = ({
 }) => {
   const { showToast } = useLocationStore();
   const [storeName, setStoreName] = useState('');
+  const [ownerName, setOwnerName] = useState(profile.fullName || '');
   const [city, setCity] = useState('');
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState(profile.phone || '');
@@ -147,10 +146,10 @@ export const StoreRegistrationModal: React.FC<StoreRegistrationModalProps> = ({
           </div>
           <div>
             <h2 className="text-xl font-extrabold tracking-tight flex items-center gap-2">
-              Buka Toko Cabang Saya 🌿
+              Buka Toko Cabang Saya 🛒
             </h2>
             <p className="text-xs text-emerald-200 font-medium">
-              Daftarkan cabang toko Anda & kelola jualan di OrganikStore
+              Daftarkan cabang toko Anda & kelola jualan di WaroengKita
             </p>
           </div>
         </div>
@@ -236,11 +235,10 @@ export const StoreRegistrationModal: React.FC<StoreRegistrationModalProps> = ({
                 <span>{errorMsg}</span>
               </div>
             )}
-
             <form onSubmit={handleSubmit} className="space-y-3.5">
               <div>
                 <label className="block text-xs font-bold text-slate-800 mb-1">
-                  Nama Toko / Cabang <span className="text-rose-500">*</span>
+                  Nama Toko / Cabang Baru <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -249,7 +247,7 @@ export const StoreRegistrationModal: React.FC<StoreRegistrationModalProps> = ({
                   <input
                     type="text"
                     required
-                    placeholder="Contoh: OrganikStore Cabang Bintaro"
+                    placeholder="Contoh: WaroengKita Cabang Bintaro"
                     value={storeName}
                     onChange={(e) => setStoreName(e.target.value)}
                     className="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition font-medium"
@@ -260,51 +258,70 @@ export const StoreRegistrationModal: React.FC<StoreRegistrationModalProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-800 mb-1">
-                    Kota Cabang <span className="text-rose-500">*</span>
+                    Nama Pemilik / Penanggung Jawab <span className="text-rose-500">*</span>
                   </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                      <MapPin className="w-4 h-4" />
-                    </div>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Contoh: Tangerang Selatan"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition font-medium"
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Nama Lengkap"
+                    value={ownerName}
+                    onChange={(e) => setOwnerName(e.target.value)}
+                    className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition font-medium"
+                  />
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-slate-800 mb-1">
-                    Telepon Toko / WA <span className="text-rose-500">*</span>
+                    No. WhatsApp Aktif <span className="text-rose-500">*</span>
                   </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                      <Phone className="w-4 h-4" />
-                    </div>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Contoh: 081288889999"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition font-medium"
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    required
+                    placeholder="0812xxxxxxxx"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition font-medium"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-800 mb-1">
+                    Kota / Kabupaten <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Contoh: Jakarta Selatan"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-800 mb-1">
+                    Jam Operasional
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Buka • 08.00 - 21.00 WIB"
+                    value={operatingHours}
+                    onChange={(e) => setOperatingHours(e.target.value)}
+                    className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition font-medium"
+                  />
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-800 mb-1">
-                  Alamat Lengkap Toko <span className="text-rose-500">*</span>
+                  Alamat Fisik Toko Lengkap <span className="text-rose-500">*</span>
                 </label>
                 <textarea
-                  required
                   rows={2}
-                  placeholder="Jl. Bintaro Utama No. 45, Sektor 7..."
+                  required
+                  placeholder="Nama jalan, nomor ruko/bangunan, RT/RW, kecamatan..."
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   className="w-full p-3 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition font-medium resize-none"
@@ -313,29 +330,11 @@ export const StoreRegistrationModal: React.FC<StoreRegistrationModalProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-slate-800 mb-1">
-                  Jam Operasional
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                    <Clock className="w-4 h-4" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Contoh: 08:00 - 20:00 WIB"
-                    value={operatingHours}
-                    onChange={(e) => setOperatingHours(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition font-medium"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1">
                   Deskripsi / Keterangan Toko (Opsional)
                 </label>
                 <textarea
                   rows={2}
-                  placeholder="Menyediakan sayur dan buah segar organik..."
+                  placeholder="Menyediakan berbagai produk pilihan berkualitas..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full p-3 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition font-medium resize-none"
@@ -346,7 +345,7 @@ export const StoreRegistrationModal: React.FC<StoreRegistrationModalProps> = ({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs rounded-xl shadow-md shadow-emerald-200 transition flex items-center justify-center space-x-2 disabled:opacity-50"
+                  className="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs rounded-xl shadow-md shadow-emerald-200 transition flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
                 >
                   {loading ? (
                     <span>Mengirim Pengajuan...</span>

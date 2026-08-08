@@ -40,8 +40,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   // Multi-image state (up to 3 images)
   const [images, setImages] = useState<string[]>([]);
   const [urlInput, setUrlInput] = useState<string>('');
-  const [isFreshDaily, setIsFreshDaily] = useState<boolean>(false);
-  const [isOrganicCertified, setIsOrganicCertified] = useState<boolean>(false);
+  const [isBundle, setIsBundle] = useState<boolean>(false);
+  const [isLimitedStock, setIsLimitedStock] = useState<boolean>(false);
 
   const [dragActive, setDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -52,7 +52,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   useEffect(() => {
     if (productToEdit) {
       setName(productToEdit.name);
-      setCategory(productToEdit.categoryId || productToEdit.category || 'cat-1');
+      setCategory(productToEdit.categorySlug || productToEdit.category || 'umum');
       setStoreId(productToEdit.storeId || profile.assignedStoreId || selectedStoreId || 'store-1');
       setPrice(productToEdit.price);
       setOriginalPrice(productToEdit.originalPrice ?? '');
@@ -63,8 +63,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       setStock(productToEdit.stock);
       setSubtitle(productToEdit.subtitle || '');
       setDescription(productToEdit.description || '');
-      setIsFreshDaily(productToEdit.isFreshDaily ?? false);
-      setIsOrganicCertified(productToEdit.isOrganicCertified ?? false);
+      setIsBundle(productToEdit.isBundle ?? false);
+      setIsLimitedStock(productToEdit.isLimitedStock ?? false);
 
       let imgList: string[] = [];
       if (productToEdit.image) imgList.push(productToEdit.image);
@@ -96,8 +96,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       setStock(50);
       setSubtitle('');
       setDescription('');
-      setIsFreshDaily(false);
-      setIsOrganicCertified(false);
+      setIsBundle(false);
+      setIsLimitedStock(false);
       setImages([]); // Empty by default per user request
       setUrlInput('');
       setImageError(null);
@@ -238,8 +238,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       image: mainImage,
       imagesJson: imagesJson,
       isActive: productToEdit ? productToEdit.isActive : true,
-      isFreshDaily: isFreshDaily,
-      isOrganicCertified: isOrganicCertified,
+      isBundle: isBundle,
+      isLimitedStock: isLimitedStock,
       rating: productToEdit?.rating ?? 0,
       reviewCount: productToEdit?.reviewCount ?? 0,
     };
@@ -435,25 +435,25 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 {/* Flags Checkboxes / Toggles */}
                 <div className="bg-emerald-50/60 border border-emerald-200/70 rounded-2xl p-3 space-y-2">
                   <span className="block text-[11px] font-extrabold text-[#063104] uppercase tracking-wider">
-                    Sertifikasi & Garansi Pangan
+                    Label & Status Produk
                   </span>
                   <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-gray-800">
                     <input
                       type="checkbox"
-                      checked={isOrganicCertified}
-                      onChange={(e) => setIsOrganicCertified(e.target.checked)}
+                      checked={isLimitedStock}
+                      onChange={(e) => setIsLimitedStock(e.target.checked)}
                       className="w-4 h-4 text-[#063104] rounded-md focus:ring-0 accent-[#063104]"
                     />
-                    <span>100% Organik (Bebas Pestisida)</span>
+                    <span>Stok Terbatas (Limited Stock)</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-gray-800">
                     <input
                       type="checkbox"
-                      checked={isFreshDaily}
-                      onChange={(e) => setIsFreshDaily(e.target.checked)}
+                      checked={isBundle}
+                      onChange={(e) => setIsBundle(e.target.checked)}
                       className="w-4 h-4 text-[#063104] rounded-md focus:ring-0 accent-[#063104]"
                     />
-                    <span>Petik Hari Ini (Segar Harian)</span>
+                    <span>Paket Hemat (Bundle)</span>
                   </label>
                 </div>
               </div>
@@ -524,11 +524,11 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                           ))
                       ) : (
                         <>
-                          <option value="sayur-segar">Sayur Segar</option>
-                          <option value="buah-organik">Buah Organik</option>
-                          <option value="daging-ayam">Daging & Ayam</option>
-                          <option value="susu-telur">Susu & Telur</option>
-                          <option value="bumbu-rempah">Bumbu & Rempah</option>
+                          <option value="umum">Produk Umum</option>
+                          <option value="elektronik">Elektronik</option>
+                          <option value="pakaian">Pakaian & Fashion</option>
+                          <option value="peralatan-rumah">Peralatan Rumah</option>
+                          <option value="aksesoris">Aksesoris & Lainnya</option>
                         </>
                       )}
                     </select>

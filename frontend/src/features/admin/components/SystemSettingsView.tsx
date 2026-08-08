@@ -16,7 +16,7 @@ export const SystemSettingsView: React.FC = () => {
   const [announcementText, setAnnouncementText] = useState(
     '📢 Promo Khusus Hari Ini: Gratis Ongkir Ke Seluruh Wilayah Dengan Min. Pembelian Rp 50.000!'
   );
-  const [platformName, setPlatformName] = useState('OrganikStore Indonesia');
+  const [platformName, setPlatformName] = useState('WaroengKita Indonesia');
   const [supportPhone, setSupportPhone] = useState('0812-3456-7890');
   const [waGatewayApiKey, setWaGatewayApiKey] = useState('wa_live_sec_9918237192381923');
   const [autoSendWaOnOrder, setAutoSendWaOnOrder] = useState(true);

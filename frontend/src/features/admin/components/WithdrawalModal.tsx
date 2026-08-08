@@ -200,7 +200,7 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
                     required
                     value={accountHolder}
                     onChange={(e) => setAccountHolder(e.target.value)}
-                    placeholder="e.g. Toko Sayur Organik"
+                    placeholder="e.g. Toko Saya"
                     className="w-full bg-white text-xs font-semibold rounded-xl px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#063104]"
                   />
                 </div>

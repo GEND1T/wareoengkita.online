@@ -112,7 +112,7 @@ export const usePembayaranStore = create<PembayaranState>((set, get) => ({
   createPayment: async (payload) => {
     set({ isCreatingPayment: true, createError: null });
     try {
-      const token = localStorage.getItem('organik_token');
+      const token = localStorage.getItem('waroengkita_token') || localStorage.getItem('organik_token');
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };

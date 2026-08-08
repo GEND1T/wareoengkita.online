@@ -57,7 +57,7 @@ export const AnalyticsReportsView: React.FC = () => {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Laporan_Penjualan_OrganikStore_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `Laporan_Penjualan_WaroengKita_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -174,7 +174,7 @@ export const AnalyticsReportsView: React.FC = () => {
                 <div className="min-w-0">
                   <h4 className="font-extrabold text-gray-900 text-[11px] md:text-xs truncate">{p.name}</h4>
                   <span className="text-[10px] md:text-[11px] text-gray-500 font-semibold hidden md:block">
-                    Kategori: {typeof p.category === 'object' && p.category !== null ? (p.category as any).name || (p.category as any).slug : String(p.category || 'Sayur Segar')} • {formatCurrency(p.price)} {p.unit}
+                    Kategori: {typeof p.category === 'object' && p.category !== null ? (p.category as any).name || (p.category as any).slug : String(p.category || 'Produk Umum')} • {formatCurrency(p.price)} {p.unit}
                   </span>
                   <span className="text-[9px] text-gray-500 font-semibold md:hidden block">
                     {formatCurrency(p.price)}

@@ -1,7 +1,7 @@
 {
-  "name": "Waroengkita - Belanja Bahan Organik",
-  "short_name": "Waroengkita",
-  "description": "Aplikasi Belanja Bahan Organik & Sembako Segar Langsung dari Petani",
+  "name": "WaroengKita - Belanja Online Terlengkap",
+  "short_name": "WaroengKita",
+  "description": "Aplikasi Marketplace Online untuk Semua Kebutuhan Anda",
   "start_url": "/",
   "id": "/",
   "display": "standalone",

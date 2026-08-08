@@ -25,7 +25,7 @@ export const useWalletStore = create<WalletState>((set, get) => ({
   activeBalance: 0,
   bankName: 'BCA',
   bankAccountNumber: '8820194819',
-  bankAccountHolder: 'Toko Sayur Organik',
+  bankAccountHolder: 'Toko Saya',
   mutations: [],
   withdrawals: [],
   isLoading: false,
@@ -54,7 +54,7 @@ export const useWalletStore = create<WalletState>((set, get) => ({
           activeBalance: walletJson.data.activeBalance || 0,
           bankName: walletJson.data.bankName || 'BCA',
           bankAccountNumber: walletJson.data.bankAccountNumber || '8820194819',
-          bankAccountHolder: walletJson.data.bankAccountHolder || 'Toko Sayur Organik',
+          bankAccountHolder: walletJson.data.bankAccountHolder || 'Toko Saya',
           mutations: walletJson.data.mutations || [],
         });
       }

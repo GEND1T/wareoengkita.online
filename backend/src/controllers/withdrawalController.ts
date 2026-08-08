@@ -33,7 +33,7 @@ export const getStoreWalletInfo = async (req: AuthRequest, res: Response) => {
         activeBalance: store.activeBalance || user?.activeBalance || 0,
         bankName: store.bankName || user?.bankName || 'BCA',
         bankAccountNumber: store.bankAccountNumber || user?.bankAccountNumber || '8820194819',
-        bankAccountHolder: store.bankAccountHolder || user?.bankAccountHolder || 'Toko Sayur Organik',
+        bankAccountHolder: store.bankAccountHolder || user?.bankAccountHolder || 'Toko Saya',
         mutations,
       },
     });

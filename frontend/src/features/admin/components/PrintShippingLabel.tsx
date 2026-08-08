@@ -108,7 +108,7 @@ export const PrintShippingLabel: React.FC<PrintShippingLabelProps> = ({
                 <thead>
                   <tr className="bg-gray-100 text-[10px] font-black uppercase text-gray-700">
                     <th className="p-2 border border-gray-300 w-8 text-center">Cek</th>
-                    <th className="p-2 border border-gray-300">Nama Produk Segar</th>
+                    <th className="p-2 border border-gray-300">Nama Produk</th>
                     <th className="p-2 border border-gray-300 text-center">Jumlah</th>
                     <th className="p-2 border border-gray-300 text-right">Harga</th>
                   </tr>

@@ -32,14 +32,14 @@ export const ProductGrid: React.FC = () => {
               unit: p.unit || '/pak',
               image: p.image,
               imagesJson: p.imagesJson,
-              category: p.categorySlug || 'sayur-segar',
+              category: p.categorySlug || 'umum',
               storeId: p.storeId || selectedStoreId,
               isActive: p.isActive !== undefined ? p.isActive : true,
               description: p.description,
               rating: p.rating !== undefined ? p.rating : 4.9,
               reviewCount: p.reviewCount !== undefined ? p.reviewCount : 0,
-              isFreshDaily: p.isFreshDaily !== undefined ? p.isFreshDaily : false,
-              isOrganicCertified: p.isOrganicCertified !== undefined ? p.isOrganicCertified : false,
+              isBundle: p.isBundle !== undefined ? p.isBundle : (p.isFreshDaily !== undefined ? p.isFreshDaily : false),
+              isLimitedStock: p.isLimitedStock !== undefined ? p.isLimitedStock : (p.isOrganicCertified !== undefined ? p.isOrganicCertified : false),
               stock: p.stock !== undefined ? p.stock : 50,
             }));
             setStoreProducts(mapped);
@@ -98,7 +98,7 @@ export const ProductGrid: React.FC = () => {
       ) : filteredProducts.length === 0 ? (
         <div className="bg-white rounded-2xl p-8 text-center border border-gray-100 my-4 shadow-xs">
           <p className="text-gray-500 text-sm font-medium">
-            Tidak ada produk organik yang sesuai dengan pencarian Anda di toko ini.
+            Tidak ada produk yang sesuai dengan pencarian Anda di toko ini.
           </p>
         </div>
       ) : (

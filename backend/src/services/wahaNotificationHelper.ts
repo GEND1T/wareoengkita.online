@@ -47,7 +47,7 @@ export async function notifyOrderPaid(orderId: string): Promise<boolean> {
     const deliveryLabel = shippingLabels[order.shippingType || 'instant'] || 'Pengiriman Instan';
 
     const message =
-      `Halo Kak *${order.customerName}*! Terima kasih telah berbelanja di OrganikStore! 🌿\n\n` +
+      `Halo Kak *${order.customerName}*! Terima kasih telah berbelanja di WaroengKita! 🛒\n\n` +
       `Pesanan Anda dengan nomor *#${order.orderNo}* telah berhasil dibayar. 🎉\n\n` +
       `📋 *Rincian Pesanan:*\n` +
       `- No. Pesanan: *#${order.orderNo}*\n` +
@@ -56,7 +56,7 @@ export async function notifyOrderPaid(orderId: string): Promise<boolean> {
       `- Total Pembayaran: *${formatCurrency(order.totalPrice)}*\n` +
       `- Jenis Pengiriman: *${deliveryLabel}*\n\n` +
       `📦 *Daftar Produk:*\n` +
-      `${itemsText || '• Produk Organik'}\n\n` +
+      `${itemsText || '• Produk Pesanan'}\n\n` +
       `Tim kami sedang menyiapkan dan mengemas produk pesanan Anda. Terima kasih atas kepercayaan Anda! 🙏`;
 
     console.log(`[WAHA Notify] Triggering Paid Notification for Order #${order.orderNo} to ${order.customerPhone}`);
@@ -156,7 +156,7 @@ export async function notifyOrderStatusChanged(orderId: string, newStatus: strin
       const message =
         `Halo Kak *${order.customerName}*! ✅\n\n` +
         `Pesanan Anda *#${order.orderNo}* telah *SELESAI*.\n` +
-        `Terima kasih banyak telah berbelanja di OrganikStore. Semoga Anda puas dengan kesegaran produk kami! 🌿😊`;
+        `Terima kasih banyak telah berbelanja di WaroengKita. Semoga Anda puas dengan kualitas produk kami! 🛒😊`;
 
       return await sendWahaNotification({ phone, message });
     }

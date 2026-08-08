@@ -312,7 +312,7 @@ export const OrdersView: React.FC = () => {
         <div className="hidden md:block">
           <h1 className="text-2xl font-black text-gray-900">Manajemen Pesanan</h1>
           <p className="text-xs text-gray-500">
-            Kelola alur status pesanan segar secara real-time dari masuk hingga terkirim.
+            Kelola alur status pesanan toko secara real-time dari masuk hingga terkirim.
           </p>
         </div>
 

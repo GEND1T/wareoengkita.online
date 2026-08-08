@@ -88,7 +88,7 @@ export const InternalCourierMapView: React.FC<InternalCourierMapViewProps> = ({
   const storeLat = rawStoreLat !== undefined && rawStoreLat !== null ? Number(rawStoreLat) : -6.94354419176064;
   const storeLon = rawStoreLon !== undefined && rawStoreLon !== null ? Number(rawStoreLon) : 109.1316514084431;
 
-  const storeName = order?.store?.name || order?.storeName || 'OrganikStore Utama';
+  const storeName = order?.store?.name || order?.storeName || 'WaroengKita Utama';
   const storeAddress = order?.store?.address || 'Jl. Senopati No. 45, Kebayoran Baru, Jakarta Selatan';
 
   // Destination (Customer) Coordinates - exact match from customer address

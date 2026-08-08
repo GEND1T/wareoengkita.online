@@ -99,7 +99,7 @@ export const VerifyAccessPage: React.FC = () => {
             <ShieldCheck className="w-9 h-9 text-white" />
           </div>
           <h1 className="text-xl font-bold">Verifikasi Akses WhatsApp</h1>
-          <p className="text-xs text-emerald-100 mt-1 font-medium">OrganikStore System Authentication</p>
+          <p className="text-xs text-emerald-100 mt-1 font-medium">WaroengKita System Authentication</p>
         </div>
 
         <div className="p-8 text-center space-y-6">

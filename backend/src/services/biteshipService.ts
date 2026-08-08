@@ -215,9 +215,9 @@ export async function createCourierOrder(params: CreateOrderRequest): Promise<Cr
   console.log('[Biteship] Creating courier order for company:', params.courier_company);
 
   const formattedItems = (params.items || []).map((item) => ({
-    name: String(item.name || 'Produk Organik').substring(0, 50),
-    description: String(item.description || item.name || 'Produk Segar OrganikStore'),
-    category: item.category || 'groceries',
+    name: String(item.name || 'Produk Marketplace').substring(0, 50),
+    description: String(item.description || item.name || 'Produk WaroengKita'),
+    category: item.category || 'general',
     value: Math.max(1000, Math.round(item.value || 10000)),
     quantity: Math.max(1, Math.round(item.quantity || 1)),
     height: Math.max(1, item.height || 10),
@@ -228,9 +228,9 @@ export async function createCourierOrder(params: CreateOrderRequest): Promise<Cr
 
   if (formattedItems.length === 0) {
     formattedItems.push({
-      name: 'Paket Belanja Organik',
-      description: 'Paket belanja kebutuhan sehari-hari',
-      category: 'groceries',
+      name: 'Paket Belanja',
+      description: 'Paket belanja pesanan pelanggan',
+      category: 'general',
       value: 50000,
       quantity: 1,
       height: 10,
@@ -248,14 +248,14 @@ export async function createCourierOrder(params: CreateOrderRequest): Promise<Cr
   const courierCompany = isTestKey ? 'biteship' : (params.courier_company || 'biteship');
 
   const payload: any = {
-    shipper_contact_name: params.shipper_contact_name || params.origin_contact_name || 'OrganikStore Admin',
+    shipper_contact_name: params.shipper_contact_name || params.origin_contact_name || 'Admin WaroengKita',
     shipper_contact_phone: params.shipper_contact_phone || params.origin_contact_phone || '088888888888',
     shipper_contact_email: params.shipper_contact_email || 'biteship@test.com',
-    shipper_organization: params.shipper_organization || 'OrganikStore Indonesia',
-    origin_contact_name: params.origin_contact_name || 'Admin Toko Organik',
+    shipper_organization: params.shipper_organization || 'WaroengKita Indonesia',
+    origin_contact_name: params.origin_contact_name || 'Admin Toko',
     origin_contact_phone: params.origin_contact_phone || '088888888888',
     origin_address: params.origin_address || 'Plaza Senayan, Jalan Asia Afrika No. 8, Jakarta Selatan',
-    origin_note: params.origin_note || 'Pintu Masuk Utama Toko Organik',
+    origin_note: params.origin_note || 'Pintu Masuk Utama Toko',
     origin_coordinate: {
       latitude: params.origin_coordinate?.latitude || -6.2253114,
       longitude: params.origin_coordinate?.longitude || 106.7993735,

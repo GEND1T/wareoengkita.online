@@ -1,7 +1,7 @@
 {
-  "name": "organikstore-backend",
+  "name": "waroengkita-backend",
   "version": "1.0.0",
-  "description": "RESTful API Backend for OrganikStore Multi-Store E-Commerce",
+  "description": "RESTful API Backend for WaroengKita Multi-Store E-Commerce",
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
@@ -18,7 +18,7 @@
     "prisma",
     "ecommerce"
   ],
-  "author": "OrganikStore Dev Team",
+  "author": "WaroengKita Dev Team",
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^5.14.0",

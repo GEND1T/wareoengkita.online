@@ -24,9 +24,9 @@ interface FaqItem {
 const FAQ_LIST: FaqItem[] = [
   {
     id: 'faq-1',
-    question: 'Bagaimana OrganikStore menjamin kesegaran sayur & buah?',
+    question: 'Bagaimana WaroengKita menjamin kualitas produk?',
     answer:
-      'Seluruh produk segar dipanen setiap hari dari mitra petani lokal terpercaya dan disimpan dalam suhu terkontrol. Sebelum dikirim, tim Quality Control (QC) kami memilah satu per satu barang untuk memastikan bebas dari cacat.',
+      'Seluruh produk melalui proses pemeriksaan kualitas oleh mitra penjual dan tim Quality Control (QC) kami sebelum dikemas dan dikirimkan kepada Anda.',
   },
   {
     id: 'faq-2',
@@ -36,9 +36,9 @@ const FAQ_LIST: FaqItem[] = [
   },
   {
     id: 'faq-3',
-    question: 'Bagaimana jika ada barang yang rusak atau busuk saat sampai?',
+    question: 'Bagaimana jika ada barang yang rusak atau cacat saat sampai?',
     answer:
-      'OrganikStore memberikan garansi 100% ganti rugi! Cukup foto/video produk yang rusak dan hubungi CS kami dalam 1x24 jam. Kami akan mengirimkan barang pengganti atau pengembalian dana penuh.',
+      'WaroengKita memberikan garansi kepuasan 100%! Cukup foto/video produk yang bermasalah dan hubungi CS kami dalam 1x24 jam. Kami akan mengirimkan barang pengganti atau pengembalian dana penuh.',
   },
   {
     id: 'faq-4',
@@ -117,7 +117,7 @@ export const SupportDrawer: React.FC<SupportDrawerProps> = ({ open, onClose }) =
           </div>
 
           <p className="text-xs text-emerald-100 leading-relaxed">
-            Ada kendala pengiriman atau ingin menanyakan kesegaran stok buah & sayur? CS kami siap membantu Anda!
+            Ada kendala pengiriman atau ingin menanyakan tentang ketersediaan stok produk? CS kami siap membantu Anda!
           </p>
 
           <button
@@ -136,9 +136,9 @@ export const SupportDrawer: React.FC<SupportDrawerProps> = ({ open, onClose }) =
             <ShieldCheck className="w-6 h-6" />
           </div>
           <div>
-            <h4 className="font-extrabold text-gray-900 text-xs">Garansi 100% Segar</h4>
+            <h4 className="font-extrabold text-gray-900 text-xs">Garansi Kepuasan 100%</h4>
             <p className="text-[11px] text-gray-500">
-              Jika barang busuk/cacat saat diterima, ganti baru atau uang kembali 100%.
+              Jika barang bermasalah/cacat saat diterima, ganti baru atau uang kembali 100%.
             </p>
           </div>
         </div>

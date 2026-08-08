@@ -45,7 +45,7 @@ export const OverviewView: React.FC = () => {
           </span>
           <h1 className="text-lg md:text-2xl font-black pt-1">Selamat Datang, Admin! 👋</h1>
           <p className="text-[11px] md:text-xs text-emerald-100 max-w-lg leading-relaxed">
-            Pantau aktivitas toko secara real-time. Kelola pesanan masuk & stok produk organik hari ini.
+            Pantau aktivitas toko secara real-time. Kelola pesanan masuk & stok produk hari ini.
           </p>
         </div>
 
@@ -202,7 +202,7 @@ export const OverviewView: React.FC = () => {
                       <div className="min-w-0">
                         <h4 className="font-bold text-gray-900 truncate">{prod.name}</h4>
                         <p className="text-[10px] text-gray-500 capitalize">
-                          {typeof prod.category === 'object' && prod.category !== null ? (prod.category as any).name || (prod.category as any).slug : String(prod.category || 'Sayur Segar')}
+                          {typeof prod.category === 'object' && prod.category !== null ? (prod.category as any).name || (prod.category as any).slug : String(prod.category || 'Produk Umum')}
                         </p>
                       </div>
                     </div>

@@ -30,10 +30,10 @@ export const HeroBanner: React.FC = () => {
 
         if (json.success && Array.isArray(json.data) && json.data.length > 0) {
           const mapped = json.data.map((p: any) => ({
-            subtitle: p.subtitle || 'Promo Spesial Organik',
-            title: p.title || 'Diskon Segar Hari Ini',
+            subtitle: p.subtitle || 'Promo Spesial Belanja',
+            title: p.title || 'Diskon Spesial Hari Ini',
             badgeText: p.badgeText || p.discountTag || 'PROMO',
-            image: p.imageUrl || p.image || 'https://images.unsplash.com/photo-1610348725531-843dff563e2c?auto=format&fit=crop&w=600&q=80',
+            image: p.imageUrl || p.image || 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=600&q=80',
             bannerType: p.bannerType || 'template',
             imageScale: p.imageScale !== undefined && p.imageScale !== null ? Number(p.imageScale) : 1.0,
             imagePositionX: p.imagePositionX !== undefined && p.imagePositionX !== null ? Number(p.imagePositionX) : 0,
@@ -44,10 +44,10 @@ export const HeroBanner: React.FC = () => {
           // Default Platform Banner if no active promos created yet
           setSlides([
             {
-              subtitle: 'Promo Spesial Organik Platform',
-              title: 'Diskon Belanja Sayur & Buah Segar 30%',
+              subtitle: 'Promo Spesial WaroengKita',
+              title: 'Diskon Belanja Hemat s.d 30%',
               badgeText: '30% OFF',
-              image: 'https://images.unsplash.com/photo-1610348725531-843dff563e2c?auto=format&fit=crop&w=600&q=80',
+              image: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=600&q=80',
               bannerType: 'template',
               imageScale: 1.0,
               imagePositionX: 0,
@@ -198,7 +198,7 @@ export const HeroBanner: React.FC = () => {
 
                       <img
                         src={slide.image}
-                        alt="Organic Basket"
+                        alt="Promo Banner"
                         className="w-32 h-28 sm:w-44 sm:h-36 md:w-52 md:h-40 object-cover rounded-2xl shadow-md border-2 border-white/20 transform group-hover:scale-105 transition-transform duration-300"
                         draggable={false}
                       />

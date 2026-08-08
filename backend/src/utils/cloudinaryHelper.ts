@@ -22,8 +22,8 @@ export const deleteCloudinaryImage = async (imageUrl?: string | null) => {
       secure: true,
     });
 
-    // Extract public_id from Cloudinary URL (e.g. organikstore_assets/sample)
-    // Example URL: https://res.cloudinary.com/ecfyagfq/image/upload/v1785516938/organikstore_assets/sample.png
+    // Extract public_id from Cloudinary URL (e.g. waroengkita_assets/sample)
+    // Example URL: https://res.cloudinary.com/ecfyagfq/image/upload/v1785516938/waroengkita_assets/sample.png
     const urlParts = imageUrl.split('/');
     const uploadIndex = urlParts.indexOf('upload');
 

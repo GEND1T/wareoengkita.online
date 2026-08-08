@@ -274,7 +274,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   </span>
                 </div>
                 <p className="text-[11px] text-gray-700 font-bold truncate mt-0.5">
-                  {order.shippingCourier || 'OrganikStore Instant Delivery'}
+                  {order.shippingCourier || 'WaroengKita Express'}
                 </p>
                 <p className="text-[10px] text-gray-500 font-medium truncate">
                   No. Resi: <strong className="font-mono text-gray-800">{trackingNumber}</strong>
@@ -425,7 +425,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               <div className="flex items-center gap-2">
                 <Store className="w-4 h-4 text-[#063104]" />
                 <span className="font-extrabold text-gray-900 text-xs">
-                  {order.storeName || 'OrganikStore Indonesia'}
+                  {order.storeName || 'WaroengKita Indonesia'}
                 </span>
               </div>
               <span className="text-[10px] font-bold text-gray-400">

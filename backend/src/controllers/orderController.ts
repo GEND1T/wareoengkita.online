@@ -202,7 +202,7 @@ export const trackOrder = async (req: Request, res: Response) => {
         status: order.orderStatus,
         customerName: order.customerName,
         shippingAddress: order.shippingAddress,
-        courierName: 'OrganikStore Instant Courier',
+        courierName: 'WaroengKita Instant Courier',
         driverName: order.driverName || 'Pak Rahmat Express',
         driverPhone: order.driverPhone || '0812-9988-7766',
         driverPlate: order.driverPlate || 'B 4891 TKO',

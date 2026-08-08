@@ -151,7 +151,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           </div>
           <div>
             <h2 className="text-xl font-bold tracking-tight">WhatsApp Login</h2>
-            <p className="text-xs text-emerald-100 font-medium">Akses Akun OrganikStore Sangat Mudah</p>
+            <p className="text-xs text-emerald-100 font-medium">Akses Akun WaroengKita Sangat Mudah</p>
           </div>
         </div>
       </div>
@@ -178,7 +178,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 Instruksi Akses:
               </div>
               <ol className="text-xs text-emerald-900 list-decimal list-inside space-y-1 pl-1">
-                <li>Buka pesan dari OrganikStore di WhatsApp.</li>
+                <li>Buka pesan dari WaroengKita di WhatsApp.</li>
                 <li>Klik link verifikasi yang tersedia.</li>
                 <li>Anda akan langsung masuk ke akun Anda.</li>
               </ol>

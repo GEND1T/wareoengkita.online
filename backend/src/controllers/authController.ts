@@ -6,7 +6,7 @@ import { prisma } from '../prisma/client';
 import { AuthRequest } from '../middlewares/authMiddleware';
 import { sendWhatsAppAccessLink, formatWhatsAppNumber } from '../services/waService';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'organikstore_super_secret_jwt_key_2026';
+const JWT_SECRET = process.env.JWT_SECRET || 'waroengkita_super_secret_jwt_key_2026';
 
 // Register Customer
 export const register = async (req: Request, res: Response) => {
@@ -176,7 +176,7 @@ export const registerWithWA = async (req: Request, res: Response) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
     const joinedDate = new Date().toISOString().split('T')[0];
-    const userEmail = email || `${formattedPhone}@organikstore.id`;
+    const userEmail = email || `${formattedPhone}@waroengkita.id`;
 
     const newUser = await prisma.user.create({
       data: {

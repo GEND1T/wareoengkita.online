@@ -574,7 +574,7 @@ export const PromosView: React.FC = () => {
 
     const promoData = {
       title: title.trim() || (activeModalTab === 'full' ? 'Banner Graphic Full' : 'Promo Banner'),
-      subtitle: activeModalTab === 'template' ? (subtitle.trim() || 'Penawaran Segar Organik Hari Ini') : '',
+      subtitle: activeModalTab === 'template' ? (subtitle.trim() || 'Penawaran Spesial Hari Ini') : '',
       discountTag: activeModalTab === 'template' ? (discountTag.trim() || 'PROMO SPECIAL') : '',
       image: image.trim() || 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1200&q=80',
       isActive: promoToEdit ? promoToEdit.isActive : true,
@@ -984,7 +984,7 @@ export const PromosView: React.FC = () => {
                   <div className="relative bg-[#063104] rounded-2xl p-4 sm:p-5 text-white flex items-center justify-between min-h-[140px] shadow-md border border-emerald-900/40 overflow-hidden">
                     <div className="z-10 max-w-[60%] space-y-1">
                       <p className="text-emerald-100/90 text-xs font-medium truncate">
-                        {subtitle || 'Sub-judul Promo Organik'}
+                        {subtitle || 'Sub-judul Promo Spesial'}
                       </p>
                       <h2 className="text-2xl font-black text-[#FACC15] leading-tight line-clamp-2">
                         {title || 'Judul Promo Diskon'}
@@ -1049,7 +1049,7 @@ export const PromosView: React.FC = () => {
                       required
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      placeholder="e.g. Diskon Organik 30% OFF"
+                      placeholder="e.g. Diskon Spesial 30% OFF"
                       className="w-full bg-gray-50 text-sm rounded-xl px-3.5 py-2 border border-gray-200 focus:outline-none focus:border-[#063104] font-extrabold text-gray-900"
                     />
                   </div>
@@ -1060,7 +1060,7 @@ export const PromosView: React.FC = () => {
                       type="text"
                       value={subtitle}
                       onChange={(e) => setSubtitle(e.target.value)}
-                      placeholder="e.g. Khusus Produk Sayuran Segar Hari Ini"
+                      placeholder="e.g. Khusus Pembelian Produk Hari Ini"
                       className="w-full bg-gray-50 text-xs rounded-xl px-3.5 py-2 border border-gray-200 focus:outline-none focus:border-[#063104] font-medium"
                     />
                   </div>

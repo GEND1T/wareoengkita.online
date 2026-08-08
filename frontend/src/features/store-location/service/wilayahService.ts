@@ -100,7 +100,7 @@ export async function searchAddress(query: string): Promise<GeoSearchResult[]> {
         `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(
           `${p.village}, ${p.district}, ${p.regency}, ${p.province}, Indonesia`
         )}&countrycodes=id&limit=1`,
-        { headers: { 'User-Agent': 'OrganicEcommerceApp/1.0' } }
+        { headers: { 'User-Agent': 'WaroengKitaApp/1.0' } }
       );
       const nomData = await nomRes.json();
       const lat = nomData[0] ? parseFloat(nomData[0].lat) : -6.2088;
@@ -131,7 +131,7 @@ export async function searchAddress(query: string): Promise<GeoSearchResult[]> {
       `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(
         cleanQ
       )}&countrycodes=id&limit=6&addressdetails=1`,
-      { headers: { 'User-Agent': 'OrganicEcommerceApp/1.0' } }
+      { headers: { 'User-Agent': 'WaroengKitaApp/1.0' } }
     );
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
@@ -173,7 +173,7 @@ export async function reverseGeocodeCoords(lat: number, lon: number): Promise<Ge
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&addressdetails=1`,
-      { headers: { 'User-Agent': 'OrganicEcommerceApp/1.0' } }
+      { headers: { 'User-Agent': 'WaroengKitaApp/1.0' } }
     );
     if (!res.ok) throw new Error('Reverse geocode error');
     const data = await res.json();
