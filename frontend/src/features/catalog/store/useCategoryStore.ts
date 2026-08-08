@@ -64,7 +64,16 @@ export const useCategoryStore = create<CategoryState>((set) => ({
       }
     } catch (err) {
       console.error('Failed to fetch categories:', err);
-      useServerStatusStore.getState().setDisconnected(true, 'Koneksi ke database server kategori terputus.');
+      set({
+        categories: [
+          { id: 'all', name: 'Semua Produk', icon: 'Sparkles' },
+          { id: 'umum', name: 'Produk Umum', icon: 'ShoppingBag' },
+          { id: 'elektronik', name: 'Elektronik', icon: 'Tv' },
+          { id: 'pakaian', name: 'Pakaian & Fashion', icon: 'Shirt' },
+          { id: 'peralatan-rumah', name: 'Peralatan Rumah', icon: 'Home' },
+          { id: 'aksesoris', name: 'Aksesoris & Lainnya', icon: 'Watch' },
+        ],
+      });
     }
   },
 }));

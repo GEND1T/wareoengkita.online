@@ -60,77 +60,90 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           loading="lazy"
         />
 
-        {/* Discount Tag Badge (Top Left) */}
-        {product.discountTag && (
-          <div className="absolute top-2 left-2 bg-red-600/90 backdrop-blur-xs text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-xs">
-            {product.discountTag}
-          </div>
-        )}
+        {/* Responsive Image Badges: Stacked at top-left below 480px, split left/right at 480px+ */}
+        {(product.discountTag || product.badge) && (
+          <div className="absolute top-2 left-2 right-2 flex flex-col min-[480px]:flex-row items-start min-[480px]:items-center min-[480px]:justify-between gap-1 pointer-events-none z-10">
+            {product.discountTag ? (
+              <div className="bg-red-600/90 backdrop-blur-xs text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-xs pointer-events-auto shrink-0">
+                {product.discountTag}
+              </div>
+            ) : (
+              <div className="hidden min-[480px]:block" />
+            )}
 
-        {/* Product Custom Badge e.g. PROMO / BESTSELLER (Top Right) */}
-        {product.badge && (
-          <div className="absolute top-2 right-2 bg-amber-500/90 backdrop-blur-xs text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-xs uppercase">
-            {product.badge}
+            {product.badge && (
+              <div className="bg-amber-500/90 backdrop-blur-xs text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-xs uppercase pointer-events-auto shrink-0 min-[480px]:ml-auto">
+                {product.badge}
+              </div>
+            )}
           </div>
         )}
       </div>
 
       {/* Content Section */}
-      <div className="flex-1 flex flex-col justify-between px-1">
-        <div className="mb-2">
-          <div className="flex items-center justify-between gap-1">
-            <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-tight line-clamp-1 group-hover:text-[#063104] transition-colors flex-1">
-              {product.name}
-            </h3>
+      <div className="flex-1 flex flex-col justify-between px-1 text-left">
+        <div>
+          {/* Title: 2 lines clamp for full readability */}
+          <h3 className="font-extrabold text-gray-900 text-xs sm:text-sm leading-snug line-clamp-2 min-h-[2.2rem] group-hover:text-[#063104] transition-colors">
+            {product.name}
+          </h3>
+
+          {/* Subtitle & Rating Row */}
+          <div className="flex items-center justify-between gap-1 mt-1">
+            <p className="text-gray-400 text-[11px] font-normal truncate flex-1">
+              {product.subtitle !== product.name ? product.subtitle : ''}
+            </p>
             {product.rating !== undefined && product.rating > 0 && (
-              <div className="flex items-center gap-0.5 text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-md shrink-0">
+              <div className="flex items-center gap-0.5 text-[9px] sm:text-[10px] font-bold text-amber-800 bg-amber-50/80 px-1.5 py-0.5 rounded-md shrink-0 border border-amber-200/60">
                 <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
                 <span>{product.rating}</span>
                 {product.reviewCount !== undefined && product.reviewCount > 0 && (
-                  <span className="text-gray-400 font-normal text-[9px]">({product.reviewCount})</span>
+                  <span className="text-gray-400 font-normal text-[8px]">({product.reviewCount})</span>
                 )}
               </div>
             )}
           </div>
-          <p className="text-gray-400 text-xs font-normal mt-0.5 line-clamp-1">
-            {product.subtitle}
-          </p>
         </div>
 
         {/* Price & Add Button Row */}
-        <div className="flex items-end justify-between pt-1 mt-auto">
-          <div>
-            {formattedOriginalPrice && (
-              <span className="block text-[11px] text-gray-400 line-through font-medium leading-none mb-0.5">
-                {formattedOriginalPrice}
-              </span>
-            )}
-            <div className="flex items-baseline">
-              <span className="font-extrabold text-gray-900 text-sm sm:text-base leading-none">
-                {formattedPrice}
-              </span>
-              <span className="text-gray-500 font-normal text-[11px] ml-1">
-                {product.unit}
-              </span>
-            </div>
-          </div>
+        <div className="pt-2 mt-auto flex flex-col items-start">
+          {/* Strikethrough price directly above main price */}
+          {formattedOriginalPrice && (
+            <span className="block text-[10px] text-gray-400 line-through font-medium leading-none mb-0.5">
+              {formattedOriginalPrice}
+            </span>
+          )}
 
-          {/* Add to Cart Button */}
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            aria-label={`Tambah ${product.name} ke keranjang`}
-            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all duration-200 focus:outline-none active:scale-95 shrink-0 cursor-pointer ${added
-              ? 'bg-emerald-600 text-white scale-105'
-              : 'bg-[#063104] hover:bg-[#084205] text-white shadow-xs'
-              }`}
-          >
-            {added ? (
-              <Check className="w-5 h-5 stroke-[2.5]" />
-            ) : (
-              <Plus className="w-5 h-5 stroke-[2.5]" />
-            )}
-          </button>
+          <div className="w-full flex items-start justify-between gap-2">
+            {/* Solid main price & unit with top padding so it doesn't stick too tightly to strikethrough price */}
+            <div className="min-w-0 flex-1 pt-1">
+              <div className="flex items-baseline flex-wrap gap-x-1">
+                <span className="font-black text-gray-900 text-sm sm:text-base leading-none">
+                  {formattedPrice}
+                </span>
+                <span className="text-gray-500 font-medium text-[11px] leading-none">
+                  /{product.unit.replace(/^\//, '').replace(/^per\s+/i, '')}
+                </span>
+              </div>
+            </div>
+
+            {/* Add to Cart Button */}
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              aria-label={`Tambah ${product.name} ke keranjang`}
+              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center transition-all duration-200 focus:outline-none active:scale-95 shrink-0 cursor-pointer ${added
+                ? 'bg-emerald-600 text-white scale-105 shadow-xs'
+                : 'bg-[#063104] hover:bg-[#084205] text-white shadow-xs'
+                }`}
+            >
+              {added ? (
+                <Check className="w-4 h-4 stroke-[2.5]" />
+              ) : (
+                <Plus className="w-4 h-4 stroke-[2.5]" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

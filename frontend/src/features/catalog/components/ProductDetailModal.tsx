@@ -269,26 +269,12 @@ export const ProductDetailModal: React.FC = () => {
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
 
-            {/* Dynamic Badges Overlay (Top Left & Top Right) */}
-            <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start">
-              {activeProduct.isLimitedStock && (
-                <div className="bg-[#063104]/90 backdrop-blur-md text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-md flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-emerald-400" />
-                  <span>Stok Terbatas</span>
-                </div>
-              )}
-              {activeProduct.isBundle && (
-                <div className="bg-amber-600/90 backdrop-blur-md text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-md flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-amber-300" />
-                  <span>Paket Hemat</span>
-                </div>
-              )}
-              {activeProduct.discountTag && (
-                <div className="bg-red-600/90 backdrop-blur-md text-white text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-md">
-                  {activeProduct.discountTag}
-                </div>
-              )}
-            </div>
+            {/* Dynamic Badges Overlay (Top Left) */}
+            {activeProduct.discountTag && (
+              <div className="absolute top-3 left-3 bg-red-600/90 backdrop-blur-md text-white text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-md">
+                {activeProduct.discountTag}
+              </div>
+            )}
 
             {activeProduct.badge && (
               <div className="absolute top-3 right-3 bg-amber-500/90 backdrop-blur-md text-white text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-md uppercase">
